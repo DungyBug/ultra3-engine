@@ -1,0 +1,1 @@
+export type ClassPattern<T extends string> = `${T}_${string}`;
