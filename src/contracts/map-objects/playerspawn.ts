@@ -1,9 +1,14 @@
 import { Player } from "../../entities/player";
 import { IDifficulty } from "../difficulty";
-import { IMapObject } from "../map-object";
+import { IMapObject, IMapObjectProps } from "../map-object";
+
+export interface IPlayerSpawnProps extends IMapObjectProps {
+    difficulty: IDifficulty;
+}
 
 export interface IPlayerSpawn extends IMapObject {
     // difficulty: IDifficulty;
 
-    spawnPlayer(difficulty: IDifficulty): Player;
+    get difficulty(): IDifficulty;
+    spawnPlayer(): Player;
 }

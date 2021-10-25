@@ -6,6 +6,6 @@ CollisionStop
 Emits when player stops collision with object ( f.e. goes away )
 */
 export interface ICollisionStopMapEvent extends IMapEvent {
-    name: "collisionstop",
+    type: "collisionstop",
     side: Side;
 }

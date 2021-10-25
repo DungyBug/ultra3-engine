@@ -9,7 +9,7 @@ Don't emit when PlayerSpawn emits
 Don't emit when PlayerRespawn emits
 */
 export interface IPlayerTeleportEvent extends IMapEvent {
-    name: "playerteleport",
+    type: "playerteleport",
     player: Array<Player>,
     teleportType: TeleportType
 }

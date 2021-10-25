@@ -6,6 +6,6 @@ CollisionStart
 Emits when player starts collision with object
 */
 export interface ICollisionStartMapEvent extends IMapEvent {
-    name: "collisionstart",
+    type: "collisionstart",
     side: Side;
 }

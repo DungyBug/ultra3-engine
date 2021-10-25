@@ -7,7 +7,7 @@ Emits when something damages object
 Very simillar to ShootEvent, but in ShootEvent bullet should collide object. In this case, even explode somewhere near can trigger DamageEvent
 */
 export interface IDamageEvent extends IMapEvent {
-    name: "damage",
+    type: "damage",
     side: Side;
     damage: number;
 }

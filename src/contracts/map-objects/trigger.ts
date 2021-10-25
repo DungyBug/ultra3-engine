@@ -1,5 +1,6 @@
+import { IEntity } from "../entity";
 import { IMapObject } from "../map-object";
 
 export interface ITrigger extends IMapObject {
-    trigger(): void;
+    trigger(by: IEntity): void;
 };

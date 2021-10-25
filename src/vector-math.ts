@@ -45,5 +45,87 @@ export const VectorMath = {
             y: a.y - b.y,
             z: a.z - b.z
         }
+    },
+
+    subdivide(a: IVector | number, b: IVector | number): IVector {
+        let _a: IVector;
+        let _b: IVector;
+
+        // Convert a and b to vectors independendly from their types
+
+        if(typeof a === "number") {
+            _a = {
+                x: a,
+                y: a,
+                z: a
+            };
+        } else {
+            _a = {
+                x: a.x,
+                y: a.y,
+                z: a.z
+            };
+        }
+
+        if(typeof b === "number") {
+            _b = {
+                x: b,
+                y: b,
+                z: b
+            };
+        } else {
+            _b = {
+                x: b.x,
+                y: b.y,
+                z: b.z
+            };
+        }
+
+        return {
+            x: _a.x / _b.x,
+            y: _a.y / _b.y,
+            z: _a.z / _b.z
+        }
+    },
+
+    multiply(a: IVector | number, b: IVector | number): IVector {
+        let _a: IVector;
+        let _b: IVector;
+
+        // Convert a and b to vectors independendly from their types
+
+        if(typeof a === "number") {
+            _a = {
+                x: a,
+                y: a,
+                z: a
+            };
+        } else {
+            _a = {
+                x: a.x,
+                y: a.y,
+                z: a.z
+            };
+        }
+
+        if(typeof b === "number") {
+            _b = {
+                x: b,
+                y: b,
+                z: b
+            };
+        } else {
+            _b = {
+                x: b.x,
+                y: b.y,
+                z: b.z
+            };
+        }
+
+        return {
+            x: _a.x * _b.x,
+            y: _a.y * _b.y,
+            z: _a.z * _b.z
+        }
     }
 };

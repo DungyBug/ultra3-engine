@@ -8,6 +8,6 @@ Don't emit when player teleports to destination somewhere in object.
 Don't emit when player respawns somewhere in object.
 */
 export interface IPlayerSpawnEvent extends IMapEvent {
-    name: "playerspawn",
+    type: "playerspawn",
     player: Array<Player>
 }

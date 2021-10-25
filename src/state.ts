@@ -11,4 +11,7 @@ export class State {
     static onError(message: string) {
 
     }
+    static registerShader(name: string, vertex: string, fragment: string) {
+        
+    };
 };

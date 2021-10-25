@@ -15,6 +15,10 @@ export class World implements IWorld {
         this.entities.push(entity);
     }
 
+    addObject(object: IMapObject) {
+        this.objects.push(object);
+    }
+
     /**
      * deletePendingEntities
      * Deletes all entities that marked as "deleted" ( "delete" method called )
@@ -34,6 +38,10 @@ export class World implements IWorld {
 
         for(let i = 0; i < this.entities.length; i++) {
             this.entities[i].think();
+        }
+
+        for(let i = 0; i < this.objects.length; i++) {
+            this.objects[i].think();
         }
 
         requestAnimationFrame(this.runTick);

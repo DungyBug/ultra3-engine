@@ -8,6 +8,7 @@ export class MapObject extends EventEmitter implements IMapObject {
     protected props: IMapObjectProps;
     protected state: number;
     protected world: World;
+    protected targets: Array<IMapObject>;
 
     constructor(shape: string, props: IMapObjectProps, world: World) {
         super();
@@ -15,6 +16,7 @@ export class MapObject extends EventEmitter implements IMapObject {
         this.props = props;
         this.world = world;
         this.state = 0;
+        world.addObject(this);
     }
 
     activate() {
@@ -33,9 +35,9 @@ export class MapObject extends EventEmitter implements IMapObject {
         return this.shape;
     }
 
-    connect(name: string) {
-        if(!this.props.targets.includes(name)) {
-            this.props.targets.push(name);
+    connect(object: IMapObject) {
+        if(!this.targets.includes(object)) { // Check if we already connected to object
+            this.targets.push(object);
         }
     }
 
@@ -43,7 +45,7 @@ export class MapObject extends EventEmitter implements IMapObject {
         super.on(event, callback);
     }
 
-    emit(event: string, e: IMapEvent): Array<boolean> {
+    emit(event: string, e: IMapEvent): Array<boolean> { // All callbacks returns boolean ( whether event need to be counted, f.e. if you try to open door, door can block this attempt, 'cause callback returned false )
         let result = super.emit(event, e);
         return result;
     }

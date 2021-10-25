@@ -3,7 +3,6 @@ import { IMapEvent } from "./map-event";
 
 export interface IMapObjectProps {
     name: string;
-    targets: Array<string>;
     // TODO: Add render props
     rotation: IVector;
     pos: IVector;
@@ -16,7 +15,6 @@ export interface IMapObject {
     // state: number;
 
     activate(): void; // Calls when player triggers a trigger, connected to this object
-    connect(name: string): void;
     emit(event: string, e: IMapEvent): Array<boolean>;
     on(event: string, callback: (e: IMapEvent) => boolean): void;
     getProps(): IMapObjectProps;

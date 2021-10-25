@@ -31,11 +31,12 @@ export class GunEntity extends Weapon implements IGunEntity {
 
     reloadMagazine() {
         // TODO: Add state changing ( to prevent shooting while reloading magazine )
-
-        let ammoToAdd = this.magazineAmmoCount - this.ammoInMagazine;
+        
+        let ammoToAdd = this.magazineAmmoCount - this.ammoInMagazine; // Get amount of ammo we need to add to magazine to make it full ( we need add 5 bullets to 45 to make magazine full )
 
         ammoToAdd = Math.min(this.ammo, ammoToAdd); // We can't fill empty magazine by 30 bullets if we have only 14, so check for ammo left
-        this.ammo -= this.magazineAmmoCount - this.ammoInMagazine;
-        this.ammoInMagazine = this.magazineAmmoCount;
+
+        this.ammo -= ammoToAdd;
+        this.ammoInMagazine += ammoToAdd;
     }
 }
