@@ -1,4 +1,4 @@
-import { IGunEntity, IGunEntityParams } from "../contracts/entities/gun";
+import { IGunEntity, IGunEntityParams, IMagazineGunEntityParams } from "../contracts/entities/gun";
 import { World } from "../world";
 import { Weapon } from "./weapon";
 
@@ -15,8 +15,8 @@ export class GunEntity extends Weapon implements IGunEntity {
         super(params, world);
         this.hasMagazine = params.hasMagazine || false;
         this.reloadTime = params.reloadTime;
-        this.magazineAmmoCount = params.magazineAmmoCount || (this.hasMagazine ? 30 : 0);
-        this.magazineReloadTime = params.magazineReloadTime || (this.hasMagazine ? 10000 : 0);
+        this.magazineAmmoCount = (this.hasMagazine ? (params as IMagazineGunEntityParams).magazineAmmoCount : 0);
+        this.magazineReloadTime = (this.hasMagazine ? (params as IMagazineGunEntityParams).magazineReloadTime : 0);
         this.ammo = params.startAmmo || 0;
         this.maxAmmo = params.maxAmmo || 120;
         this.ammoInMagazine = this.magazineAmmoCount;
