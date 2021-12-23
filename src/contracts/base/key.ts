@@ -1,4 +1,4 @@
 export interface IKey {
     name: string;
-    value: any;
+    value: string | number | boolean;
 }
