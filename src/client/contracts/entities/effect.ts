@@ -1,20 +1,12 @@
-import { IShader } from "../shader";
-import { IViewableEntity, IViewableEntityParams } from "./base/Viewable";
-import { ClassPattern } from "../ent_types";
+import { ClassPattern } from "../../../contracts/ent_types";
+import { IViewableEntity, IViewableEntityParams } from "./base/viewable";
 
 export interface IEffectEntityParams extends IViewableEntityParams {
     classname: ClassPattern<"effect">;
-    shader: IShader;
 };
-
-export interface IEffectEntityDisplayParams {
-    isSprite: boolean;
-}
 
 export interface IEffectEntity extends IViewableEntity {
     classname: ClassPattern<"effect">;
-    shader: IShader;
-    displayParams: IEffectEntityDisplayParams;
 
     /**
      * render

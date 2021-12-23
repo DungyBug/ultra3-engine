@@ -1,5 +1,3 @@
-// <T extends Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array>
-
 import ColorMode from "../../constants/color-mode";
 import SamplingMode from "../../constants/sampling-mode";
 import TextureFormat from "../../constants/texture-format";

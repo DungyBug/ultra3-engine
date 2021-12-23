@@ -1,7 +1,7 @@
 import { ViewType } from "../../constants/view-type";
-import { ISmallExplosionEntityParams } from "../../contracts/effects/explosion/small-explosion-params";
+import { ISmallExplosionEntityParams } from "../../../contracts/effects/explosion/small-explosion-params";
 import { EffectEntity } from "../../entities/effect";
-import { World } from "../../world";
+import { World } from "../../../world";
 
 class SmallExplosionEffect extends EffectEntity {
     private startTime: number;
@@ -36,4 +36,4 @@ class SmallExplosionEffect extends EffectEntity {
     }
 }
 
-export { SmallExplosionEffect }
+export default SmallExplosionEffect;

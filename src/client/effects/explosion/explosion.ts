@@ -1,8 +1,8 @@
-import { IExplosionEntityParams } from "../../contracts/effects/explosion/explosion-params";
+import { IExplosionEntityParams } from "../../../contracts/effects/explosion/explosion-params";
 import { EffectEntity } from "../../entities/effect";
-import { VectorMath } from "../../vector-math";
-import { World } from "../../world";
-import { SmallExplosionEffect } from "./small-explosion";
+import { VectorMath } from "../../../vector-math";
+import { World } from "../../../world";
+import SmallExplosionEffect from "./small-explosion";
 
 class ExplosionEffect extends EffectEntity {
     private startTime: number;
@@ -55,3 +55,5 @@ class ExplosionEffect extends EffectEntity {
         }
     }
 }
+
+export default ExplosionEffect;
