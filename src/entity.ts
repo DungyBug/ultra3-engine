@@ -1,4 +1,3 @@
-
 import { IVector } from './contracts/base/vector';
 import { IEntity, IEntityParams } from './contracts/entity';
 import { IWorld } from './contracts/world';
