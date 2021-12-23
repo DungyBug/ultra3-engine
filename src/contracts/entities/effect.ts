@@ -7,14 +7,9 @@ export interface IEffectEntityParams extends IViewableEntityParams {
     shader: IShader;
 };
 
-export interface IEffectEntityDisplayParams {
-    isSprite: boolean;
-}
-
 export interface IEffectEntity extends IViewableEntity {
     classname: ClassPattern<"effect">;
     shader: IShader;
-    displayParams: IEffectEntityDisplayParams;
 
     /**
      * render

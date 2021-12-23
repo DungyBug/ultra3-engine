@@ -1,22 +1,13 @@
 import { IWeapon, IWeaponParams } from './weapon';
 
-export interface IMagazineGunEntityParams extends IWeaponParams {
+export interface IGunEntityParams extends IWeaponParams {
     maxAmmo?: number; // 120 by default
     startAmmo?: number; // 0 by default
-    hasMagazine: true;
-    magazineAmmoCount: number; // 0 if hasn't magazine and 30 if has
-    reloadTime: number; // Reload time between patrons
-    magazineReloadTime: number; // 10 seconds by default ( 10000 )
-}
-
-export interface ISingleShotGunEntityParams extends IWeaponParams {
-    maxAmmo?: number; // 120 by default
-    startAmmo?: number; // 0 by default
-    hasMagazine: false;
+    hasMagazine?: boolean; // false by default
+    magazineAmmoCount?: number; // 0 if hasn't magazine and 30 if has
     reloadTime: number;
+    magazineReloadTime?: number; // 10 seconds by default ( 10000 )
 }
-
-export type IGunEntityParams = IMagazineGunEntityParams | ISingleShotGunEntityParams;
 
 export interface IGunEntity extends IWeapon {
     addAmmo(ammo: number): void;
