@@ -1,4 +1,4 @@
-import { IGunEntity, IGunEntityParams, IMagazineGunEntityParams } from "../contracts/entities/gun";
+import { GunEntityState, IGunEntity, IGunEntityParams, IMagazineGunEntityParams } from "../contracts/entities/gun";
 import { World } from "../world";
 import { Weapon } from "./weapon";
 
@@ -38,5 +38,40 @@ export class GunEntity extends Weapon implements IGunEntity {
 
         this.ammo -= ammoToAdd;
         this.ammoInMagazine += ammoToAdd;
+    }
+    
+    getEntityState(): GunEntityState {
+        let parentState = super.getEntityState();
+
+        if(this.hasMagazine) {
+            return {
+                ...parentState,
+                hasMagazine: true,
+                magazineReloadTime: this.magazineReloadTime,
+                ammoInMagazine: this.ammoInMagazine,
+                maxAmmo: this.maxAmmo,
+                reloadTime: this.reloadTime,
+                ammo: this.ammo,
+                magazineAmmoCount: this.magazineAmmoCount
+            }
+        } else {
+            return {
+                ...parentState,
+                hasMagazine: false,
+                maxAmmo: this.maxAmmo,
+                reloadTime: this.reloadTime,
+                ammo: this.ammo
+            }
+        }
+    }
+    
+    setEntityState(state: GunEntityState): void {
+        super.setEntityState(state);
+
+        this.ammo = state.ammo;
+        
+        if(state.hasMagazine) {
+            this.ammoInMagazine = state.ammoInMagazine;
+        }
     }
 }

@@ -8,11 +8,24 @@ export class World implements IWorld {
     protected objects: Array<IMapObject> = [];
     protected _time: number = 0; // Global world time
     protected readonly _startTime: number = Date.now(); // World initialization time
+    protected addedEntitiesCount: number = 0; // Increments every time a new entity has been added
 
     constructor(protected readonly _worldProps: IWorldProps = { gravity: 9.81 }) {}
 
     addEntity(entity: Entity) {
-        this.entities.push(entity);
+        this.entities.push(entity) - 1;
+
+        return this.addedEntitiesCount++;
+    }
+
+    getEntity(id: number): Entity | null {
+        for(let i = 0; i < id && i < this.entities.length; i++) {
+            if(this.entities[i].id === id) {
+                return this.entities[i];
+            }
+        }
+
+        return null;
     }
 
     addObject(object: IMapObject) {

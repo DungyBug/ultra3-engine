@@ -7,7 +7,11 @@ Entity that can move itself
 */
 
 import { IForce } from "../../physics/force";
-import { IPhysicalEntity } from "./physical";
+import { IPhysicalEntity, IPhysicalEntityState } from "./physical";
+
+export interface IMovableEntityState extends IPhysicalEntityState {
+    forces: Array<IForce>;
+};
 
 export interface IMovableEntity extends IPhysicalEntity {
     forces: Array<IForce>;
@@ -15,4 +19,7 @@ export interface IMovableEntity extends IPhysicalEntity {
     addForce(force: IForce): void;
     deleteForce(force: IForce): void;
     deleteAllForces(): void;
+
+    getEntityState(): IMovableEntityState;
+    setEntityState(state: IMovableEntityState): void;
 };

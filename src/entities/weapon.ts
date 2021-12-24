@@ -1,5 +1,5 @@
 import { PickableEntity } from "./pickable";
-import { IWeapon, IWeaponParams } from "../contracts/entities/weapon";
+import { IWeapon, IWeaponParams, IWeaponState } from "../contracts/entities/weapon";
 import { ClassPattern } from "../contracts/ent_types";
 import { World } from "../world";
 
@@ -16,5 +16,22 @@ export class Weapon extends PickableEntity implements IWeapon {
 
     shoot() {
         
+    }
+
+    getEntityState(): IWeaponState {
+        let parentState = super.getEntityState();
+
+        return {
+            ...parentState,
+            damage: this.damage,
+            lastShoot: this.lastShoot
+        }
+    }
+
+    setEntityState(state: IWeaponState): void {
+        super.setEntityState(state);
+
+        this.damage = state.damage;
+        this.lastShoot = state.lastShoot;
     }
 }

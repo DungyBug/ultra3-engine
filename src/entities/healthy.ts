@@ -1,5 +1,5 @@
 import { World } from "../world";
-import { IHealthyEntity, IHealthyEntityParams } from "../contracts/entities/healthy";
+import { IHealthyEntity, IHealthyEntityParams, IHealthyEntityState } from "../contracts/entities/healthy";
 import { Entity } from "../entity";
 
 export class HealthyEntity extends Entity implements IHealthyEntity {
@@ -18,5 +18,20 @@ export class HealthyEntity extends Entity implements IHealthyEntity {
         if(this.health <= 0) {
             this.dead = true;
         }
+    }
+    
+    getEntityState(): IHealthyEntityState {
+        let parentState = super.getEntityState();
+
+        return {
+            ...parentState,
+            health: this.health
+        }
+    }
+    
+    setEntityState(state: IHealthyEntityState): void {
+        super.setEntityState(state);
+
+        this.health = state.health;
     }
 }

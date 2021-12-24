@@ -9,7 +9,7 @@ Now entity can fall down
 
 import { PhysicalActivity } from "../../../constants/physical-activity";
 import IBasePhysicalModel from "../../base-physical-model";
-import { IEntity, IEntityParams } from "../../entity";
+import { IEntity, IEntityParams, IEntityState } from "../../entity";
 
 export interface IPhysicalEntityParams extends IEntityParams {
     // 3d model with which calculate physics
@@ -21,6 +21,15 @@ export interface IPhysicalEntityParams extends IEntityParams {
 }
 
 export interface IPhysicalEntity extends IEntity {
+    physicalModel: IBasePhysicalModel;
+    activity: PhysicalActivity;
+    weight: number;
+
+    getEntityState(): IPhysicalEntityState;
+    setEntityState(state: IPhysicalEntityState): void;
+}
+
+export interface IPhysicalEntityState extends IEntityState {
     physicalModel: IBasePhysicalModel;
     activity: PhysicalActivity;
     weight: number;

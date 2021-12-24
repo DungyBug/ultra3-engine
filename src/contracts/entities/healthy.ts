@@ -6,10 +6,14 @@ Type of Entity
 Entity, that has health
 */
 
-import { IEntity, IEntityParams } from "../entity";
+import { IEntity, IEntityParams, IEntityState } from "../entity";
 
 export interface IHealthyEntityParams extends IEntityParams {
     health?: number; // 100 by default
+}
+
+export interface IHealthyEntityState extends IEntityState {
+    health: number;
 }
 
 export interface IHealthyEntity extends IEntity {
@@ -17,4 +21,7 @@ export interface IHealthyEntity extends IEntity {
     dead: boolean;
 
     damage(damage: number, attacker: IEntity): void;
+
+    getEntityState(): IHealthyEntityState;
+    setEntityState(state: IHealthyEntityState): void;
 }

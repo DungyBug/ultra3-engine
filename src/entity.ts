@@ -1,5 +1,5 @@
 import { IVector } from './contracts/base/vector';
-import { IEntity, IEntityParams } from './contracts/entity';
+import { IEntity, IEntityParams, IEntityState } from './contracts/entity';
 import { IWorld } from './contracts/world';
 
 export class Entity implements IEntity {
@@ -12,6 +12,7 @@ export class Entity implements IEntity {
     requestingState: number; // <enum> Requesting state to entity ( requesting idling, requesting shooting, requesting glowing and so on )
     currentState: number; // enum
     world: IWorld;
+    id: number;
 
     constructor(params: IEntityParams, world: IWorld) {
         this.classname = params.classname;
@@ -30,7 +31,7 @@ export class Entity implements IEntity {
         this.requestingState = 0;
         this.currentState = 0;
 
-        this.world.addEntity(this);
+        this.id = this.world.addEntity(this);
     }
 
     delete() {
@@ -43,7 +44,7 @@ export class Entity implements IEntity {
     }
 
     think() {
-        // Do something
+        // Do nothing
     }
 
     unlink(entity: IEntity) {
@@ -70,4 +71,46 @@ export class Entity implements IEntity {
     setState(newState: number) {
         this.requestingState = newState;
     };
+
+    getEntityState(): IEntityState {
+        let links = [];
+
+        for(let i = 0; i < this.links.length; i++) {
+            links.push(this.links[i].id);
+        }
+
+        return {
+            id: this.id,
+            pos: this.pos,
+            deleted: this.deleted,
+            links: links,
+            linkedKeys: this.linkedKeys,
+            nextthink: this.nextthink,
+            requestingState: this.requestingState,
+            currentState: this.currentState
+        }
+    }
+
+    setEntityState(state: IEntityState): void {
+        this.id = state.id;
+        // Separate setting values to prevent variable linking
+        this.pos.x = state.pos.x;
+        this.pos.y = state.pos.y;
+        this.pos.z = state.pos.z;
+        this.deleted = state.deleted;
+        this.links = [];
+        this.linkedKeys = [];
+
+        for(let i = 0; i < state.links.length; i++) {
+            this.links.push(this.world.getEntity(state.links[i]));
+        }
+
+        for(let j = 0; j < state.linkedKeys.length; j++) {
+            this.linkedKeys[j] = state.linkedKeys[j];
+        }
+
+        this.nextthink = state.nextthink;
+        this.requestingState = state.requestingState;
+        this.currentState = state.currentState;
+    }
 };

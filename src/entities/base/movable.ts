@@ -1,5 +1,5 @@
 import { World } from "../../world";
-import { IMovableEntity } from "../../contracts/entities/base/movable";
+import { IMovableEntity, IMovableEntityState } from "../../contracts/entities/base/movable";
 import { IPhysicalEntityParams } from "../../contracts/entities/base/physical";
 import { IForce } from "../../contracts/physics/force";
 import { PhysicalEntity } from "./physical";
@@ -26,5 +26,45 @@ export class MovableEntity extends PhysicalEntity implements IMovableEntity {
 
     deleteAllForces() {
         this.forces = [];
+    }
+
+    getEntityState(): IMovableEntityState {
+        let parentState = super.getEntityState();
+
+        let forces: Array<IForce> = [];
+
+        for(let i = 0; i < this.forces.length; i++) {
+            forces.push({
+                force: this.forces[i].force,
+                direction: {
+                    x: this.forces[i].direction.x,
+                    y: this.forces[i].direction.y,
+                    z: this.forces[i].direction.z
+                }
+            });
+        }
+
+        return {
+            ...parentState,
+            forces
+        };
+    }
+
+    setEntityState(state: IMovableEntityState): void {
+        super.setEntityState(state);
+
+        this.forces = [];
+
+        // To prevent variable linking
+        for(let i = 0; i < state.forces.length; i++) {
+            this.forces.push({
+                force: state.forces[i].force,
+                direction: {
+                    x: state.forces[i].direction.x,
+                    y: state.forces[i].direction.y,
+                    z: state.forces[i].direction.z
+                }
+            });
+        }
     }
 }

@@ -1,11 +1,11 @@
 import { World } from "../world";
 import { IPhysicalEntityParams } from "../contracts/entities/base/physical";
-import { IPickableEntity } from "../contracts/entities/pickable";
-import { Entity } from "../entity";
+import { IPickableEntity, IPickableEntityState } from "../contracts/entities/pickable";
 import { PhysicalEntity } from "./base/physical";
+import { IEntity } from "../contracts/entity";
 
 export class PickableEntity extends PhysicalEntity implements IPickableEntity {
-    protected owner: Entity;
+    protected owner: IEntity;
     protected picked: boolean;
 
     constructor(params: IPhysicalEntityParams, world: World) {
@@ -14,7 +14,7 @@ export class PickableEntity extends PhysicalEntity implements IPickableEntity {
         this.picked = false;
     }
 
-    pick(by: Entity) {
+    pick(by: IEntity) {
         if(this === by) {
             throw new Error("PickableEntity: Cannot pick self.");
         }
@@ -26,5 +26,28 @@ export class PickableEntity extends PhysicalEntity implements IPickableEntity {
     unpick() {
         this.owner = null;
         this.picked = false;
+    }
+
+    
+    getEntityState(): IPickableEntityState {
+        let parentState = super.getEntityState();
+
+        return {
+            ...parentState,
+            owner: this.owner.id || -1,
+            picked: this.picked
+        }
+    }
+
+    setEntityState(state: IPickableEntityState): void {
+        super.setEntityState(state);
+
+        this.picked = state.picked;
+
+        if(this.picked) {
+            this.owner = this.world.getEntity(state.owner);
+        } else {
+            this.owner = null;
+        }
     }
 }

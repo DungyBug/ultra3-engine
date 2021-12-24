@@ -1,4 +1,4 @@
-import { IWeapon, IWeaponParams } from './weapon';
+import { IWeapon, IWeaponParams, IWeaponState } from './weapon';
 
 export interface IMagazineGunEntityParams extends IWeaponParams {
     maxAmmo?: number; // 120 by default
@@ -18,7 +18,30 @@ export interface ISingleShotGunEntityParams extends IWeaponParams {
 
 export type IGunEntityParams = IMagazineGunEntityParams | ISingleShotGunEntityParams;
 
+interface IBaseGunEntityState extends IWeaponState {
+    hasMagazine: boolean;
+    maxAmmo: number;
+    reloadTime: number;
+    ammo: number;
+}
+
+interface IMagazineGunEntityState extends IBaseGunEntityState {
+    magazineReloadTime: number;
+    hasMagazine: true;
+    ammoInMagazine: number;
+    magazineAmmoCount: number;
+}
+
+interface ISingleShotGunEntityState extends IBaseGunEntityState {
+    hasMagazine: false;
+}
+
+export type GunEntityState = IMagazineGunEntityState | ISingleShotGunEntityState;
+
 export interface IGunEntity extends IWeapon {
     addAmmo(ammo: number): void;
     reloadMagazine(): void;
+
+    getEntityState(): GunEntityState;
+    setEntityState(state: GunEntityState): void;
 };

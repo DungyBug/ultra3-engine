@@ -8,13 +8,21 @@ Entity, that can shoot
 
 import { ClassPattern } from "../ent_types";
 import { IPhysicalEntityParams } from "./base/physical";
-import { IPickableEntity } from "./pickable";
+import { IPickableEntity, IPickableEntityState } from "./pickable";
 
 export interface IWeaponParams extends IPhysicalEntityParams {
     classname: ClassPattern<"wp">;
     damage: number;
 }
 
+export interface IWeaponState extends IPickableEntityState {
+    damage: number;
+    lastShoot: number;
+}
+
 export interface IWeapon extends IPickableEntity {
     shoot(): void;
+
+    getEntityState(): IWeaponState;
+    setEntityState(state: IWeaponState): void;
 }
