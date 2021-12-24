@@ -1,10 +1,10 @@
-import { DoorState } from "../constants/door-state/door-state";
-import { IVector } from "../contracts/base/vector";
-import { IEntity } from "../contracts/entity";
-import { IMapEvent } from "../contracts/map-event";
-import { IDoor, IDoorProps } from "../contracts/map-objects/door";
-import { MapObject } from "../map-object";
-import { World } from "../world";
+import { DoorState } from "../../constants/door-state/door-state";
+import { IVector } from "../../contracts/base/vector";
+import { IEntity } from "../../contracts/entity";
+import { IMapEvent } from "../../contracts/map-event";
+import { IDoor, IDoorProps } from "../../contracts/map-objects/door";
+import { MapObject } from "../../map-object";
+import { World } from "../../world";
 
 export class Door extends MapObject implements IDoor {
     protected nextthink: number;

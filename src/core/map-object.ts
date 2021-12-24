@@ -1,7 +1,7 @@
 import { IMapEvent } from "./contracts/map-event";
 import { IMapObject, IMapObjectProps } from "./contracts/map-object";
 import { World } from "./world";
-import { EventEmitter } from "./common/event-emitter";
+import { EventEmitter } from "./services/event-emitter";
 
 export class MapObject extends EventEmitter implements IMapObject {
     protected shape: string; // IShape

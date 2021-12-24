@@ -1,13 +1,13 @@
-import { PlatformDirection } from "../constants/platform-direction";
-import { PlatformState } from "../constants/platform-state/platform-state";
-import { IVector } from "../contracts/base/vector";
-import { IEntity } from "../contracts/entity";
-import { IPlatform, IPlatformProps } from "../contracts/map-objects/platform";
-import { IBaseTrain } from "../contracts/map-objects/train";
-import { ITrainStart } from "../contracts/map-objects/train-start";
-import { MapObject } from "../map-object";
-import { VectorMath } from "../vector-math";
-import { World } from "../world";
+import { PlatformDirection } from "../../constants/platform-direction";
+import { PlatformState } from "../../constants/platform-state/platform-state";
+import { IVector } from "../../contracts/base/vector";
+import { IEntity } from "../../contracts/entity";
+import { IPlatform, IPlatformProps } from "../../contracts/map-objects/platform";
+import { IBaseTrain } from "../../contracts/map-objects/train";
+import { ITrainStart } from "../../contracts/map-objects/train-start";
+import { MapObject } from "../../map-object";
+import { VectorMath } from "../../vector-math";
+import { World } from "../../world";
 
 export class Platform extends MapObject implements IPlatform {
     protected nextthink: number;
