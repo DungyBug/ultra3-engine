@@ -1,5 +1,5 @@
-import { GunEntity } from "../../entities/gun";
-import { World } from "../../world";
+import { GunEntity } from "../../core/entities/gun";
+import { World } from "../../core/world";
 import IClientGunEntity, { IClientGunEntityParams } from "../contracts/entities/gun";
 import IMesh from "../contracts/mesh";
 

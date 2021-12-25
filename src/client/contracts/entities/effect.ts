@@ -1,4 +1,6 @@
-import { ClassPattern } from "../../../contracts/ent_types";
+import { ClassPattern } from "../../../core/contracts/ent_types";
+import IMesh from "../mesh";
+import ISprite from "../sprite";
 import { IViewableEntity, IViewableEntityParams } from "./base/viewable";
 
 export interface IEffectEntityParams extends IViewableEntityParams {
@@ -12,5 +14,5 @@ export interface IEffectEntity extends IViewableEntity {
      * render
      * Returns entities to be rendered for some effects
      */
-    render(): Array<IEffectEntity>;
+    render(): Array<IEffectEntity | ISprite | IMesh>;
 };

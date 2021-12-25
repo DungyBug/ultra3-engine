@@ -1,7 +1,8 @@
-import { World } from '../../world';
+import { ClassPattern } from '../../core/contracts/ent_types';
+import { World } from '../../core/world';
 import { IEffectEntity, IEffectEntityParams } from '../contracts/entities/effect';
-import { ClassPattern } from '../../contracts/ent_types';
 import IMesh from '../contracts/mesh';
+import ISprite from '../contracts/sprite';
 import ViewableEntity from './base/viewable';
 
 class EffectEntity extends ViewableEntity implements IEffectEntity {
@@ -12,7 +13,7 @@ class EffectEntity extends ViewableEntity implements IEffectEntity {
         super(params, world);
     }
 
-    render(): Array<IEffectEntity> {
+    render(): Array<IEffectEntity | ISprite | IMesh> {
         return [];
     }
 }

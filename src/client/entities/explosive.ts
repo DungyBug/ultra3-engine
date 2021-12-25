@@ -1,5 +1,5 @@
-import { ExplosiveEntity } from "../../entities/explosive";
-import { World } from "../../world";
+import { ExplosiveEntity } from "../../core/entities/explosive";
+import { World } from "../../core/world";
 import { IClientExplosiveEntity, IClientExplosiveEntityParams } from "../contracts/entities/explosive";
 import IMesh from "../contracts/mesh";
 

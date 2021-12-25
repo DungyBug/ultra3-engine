@@ -1,5 +1,5 @@
-import { Entity } from "../../../entity";
-import { World } from "../../../world";
+import { Entity } from "../../../core/entity";
+import { World } from "../../../core/world";
 import { IViewableEntity, IViewableEntityParams } from "../../contracts/entities/base/viewable";
 import IMesh from "../../contracts/mesh";
 

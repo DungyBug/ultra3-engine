@@ -1,5 +1,5 @@
-import { PhysicalEntity } from "../../../entities/base/physical";
-import { World } from "../../../world";
+import { PhysicalEntity } from "../../../core/entities/base/physical";
+import { World } from "../../../core/world";
 import { IClientPhysicalEntity, IClientPhysicalEntityParams } from "../../contracts/entities/base/physical";
 import IMesh from "../../contracts/mesh";
 

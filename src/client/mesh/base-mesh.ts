@@ -1,5 +1,5 @@
+import { IVector } from "../../core/contracts/base/vector";
 import IBaseMesh from "../contracts/base-mesh";
-import { IVector } from "../contracts/base/vector";
 import IMaterial from "../contracts/material";
 import IBaseMeshOptions from "../contracts/mesh/base-mesh-opts";
 

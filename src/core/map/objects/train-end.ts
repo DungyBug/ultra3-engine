@@ -1,9 +1,9 @@
-import { IMapObjectProps } from "../contracts/map-object";
-import { IBaseTrain } from "../contracts/map-objects/train";
-import { ITrainEnd } from "../contracts/map-objects/train-end";
-import { ITrainNode } from "../contracts/map-objects/train-node";
-import { ITrainStart } from "../contracts/map-objects/train-start";
-import { World } from "../world";
+import { IMapObjectProps } from "../../contracts/map-object";
+import { IBaseTrain } from "../../contracts/map-objects/train";
+import { ITrainEnd } from "../../contracts/map-objects/train-end";
+import { ITrainNode } from "../../contracts/map-objects/train-node";
+import { ITrainStart } from "../../contracts/map-objects/train-start";
+import { World } from "../../world";
 import { BaseTrain } from "./train";
 
 export class TrainEnd extends BaseTrain implements ITrainEnd {

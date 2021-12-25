@@ -1,4 +1,4 @@
-import { IVector } from "../../contracts/base/vector";
+import { IVector } from "../../core/contracts/base/vector";
 import IMaterial from "./material";
 
 interface IBaseMesh {

@@ -1,5 +1,5 @@
-import { PickableEntity } from "../../entities/pickable";
-import { World } from "../../world";
+import { PickableEntity } from "../../core/entities/pickable";
+import { World } from "../../core/world";
 import { IClientPhysicalEntityParams } from "../contracts/entities/base/physical";
 import { IClientPickableEntity } from "../contracts/entities/pickable";
 import IMesh from "../contracts/mesh";

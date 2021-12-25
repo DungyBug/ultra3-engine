@@ -1,7 +1,7 @@
-import { IExplosionEntityParams } from "../../../contracts/effects/explosion/explosion-params";
-import { EffectEntity } from "../../entities/effect";
-import { VectorMath } from "../../../vector-math";
-import { World } from "../../../world";
+import { IExplosionEntityParams } from "./explosion-params";
+import { VectorMath } from "../../../core/vector-math";
+import { World } from "../../../core/world";
+import EffectEntity from "../../entities/effect";
 import SmallExplosionEffect from "./small-explosion";
 
 class ExplosionEffect extends EffectEntity {
@@ -14,13 +14,7 @@ class ExplosionEffect extends EffectEntity {
     world: World;
 
     constructor(params: IExplosionEntityParams, world: World) {
-        super({
-            ...params,
-            shader: {
-                params: [],
-                name: ""
-            }
-        }, world);
+        super(params, world);
 
         this.subExplosionsCount = params.subExplosionsCount;
         this.duration = params.duration;
@@ -41,11 +35,7 @@ class ExplosionEffect extends EffectEntity {
         if(deltaTime % this.timeBetweenExplosions === 0 && this.explosions.length < this.subExplosionsCount) {
             this.explosions.push(new SmallExplosionEffect({
                 classname: "effect_small_explosion",
-                model: "",
-                shader: {
-                    params: [],
-                    name: ''
-                },
+                model: null,
                 pos: VectorMath.add(this.pos, VectorMath.multiply({
                     x: Math.random() * 2 - 1,
                     y: Math.random() * 2 - 1,

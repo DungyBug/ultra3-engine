@@ -1,8 +1,8 @@
-import { IDifficulty } from "../contracts/difficulty";
-import { IPlayerSpawn, IPlayerSpawnProps } from "../contracts/map-objects/playerspawn";
-import { Player } from "../entities/player";
-import { MapObject } from "../map-object";
-import { World } from "../world";
+import { IDifficulty } from "../../contracts/difficulty";
+import { IPlayerSpawn, IPlayerSpawnProps } from "../../contracts/map-objects/playerspawn";
+import { Player } from "../../entities/player";
+import { MapObject } from "../../map-object";
+import { World } from "../../world";
 
 export class PlayerSpawn extends MapObject implements IPlayerSpawn {
     protected _difficulty: IDifficulty;
@@ -18,7 +18,7 @@ export class PlayerSpawn extends MapObject implements IPlayerSpawn {
 
     spawnPlayer() {
         let player = new Player({
-            classname: "player",
+            classname: "player_player",
             pos: this.props.pos
         }, this.world);
 

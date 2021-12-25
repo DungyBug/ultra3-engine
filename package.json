@@ -8,11 +8,10 @@
   },
   "author": "DungyBug",
   "license": "ISC",
-  "dependencies": {
-    "webpack": "^5.51.1"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "ts-loader": "^9.2.5",
-    "typescript": "^4.3.5"
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.5.4",
+    "webpack": "^5.65.0"
   }
 }

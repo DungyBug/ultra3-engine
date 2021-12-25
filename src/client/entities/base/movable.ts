@@ -1,5 +1,5 @@
-import { MovableEntity } from "../../../entities/base/movable";
-import { World } from "../../../world";
+import { MovableEntity } from "../../../core/entities/base/movable";
+import { World } from "../../../core/world";
 import { IClientMovableEntity } from "../../contracts/entities/base/movable";
 import { IClientPhysicalEntityParams } from "../../contracts/entities/base/physical";
 import IMesh from "../../contracts/mesh";

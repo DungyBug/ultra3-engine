@@ -1,8 +1,8 @@
-import { IEntity } from "../contracts/entity";
-import { IMapEvent } from "../contracts/map-event";
-import { ITriggerEvent } from "../contracts/map-events/trigger";
-import { ITrigger } from "../contracts/map-objects/trigger";
-import { MapObject } from "../map-object";
+import { IEntity } from "../../contracts/entity";
+import { IMapEvent } from "../../contracts/map-event";
+import { ITriggerEvent } from "../../contracts/map-events/trigger";
+import { ITrigger } from "../../contracts/map-objects/trigger";
+import { MapObject } from "../../map-object";
 
 export class Trigger extends MapObject implements ITrigger {
     trigger(by: IEntity) {

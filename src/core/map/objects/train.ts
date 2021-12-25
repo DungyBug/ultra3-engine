@@ -1,6 +1,6 @@
-import { IBaseTrain, IBaseTrainProps } from "../contracts/map-objects/train";
-import { MapObject } from "../map-object";
-import { World } from "../world";
+import { IBaseTrain, IBaseTrainProps } from "../../contracts/map-objects/train";
+import { MapObject } from "../../map-object";
+import { World } from "../../world";
 
 export class BaseTrain extends MapObject implements IBaseTrain {
     readonly end: boolean;
