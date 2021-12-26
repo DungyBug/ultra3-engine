@@ -4,7 +4,7 @@ import IMaterial from "../contracts/material";
 import IBaseMeshOptions from "../contracts/mesh/base-mesh-opts";
 
 class BaseMesh implements IBaseMesh {
-    protected verticies: Array<IVector>;
+    protected vertices: Array<IVector>;
     pos: IVector;
     scale: IVector;
     rotation: IVector;
@@ -15,7 +15,7 @@ class BaseMesh implements IBaseMesh {
         this.scale = options.scale;
         this.rotation = options.rotation;
         this.material = options.material;
-        this.verticies = options.verticies;
+        this.vertices = options.vertices;
     }
 }
 

@@ -6,7 +6,7 @@ interface IBaseMeshOptions {
     scale: IVector;
     rotation: IVector;
     material: IMaterial;
-    verticies: Array<IVector>;
+    vertices: Array<IVector>;
 }
 
 export default IBaseMeshOptions;

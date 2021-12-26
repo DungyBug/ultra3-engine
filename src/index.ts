@@ -7,18 +7,18 @@ import { StandardMaterial } from "babylonjs/Materials/standardMaterial";
 
 let loader = new GLTFLoader();
 
-// let verticiesArray = new Float32Array(10);
-// verticiesArray[0] = 0;
-// verticiesArray[1] = -1;
-// verticiesArray[2] = -1;
-// verticiesArray[3] = -1;
-// verticiesArray[4] = 0;
-// verticiesArray[5] = 0;
-// verticiesArray[6] = 0;
-// verticiesArray[7] = 1;
-// verticiesArray[8] = 1;
-// verticiesArray[9] = 1;
-// let data = new DataView(verticiesArray.buffer);
+// let verticesArray = new Float32Array(10);
+// verticesArray[0] = 0;
+// verticesArray[1] = -1;
+// verticesArray[2] = -1;
+// verticesArray[3] = -1;
+// verticesArray[4] = 0;
+// verticesArray[5] = 0;
+// verticesArray[6] = 0;
+// verticesArray[7] = 1;
+// verticesArray[8] = 1;
+// verticesArray[9] = 1;
+// let data = new DataView(verticesArray.buffer);
 // data.setUint8(0, 0);
 // data.setUint8(1, 2);
 // data.setUint8(2, 1);
@@ -32,7 +32,6 @@ fetch("/models/rocket_old.gltf")
             .then(data => {
                 data.arrayBuffer()
                     .then(buffer => {
-                        console.log(gltf, buffer);
                         loader.loadBinaries([
                             {
                                 name: "rocket_old.bin",
@@ -62,6 +61,8 @@ function main(data: IMesh) {
     // Create a FreeCamera, and set its position to {x: 0, y: 5, z: -10}
     var camera = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0, 5, -10), scene);
 
+    camera.minZ = 0.01;
+
     // Target the camera to scene origin
     camera.setTarget(BABYLON.Vector3.Zero());
 
@@ -69,17 +70,18 @@ function main(data: IMesh) {
     camera.attachControl(canvas, false);
 
     // Create a basic light, aiming 0, 1, 0 - meaning, to the sky
-    var light = new BABYLON.PointLight('light1', new BABYLON.Vector3(2, 5, 0), scene);
+    var light = new BABYLON.PointLight('light1', new BABYLON.Vector3(10, 25, 0), scene);
+    light.intensity = 1;
 
     let customMesh = new BABYLON.Mesh("rocket", scene);
 
-    let verticies = [];
+    let vertices = [];
     let normals = [];
 
-    for(let i = 0; i < data.verticies.length; i++) {
-        verticies.push(data.verticies[i].x);
-        verticies.push(data.verticies[i].y);
-        verticies.push(data.verticies[i].z);
+    for(let i = 0; i < data.vertices.length; i++) {
+        vertices.push(data.vertices[i].x);
+        vertices.push(data.vertices[i].y);
+        vertices.push(data.vertices[i].z);
     }
 
     for(let i = 0; i < data.normals.length; i++) {
@@ -90,7 +92,7 @@ function main(data: IMesh) {
 
     let vertexData = new BABYLON.VertexData();
     
-    vertexData.positions = verticies;
+    vertexData.positions = vertices;
     vertexData.indices = data.indices;
     vertexData.normals = normals;
 
