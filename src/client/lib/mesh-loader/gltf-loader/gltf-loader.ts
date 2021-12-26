@@ -1,6 +1,5 @@
 import { IVector } from "../../../../core/contracts/base/vector";
 import VerticiesMode from "../../../constants/verticies-mode";
-import { ViewType } from "../../../constants/view-type";
 import IMesh from "../../../contracts/mesh";
 import GLTFDataType from "../../constants/mesh-loader/gltf-loader/data-type";
 import GLTFPrimitiveMode from "../../constants/mesh-loader/gltf-loader/primitive-mode";
@@ -107,7 +106,7 @@ class GLTFLoader implements IMeshLoader {
 
                     if(storage.meshes[i].primitives[j].indices) {
                         // Access indices buffer
-                        const accessor2: GLTFAccessor = storage.accessors[storage.meshes[i].primitives[j].attributes.POSITION];
+                        const accessor2: GLTFAccessor = storage.accessors[storage.meshes[i].primitives[j].indices];
                         const bufferView2: IGLTFBufferView = storage.bufferViews[accessor2.bufferView];
                         const buffer2: IGLTFBuffer = storage.buffers[bufferView2.buffer];
 
@@ -170,10 +169,24 @@ class GLTFLoader implements IMeshLoader {
 
                             indicesBinary = new arrayType(newBuffer);
                         } else {
-                            indicesBinary = new arrayType(buffer2.slice((bufferView2.byteOffset || 0) + (accessor2.byteOffset || 0)), 0, accessor2.count);
+                            let buffer: ArrayBuffer;
+
+                            if(buffer2.uri) {
+                                // Search for file
+                                for(let k = 0; k < this.binaries.length; k++) {
+                                    if(buffer2.uri === this.binaries[k].name) {
+                                        buffer = this.binaries[k].data;
+                                    }
+                                }
+                            } else {
+                                buffer = this.binaries[0].data;
+                            }
+
+                            indicesBinary = new arrayType(buffer.slice((bufferView2.byteOffset || 0) + (accessor2.byteOffset || 0)), 0, accessor2.count);
+                            console.log(indicesBinary);
                         }
 
-                        for(let k = 0; k < accessor1.count; k++) {
+                        for(let k = 0; k < accessor2.count; k++) {
                             indices.push(indicesBinary[k]);
                         }
                     } else {
@@ -237,13 +250,58 @@ class GLTFLoader implements IMeshLoader {
                         });
                     }
 
+                    let normals: Array<IVector> = [];
+
+                    if(storage.meshes[i].primitives[j].attributes.NORMAL) {
+                        // Access normals buffer
+                        const normalsAccessor = storage.accessors[storage.meshes[i].primitives[j].attributes.NORMAL];
+                        const normalsBufferView = storage.bufferViews[normalsAccessor.bufferView];
+                        const normalsBuffer = storage.buffers[normalsBufferView.buffer];
+
+                        let normalsBinary: Float32Array;
+
+                        if(normalsBufferView.byteStride) {
+                            let newBuffer = new Uint8Array(normalsAccessor.count * 3 * 4);
+                            let oldBuffer = new Uint8Array(normalsBuffer.slice((normalsBufferView.byteOffset || 0) + (normalsAccessor.byteOffset || 0)));
+    
+                            for(let i = 0; i < normalsAccessor.count * 3 * 4; i++) {
+                                newBuffer[i] = oldBuffer[i * (normalsBufferView.byteStride + 1)];
+                            }
+    
+                            normalsBinary = new Float32Array(newBuffer, 0, normalsAccessor.count);
+                        } else {
+                            let buffer: ArrayBuffer;
+    
+                            if(normalsBuffer.uri) {
+                                // Search for file
+                                for(let k = 0; k < this.binaries.length; k++) {
+                                    if(normalsBuffer.uri === this.binaries[k].name) {
+                                        buffer = this.binaries[k].data;
+                                    }
+                                }
+                            } else {
+                                buffer = this.binaries[0].data;
+                            }
+    
+                            normalsBinary = new Float32Array(buffer.slice((normalsBufferView.byteOffset || 0) + (normalsAccessor.byteOffset || 0)), 0, normalsAccessor.count * 3);
+                        }
+
+                        for(let i = 0; i < normalsAccessor.count * 3; i += 3) {
+                            normals.push({
+                                x: normalsBinary[i],
+                                y: normalsBinary[i + 1],
+                                z: normalsBinary[i + 2]
+                            });
+                        }
+                    }
+
                     mesh = {
                         castsShadow: true,
                         verticiesMode: verticiesMode,
 
                         verticies: points,
                         indices: indices,
-                        normals: [],
+                        normals: normals,
                         uvs: [],
 
                         pos: {
