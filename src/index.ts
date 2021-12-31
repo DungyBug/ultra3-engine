@@ -4,43 +4,17 @@ import IGLTFStorage from "./client/lib/contracts/mesh-loader/gltf-loader/gltf-st
 import GLTFLoader from "./client/lib/mesh-loader/gltf-loader/gltf-loader";
 import * as BABYLON from "babylonjs";
 import { StandardMaterial } from "babylonjs/Materials/standardMaterial";
+import PBRMaterial from "./client/materials/pbr";
 
 let loader = new GLTFLoader();
 
-// let verticesArray = new Float32Array(10);
-// verticesArray[0] = 0;
-// verticesArray[1] = -1;
-// verticesArray[2] = -1;
-// verticesArray[3] = -1;
-// verticesArray[4] = 0;
-// verticesArray[5] = 0;
-// verticesArray[6] = 0;
-// verticesArray[7] = 1;
-// verticesArray[8] = 1;
-// verticesArray[9] = 1;
-// let data = new DataView(verticesArray.buffer);
-// data.setUint8(0, 0);
-// data.setUint8(1, 2);
-// data.setUint8(2, 1);
-// data.setUint8(3, 255);
 
-fetch("/models/rocket_old.gltf")
-    .then(data => data.json())
-    .then((gltf: IGLTFStorage) => {
-        fetch("/models/rocket_old.bin")
-            .then(data => data.blob())
-            .then(data => {
-                data.arrayBuffer()
-                    .then(buffer => {
-                        loader.loadBinaries([
-                            {
-                                name: "rocket_old.bin",
-                                data: buffer
-                            }
-                        ]);
-                        main(loader.parseGLTF(gltf)[0]);
-                    })
-            })
+fetch("/models/waterbottle.gltf")
+    .then(data => data.blob())
+    .then(data => data.arrayBuffer())
+    .then(gltf => {
+        loader.loadMeshes(gltf, "/models")
+            .then(meshes => main(meshes[0]));
     })
 
 function main(data: IMesh) {
@@ -71,12 +45,13 @@ function main(data: IMesh) {
 
     // Create a basic light, aiming 0, 1, 0 - meaning, to the sky
     var light = new BABYLON.PointLight('light1', new BABYLON.Vector3(10, 25, 0), scene);
-    light.intensity = 1;
+    light.intensity = 10000;
 
     let customMesh = new BABYLON.Mesh("rocket", scene);
 
     let vertices = [];
     let normals = [];
+    let uvs = [];
 
     for(let i = 0; i < data.vertices.length; i++) {
         vertices.push(data.vertices[i].x);
@@ -90,16 +65,34 @@ function main(data: IMesh) {
         normals.push(data.normals[i].z);
     }
 
+    for(let i = 0; i < data.uvs.length; i++) {
+        uvs.push(data.uvs[i].x);
+        uvs.push(data.uvs[i].y);
+    }
+
     let vertexData = new BABYLON.VertexData();
     
     vertexData.positions = vertices;
     vertexData.indices = data.indices;
     vertexData.normals = normals;
+    vertexData.uvs = uvs;
 
     vertexData.applyToMesh(customMesh);
 
-    customMesh.material = new BABYLON.StandardMaterial("", scene);
-    customMesh.material.backFaceCulling = false;
+    const pbrmaterial = data.material as PBRMaterial;
+
+    const material = new BABYLON.PBRMetallicRoughnessMaterial("", scene);
+    material.backFaceCulling = false;
+
+    material.baseTexture = new BABYLON.RawTexture(pbrmaterial.albedoTexture.getRawData(0), pbrmaterial.albedoTexture.dimensions[0], pbrmaterial.albedoTexture.dimensions[1], BABYLON.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Engine.TEXTURE_TRILINEAR_SAMPLINGMODE, BABYLON.Engine.TEXTURETYPE_UNSIGNED_BYTE);
+    material.emissiveTexture = new BABYLON.RawTexture(pbrmaterial.emissiveTexture.getRawData(0), pbrmaterial.emissiveTexture.dimensions[0], pbrmaterial.emissiveTexture.dimensions[1], BABYLON.Engine.TEXTUREFORMAT_LUMINANCE, scene, false, false, BABYLON.Engine.TEXTURE_TRILINEAR_SAMPLINGMODE, BABYLON.Engine.TEXTURETYPE_UNSIGNED_BYTE);
+    material.normalTexture = new BABYLON.RawTexture(pbrmaterial.normalsTexture.getRawData(0), pbrmaterial.normalsTexture.dimensions[0], pbrmaterial.normalsTexture.dimensions[1], BABYLON.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Engine.TEXTURE_TRILINEAR_SAMPLINGMODE, BABYLON.Engine.TEXTURETYPE_UNSIGNED_BYTE);
+    material.occlusionTexture = new BABYLON.RawTexture(pbrmaterial.occlusionTexture.getRawData(0), pbrmaterial.occlusionTexture.dimensions[0], pbrmaterial.occlusionTexture.dimensions[1], BABYLON.Engine.TEXTUREFORMAT_LUMINANCE, scene, false, false, BABYLON.Engine.TEXTURE_TRILINEAR_SAMPLINGMODE, BABYLON.Engine.TEXTURETYPE_UNSIGNED_BYTE);
+    material.metallic = 0.5;
+    material.roughness = 0.5;
+
+    customMesh.material = material;
+    customMesh.scaling = new BABYLON.Vector3(20, 20, 20);
 
     // run the render loop
     engine.runRenderLoop(function(){

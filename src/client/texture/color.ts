@@ -1,10 +1,11 @@
 import ColorMode from "../constants/color-mode";
 import SamplingMode from "../constants/sampling-mode";
 import TextureFormat from "../constants/texture-format";
-import { IUint8TextureOptions } from "../contracts/texture/texture-opts";
+import { ArrayTypeToTextureOpts } from "../contracts/texture/texture-opts";
 import Texture2D from "./texture2d";
 
-class ColorTexture<T extends ColorMode = ColorMode> extends Texture2D<IUint8TextureOptions & {width: 1, height: 1}> {
+
+class ColorTexture<T extends ColorMode = ColorMode> extends Texture2D<ArrayTypeToTextureOpts<Uint8Array> & {width: 1, height: 1}> {
     constructor(colorMode: T, color: T extends ColorMode.LUMINANCE
                                                             ? number :
                                                                 T extends ColorMode.ALPHA
@@ -75,6 +76,14 @@ class ColorTexture<T extends ColorMode = ColorMode> extends Texture2D<IUint8Text
             samplingMode: SamplingMode.NEAREST,
             textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE
         });
+    }
+
+    static White() {
+        return new ColorTexture(ColorMode.LUMINANCE, 1.0);
+    }
+
+    static Black() {
+        return new ColorTexture(ColorMode.LUMINANCE, 0.0);
     }
 }
 

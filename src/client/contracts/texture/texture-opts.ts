@@ -1,6 +1,7 @@
 import ColorMode from "../../constants/color-mode";
 import SamplingMode from "../../constants/sampling-mode";
 import TextureFormat from "../../constants/texture-format";
+import TypedArray from "../common/typed-array";
 
 interface IUint8TextureOptions {
     frames: Array<Uint8Array>;
@@ -86,5 +87,24 @@ type TextureOptsToArrayType<T extends TextureOptions> = T extends IUint8TextureO
                                 ? Uint16Array 
                                 : never;
 
+/*
+U - How to interpretate Uint16Array: "Float16" - as Float16Array, "Uint16" - as Uint16Array.
+*/
+type ArrayTypeToTextureOpts<T extends TypedArray, U extends "Float16" | "Uint16" = "Uint16"> = T extends Uint8Array 
+    ? IUint8TextureOptions 
+    : T extends Uint16Array 
+        ? (U extends "Float16" ? IFloat16TextureOptions : IUint16TextureOptions) 
+        : T extends Uint32Array 
+            ? IUint32TextureOptions 
+            : T extends Int8Array 
+                ? IInt8TextureOptions 
+                : T extends Int16Array 
+                    ? IInt16TextureOptions 
+                    : T extends Int32Array 
+                        ? IInt32TextureOptions 
+                        : T extends Float32Array 
+                            ? IFloat32TextureOptions
+                            : never;
+
 export default TextureOptions;
-export { TextureOptsToArrayType, IUint8TextureOptions, IUint16TextureOptions, IUint32TextureOptions, IInt8TextureOptions, IInt16TextureOptions, IInt32TextureOptions, IFloat32TextureOptions, IFloat16TextureOptions };
+export { TextureOptsToArrayType, ArrayTypeToTextureOpts, IUint8TextureOptions, IUint16TextureOptions, IUint32TextureOptions, IInt8TextureOptions, IInt16TextureOptions, IInt32TextureOptions, IFloat32TextureOptions, IFloat16TextureOptions };

@@ -38,19 +38,19 @@ interface IBaseGLTFMaterial extends IGLTFExtensionable {
     doubleSided?: boolean;
 }
 
-interface IGLTFOpaqueMaterial {
+interface IGLTFOpaqueMaterial extends IBaseGLTFMaterial {
     alphaMode?: "OPAQUE";
 }
 
-interface IGLTFMaskMaterial {
+interface IGLTFMaskMaterial extends IBaseGLTFMaterial {
     alphaMode?: "MASK";
     alphaCutoff?: number;
 }
 
-interface IGLTFBlendMaterial {
+interface IGLTFBlendMaterial extends IBaseGLTFMaterial {
     alphaMode?: "BLEND";
 }
 
-type GLTFMaterial = IBaseGLTFMaterial | (IGLTFOpaqueMaterial | IGLTFMaskMaterial | IGLTFBlendMaterial);
+type GLTFMaterial = IGLTFOpaqueMaterial | IGLTFMaskMaterial | IGLTFBlendMaterial;
 
 export default GLTFMaterial;

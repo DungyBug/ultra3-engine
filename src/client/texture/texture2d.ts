@@ -1,11 +1,11 @@
 import ColorMode from "../constants/color-mode";
 import SamplingMode from "../constants/sampling-mode";
 import TypedArray from "../contracts/common/typed-array";
-import { TextureOptsToArrayType } from "../contracts/texture/texture-opts";
+import TextureOptions, { TextureOptsToArrayType } from "../contracts/texture/texture-opts";
 import ITexture2D from "../contracts/texture/texture2d";
 import Texture2DOptions from "../contracts/texture/texture2d-opts";
 
-class Texture2D<T extends Texture2DOptions> implements ITexture2D<TextureOptsToArrayType<T>> {
+class Texture2D<T extends TextureOptions> implements ITexture2D<TextureOptsToArrayType<T>> {
     protected width: number;
     protected height: number;
     public samplingMode: SamplingMode;
@@ -13,7 +13,7 @@ class Texture2D<T extends Texture2DOptions> implements ITexture2D<TextureOptsToA
     protected frames: Array<TypedArray>;
     protected framesPerSecond: number;
 
-    constructor(options: T) {
+    constructor(options: Texture2DOptions<T>) {
         this.width = options.width;
         this.height = options.height;
         this.samplingMode = options.samplingMode;

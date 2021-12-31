@@ -1,29 +1,36 @@
 import { IVector } from "../../../../core/contracts/base/vector";
 import IVector2D from "../../../../core/contracts/base/vector2d";
+import ColorMode from "../../../constants/color-mode";
+import SamplingMode from "../../../constants/sampling-mode";
+import TextureFormat from "../../../constants/texture-format";
 import VerticesMode from "../../../constants/verticies-mode";
+import IMaterial from "../../../contracts/material";
 import IMesh from "../../../contracts/mesh";
+import { IUint8TextureOptions } from "../../../contracts/texture/texture-opts";
+import ITexture2D from "../../../contracts/texture/texture2d";
+import Texture2D from "../../../texture/texture2d";
 import GLTFDataType from "../../constants/mesh-loader/gltf-loader/data-type";
 import GLTFPrimitiveMode from "../../constants/mesh-loader/gltf-loader/primitive-mode";
 import IGLTFBinary from "../../contracts/mesh-loader/gltf-loader/gltf-binary";
 import { IGLTFStorage, GLTFAccessor, IGLTFBufferView, IGLTFBuffer } from "../../contracts/mesh-loader/gltf-loader/gltf-types";
 import IMeshLoader from "../../contracts/mesh-loader/mesh-loader";
-
-// Helper function
-function convertToFloat(array: Uint8Array | Uint16Array | Uint32Array): Float32Array {
-    let floatArray = new Float32Array(array.length);
-
-    for(let i = 0; i < array.length; i++) {
-        floatArray[i] = array[i] / (256 ** array.BYTES_PER_ELEMENT - 1);
-    }
-
-    return floatArray;
-}
+import { convertToFloat } from "./gltf-helper-functions";
+import { GLTFUnMipMappedTextureFilter } from "../../constants/mesh-loader/gltf-loader/texture-filter";
+import ColorTexture from "../../../texture/color";
+import PBRMaterial from "../../../materials/pbr";
+import IGLTFFile from "../../contracts/mesh-loader/gltf-loader/gltf-file";
 
 class GLTFLoader implements IMeshLoader {
     private binaries: Array<IGLTFBinary>;
+    private images: Record<string, {
+        data: Uint8Array;
+        width: number;
+        height: number;
+    }>;
 
     constructor() {
         this.binaries = [];
+        this.images = {};
     }
 
     loadBinaries(binaries: Array<IGLTFBinary>) {
@@ -63,6 +70,18 @@ class GLTFLoader implements IMeshLoader {
                 }
             }
         }
+    }
+
+    accessImage(src: string) {
+        return this.images[src];
+    }
+
+    loadImage(name: string, data: Uint8Array, width: number, height: number) {
+        this.images[name] = {
+            data,
+            width,
+            height
+        };
     }
 
     parseGLTF(storage: IGLTFStorage): Array<IMesh> {
@@ -384,9 +403,11 @@ class GLTFLoader implements IMeshLoader {
 
                         let uvsBinary: Float32Array;
 
-                        if(uvsBufferView.byteStride) { // No stride support for UVs
+                        if(uvsBufferView.byteStride) {
                             // Get buffer
                             let buffer: ArrayBuffer;
+                            let componentSize: 1 | 2 | 4;
+                            let arrayType: Uint8ArrayConstructor | Int8ArrayConstructor | Uint16ArrayConstructor | Int16ArrayConstructor | Uint32ArrayConstructor | Float32ArrayConstructor;
 
                             if(uvsBuffer.uri) {
                                 buffer = this.accessBuffer(uvsBuffer.uri);
@@ -394,14 +415,54 @@ class GLTFLoader implements IMeshLoader {
                                 buffer = this.binaries[0].data;
                             }
 
-                            let newBuffer = new Uint8Array(uvsAccessor.count * 2);
+                            switch(uvsAccessor.componentType) {
+                                case GLTFDataType.FLOAT: {
+                                    componentSize = 4;
+                                    arrayType = Float32Array;
+                                    break;
+                                }
+                                case GLTFDataType.SIGNED_BYTE: {
+                                    console.warn("Ultra3.GLTFLoader: Unexpected data type \"SIGNED BYTE\" for UVs.");
+                                    componentSize = 1;
+                                    arrayType = Int8Array;
+                                    break;
+                                }
+                                case GLTFDataType.UNSIGNED_BYTE: {
+                                    componentSize = 1;
+                                    arrayType = Uint8Array;
+                                    break;
+                                }
+                                case GLTFDataType.SIGNED_SHORT: {
+                                    console.warn("Ultra3.GLTFLoader: Unexpected data type \"SIGNED SHORT\" for UVs.");
+                                    componentSize = 1;
+                                    arrayType = Int16Array;
+                                    break;
+                                }
+                                case GLTFDataType.UNSIGNED_SHORT: {
+                                    componentSize = 2;
+                                    arrayType = Uint16Array;
+                                    break;
+                                }
+                                case GLTFDataType.UNSIGNED_INT: {
+                                    console.warn("Ultra3.GLTFLoader: Unexpected data type \"UNSIGNED INT\" for UVs.");
+                                    componentSize = 4;
+                                    arrayType = Uint32Array;
+                                    break;
+                                }
+                                default:
+                                {
+                                    throw new Error(`Unknown UVs data type "${uvsAccessor.componentType}".`);
+                                }
+                            }
+
+                            let newBuffer = new Uint8Array(uvsAccessor.count * 2 * componentSize);
                             let oldBuffer = new Uint8Array(buffer.slice((uvsBufferView.byteOffset || 0) + (uvsAccessor.byteOffset || 0)));
     
-                            for(let i = 0; i < uvsAccessor.count * 2; i++) {
+                            for(let i = 0; i < uvsAccessor.count * 2 * componentSize; i++) {
                                 newBuffer[i] = oldBuffer[i * (uvsBufferView.byteStride + 1)];
                             }
-    
-                            uvsBinary = new Float32Array(newBuffer, 0, uvsAccessor.count);
+
+                            uvsBinary = convertToFloat(new arrayType(newBuffer, 0, uvsAccessor.count * 2));
                         } else {
                             let buffer: ArrayBuffer;
     
@@ -424,18 +485,23 @@ class GLTFLoader implements IMeshLoader {
                                     uvsBinary = convertToFloat(new Uint16Array(buffer.slice((uvsBufferView.byteOffset || 0) + (uvsAccessor.byteOffset || 0)), 0, uvsAccessor.count * 2))
                                     break;
                                 }
+                                case GLTFDataType.UNSIGNED_INT: {
+                                    console.warn("Ultra3.GLTFLoader: Unexpected data type \"UNSIGNED INT\" for UVs.");
+                                    uvsBinary = convertToFloat(new Uint32Array(buffer.slice((uvsBufferView.byteOffset || 0) + (uvsAccessor.byteOffset || 0)), 0, uvsAccessor.count * 2))
+                                    break;
+                                }
                                 case GLTFDataType.SIGNED_BYTE: {
                                     console.warn("Ultra3.GLTFLoader: Unexpected data type \"SIGNED BYTE\" for UVs.");
+                                    uvsBinary = convertToFloat(new Int8Array(buffer.slice((uvsBufferView.byteOffset || 0) + (uvsAccessor.byteOffset || 0)), 0, uvsAccessor.count * 2))
                                     break;
                                 }
                                 case GLTFDataType.SIGNED_SHORT: {
                                     console.warn("Ultra3.GLTFLoader: Unexpected data type \"SIGNED SHORT\" for UVs.");
+                                    uvsBinary = convertToFloat(new Int16Array(buffer.slice((uvsBufferView.byteOffset || 0) + (uvsAccessor.byteOffset || 0)), 0, uvsAccessor.count * 2))
                                     break;
                                 }
                                 default:
-                                {
                                     throw new Error(`Unknown UVs data type "${uvsAccessor.componentType}".`);
-                                }
                             }
 
                             for(let k = 0; k < uvsBinary.length; k += 2) {
@@ -446,6 +512,296 @@ class GLTFLoader implements IMeshLoader {
                             }
                         }
                     }
+
+                    /*
+                    ***************************************************
+                    *                  Parse materials                *
+                    ***************************************************
+                    */
+
+                    let material: IMaterial;
+
+                    const GLTFMaterial = storage.materials[storage.meshes[i].primitives[j].material || 0];
+                    let albedo: ITexture2D<Uint8Array>;
+                    let metallic: ITexture2D<Uint8Array>;
+                    let roughness: ITexture2D<Uint8Array>;
+                    let normalsTexture: ITexture2D<Uint8Array>;
+                    let occlusion: ITexture2D<Uint8Array>;
+                    let emissive: ITexture2D<Uint8Array>;
+
+                    if (GLTFMaterial.pbrMetallicRoughness) {
+                        /*
+                        *****************************************
+                        *           Get albedo texture          *
+                        *****************************************
+                        */
+                        
+                        if (GLTFMaterial.pbrMetallicRoughness.baseColorTexture) {
+                            const texture = storage.textures[GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index];
+                            const image = storage.images[texture.source];
+                            
+                            const accessedImage = this.accessImage(image.uri);
+                            const imageData = accessedImage.data;
+
+                            // Apply factor to image data
+                            if (GLTFMaterial.pbrMetallicRoughness.baseColorFactor) {
+                                let factor = GLTFMaterial.pbrMetallicRoughness.baseColorFactor;
+
+                                for(let i = 0; i < imageData.length; i += 4) {
+                                    imageData[i] *= factor[0];
+                                    imageData[i + 1] *= factor[1];
+                                    imageData[i + 2] *= factor[2];
+                                    imageData[i + 3] *= factor[3];
+                                }
+                            }
+
+                            let samplingMode: SamplingMode;
+
+                            if (texture.sampler) {
+                                const sampler = storage.samplers[texture.sampler];
+                                
+                                // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
+                                switch(sampler.magFilter) {
+                                    case GLTFUnMipMappedTextureFilter.NEAREST: {
+                                        samplingMode = SamplingMode.NEAREST;
+                                        break;
+                                    }
+                                    case GLTFUnMipMappedTextureFilter.LINEAR: {
+                                        samplingMode = SamplingMode.TRILINEAR;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            albedo = new Texture2D<IUint8TextureOptions>({
+                                width: accessedImage.width,
+                                height: accessedImage.height,
+                                frames: [imageData],
+                                framesPerSecond: 0,
+                                colorMode: ColorMode.RGBA,
+                                textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                samplingMode: samplingMode
+                            });
+                        } else {
+                            let color: [number, number, number, number] = [1.0, 1.0, 1.0, 1.0];
+
+                            if (GLTFMaterial.pbrMetallicRoughness.baseColorFactor) {
+                                color = GLTFMaterial.pbrMetallicRoughness.baseColorFactor;
+                            }
+
+                            albedo = new ColorTexture(ColorMode.RGBA, color);
+                        }
+
+                        /*
+                        *****************************************
+                        *    Get metallic-roughness texture     *
+                        *****************************************
+                        */
+                        if (GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture) {
+                            const texture = storage.textures[GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index];
+                            const image = storage.images[texture.source];
+                            
+                            const accessedImage = this.accessImage(image.uri);
+                            const imageData = accessedImage.data;
+
+                            const metallicData = new Uint8Array(imageData.length * 0.25);
+                            const roughnessData = new Uint8Array(imageData.length * 0.25);
+
+                            // Apply factor to image data
+                            if (GLTFMaterial.pbrMetallicRoughness.metallicFactor || GLTFMaterial.pbrMetallicRoughness.roughnessFactor) {
+                                let metallicFactor = GLTFMaterial.pbrMetallicRoughness.metallicFactor || 1;
+                                let roughnessFactor = GLTFMaterial.pbrMetallicRoughness.roughnessFactor || 1;
+
+                                for(let i = 0; i < imageData.length * 0.25; i++) {
+                                    metallicData[i] = imageData[i * 4 + 1] * metallicFactor; // Blue * metallicFactor
+                                    roughnessData[i] = imageData[i * 4 + 2] * roughnessFactor; // Green * roughnessFactor
+                                }
+                            }
+
+                            let samplingMode: SamplingMode;
+
+                            if (texture.sampler) {
+                                const sampler = storage.samplers[texture.sampler];
+                                
+                                // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
+                                switch(sampler.magFilter) {
+                                    case GLTFUnMipMappedTextureFilter.NEAREST: {
+                                        samplingMode = SamplingMode.NEAREST;
+                                        break;
+                                    }
+                                    case GLTFUnMipMappedTextureFilter.LINEAR: {
+                                        samplingMode = SamplingMode.TRILINEAR;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            metallic = new Texture2D<IUint8TextureOptions>({
+                                width: accessedImage.width,
+                                height: accessedImage.height,
+                                frames: [metallicData],
+                                framesPerSecond: 0,
+                                colorMode: ColorMode.LUMINANCE,
+                                textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                samplingMode: samplingMode
+                            });
+
+                            roughness = new Texture2D<IUint8TextureOptions>({
+                                width: accessedImage.width,
+                                height: accessedImage.height,
+                                frames: [roughnessData],
+                                framesPerSecond: 0,
+                                colorMode: ColorMode.LUMINANCE,
+                                textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                samplingMode: samplingMode
+                            });
+                        } else {
+                            let metallicFactor = 1.0 || GLTFMaterial.pbrMetallicRoughness.metallicFactor;
+                            let roughnessFactor = 1.0 || GLTFMaterial.pbrMetallicRoughness.roughnessFactor;
+
+                            metallic = new ColorTexture(ColorMode.LUMINANCE, metallicFactor);
+                            roughness = new ColorTexture(ColorMode.LUMINANCE, roughnessFactor);
+                        }
+                    }
+
+                    /*
+                    *****************************************
+                    *          Get normals texture          *
+                    *****************************************
+                    */
+                    if (GLTFMaterial.normalTexture) {
+                        const texture = storage.textures[GLTFMaterial.normalTexture.index];
+                        const image = storage.images[texture.source];
+                        
+                        const accessedImage = this.accessImage(image.uri);
+                        const imageData = accessedImage.data;
+
+                        let samplingMode: SamplingMode;
+
+                        if (texture.sampler) {
+                            const sampler = storage.samplers[texture.sampler];
+                            
+                            // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
+                            switch(sampler.magFilter) {
+                                case GLTFUnMipMappedTextureFilter.NEAREST: {
+                                    samplingMode = SamplingMode.NEAREST;
+                                    break;
+                                }
+                                case GLTFUnMipMappedTextureFilter.LINEAR: {
+                                    samplingMode = SamplingMode.TRILINEAR;
+                                    break;
+                                }
+                            }
+                        }
+
+                        normalsTexture = new Texture2D<IUint8TextureOptions>({
+                            width: accessedImage.width,
+                            height: accessedImage.height,
+                            frames: [imageData],
+                            framesPerSecond: 0,
+                            colorMode: ColorMode.RGB,
+                            textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                            samplingMode: samplingMode
+                        });
+                    } else {
+                        normalsTexture = new ColorTexture(ColorMode.RGB, [0.5, 0.5, 1.0]);
+                    }
+
+                    /*
+                    *****************************************
+                    *         Get occlusion texture         *
+                    *****************************************
+                    */
+                    if (GLTFMaterial.occlusionTexture) {
+                        const texture = storage.textures[GLTFMaterial.occlusionTexture.index];
+                        const image = storage.images[texture.source];
+                        
+                        const accessedImage = this.accessImage(image.uri);
+                        const imageData = accessedImage.data;
+
+                        let samplingMode: SamplingMode;
+
+                        if (texture.sampler) {
+                            const sampler = storage.samplers[texture.sampler];
+                            
+                            // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
+                            switch(sampler.magFilter) {
+                                case GLTFUnMipMappedTextureFilter.NEAREST: {
+                                    samplingMode = SamplingMode.NEAREST;
+                                    break;
+                                }
+                                case GLTFUnMipMappedTextureFilter.LINEAR: {
+                                    samplingMode = SamplingMode.TRILINEAR;
+                                    break;
+                                }
+                            }
+                        }
+
+                        occlusion = new Texture2D<IUint8TextureOptions>({
+                            width: accessedImage.width,
+                            height: accessedImage.height,
+                            frames: [imageData],
+                            framesPerSecond: 0,
+                            colorMode: ColorMode.RGB,
+                            textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                            samplingMode: samplingMode
+                        });
+                    } else {
+                        occlusion = new ColorTexture(ColorMode.LUMINANCE, 1.0);
+                    }
+
+                    /*
+                    *****************************************
+                    *          Get emissive texture         *
+                    *****************************************
+                    */
+
+                    if (GLTFMaterial.emissiveTexture) {
+                        const texture = storage.textures[GLTFMaterial.emissiveTexture.index];
+                        const image = storage.images[texture.source];
+                        
+                        const accessedImage = this.accessImage(image.uri);
+                        const imageData = accessedImage.data;
+
+                        let samplingMode: SamplingMode;
+
+                        if (texture.sampler) {
+                            const sampler = storage.samplers[texture.sampler];
+                            
+                            // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
+                            switch(sampler.magFilter) {
+                                case GLTFUnMipMappedTextureFilter.NEAREST: {
+                                    samplingMode = SamplingMode.NEAREST;
+                                    break;
+                                }
+                                case GLTFUnMipMappedTextureFilter.LINEAR: {
+                                    samplingMode = SamplingMode.TRILINEAR;
+                                    break;
+                                }
+                            }
+                        }
+
+                        emissive = new Texture2D<IUint8TextureOptions>({
+                            width: accessedImage.width,
+                            height: accessedImage.height,
+                            frames: [imageData],
+                            framesPerSecond: 0,
+                            colorMode: ColorMode.RGB,
+                            textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                            samplingMode: samplingMode
+                        });
+                    } else {
+                        emissive = new ColorTexture(ColorMode.LUMINANCE, 1.0);
+                    }
+
+                    material = new PBRMaterial({
+                        albedoTexture: albedo,
+                        metallicTexture: metallic,
+                        roughnessTexture: roughness,
+                        normalsTexture: normalsTexture,
+                        occlusionTexture: occlusion,
+                        emissiveTexture: emissive
+                    });
 
                     mesh = {
                         castsShadow: true,
@@ -472,10 +828,8 @@ class GLTFLoader implements IMeshLoader {
                             z: 0
                         },
 
-                        material: null
+                        material: material
                     }
-
-                    // TODO: Add material parsing
 
                     meshes.push(mesh);
                 }
@@ -485,31 +839,115 @@ class GLTFLoader implements IMeshLoader {
         return meshes;
     }
 
-    loadMeshes(buffer: ArrayBuffer, binaries?: Array<IGLTFBinary>): Array<IMesh> {  
-        let view = new DataView(buffer);
-        let meshes: Array<IMesh> = [];
+    parseMeshes(res: (meshes: Array<IMesh>) => any, storage: IGLTFStorage) {
+        console.log(storage);
+        res(this.parseGLTF(storage));
+    }
 
-        let magic = view.getUint32(0);
+    loadMeshes(buffer: ArrayBuffer, binariesSrc: string = ""): Promise<Array<IMesh>> {
+        return new Promise((res) => {
+            let view = new DataView(buffer);
+            let meshes: Array<IMesh> = [];
 
-        if(binaries) {
-            this.binaries = binaries;
-        }
+            let magic = view.getUint32(0);
 
-        if(magic === 0x46546C67) {
-            // GLB format
-            meshes = this.parseGLB(view);
-        } else if(view.getUint8(0) === 0x7b) { // view.getUint8(0) === '{'
-            // GLTF format
-            let jsonstring = '{';
+            if(magic === 0x46546C67) {
+                // GLB format
+                meshes = this.parseGLB(view);
+            } else if(view.getUint8(0) === 0x7b) { // view.getUint8(0) === '{'
+                // GLTF format
+                let jsonstring = '{';
 
-            for(let i = 1; i < view.byteLength; i++) {
-                jsonstring += String.fromCharCode(view.getUint8(i));
+                for(let i = 1; i < view.byteLength; i++) {
+                    jsonstring += String.fromCharCode(view.getUint8(i));
+                }
+
+                const storage: IGLTFStorage = JSON.parse(jsonstring) as IGLTFStorage;
+
+                /*
+                **************************************
+                *       Load all external files      *
+                **************************************
+                */
+                const files: Array<IGLTFFile> = new Array((storage.buffers || []).length + (storage.images || []).length);
+                let count = 0;
+
+                for(let i = 0; i < storage.buffers.length; i++) {
+                    let url: string;
+
+                    if(storage.buffers[i].uri.startsWith("data:")) {
+                        url = storage.buffers[i].uri;
+                    } else {
+                        url = `${binariesSrc}/${storage.buffers[i].uri}`;
+                    }
+
+                    fetch(url)
+                        .then(data => data.blob())
+                        .then(data => data.arrayBuffer())
+                        .then(data => {
+                            this.loadBinaries([
+                                {
+                                    name: storage.buffers[i].uri,
+                                    data: data
+                                }
+                            ]);
+                            count++;
+
+                            if(count === (storage.buffers || []).length + (storage.images || []).length) {
+                                this.parseMeshes(res, storage);
+                            }
+                        })
+                }
+
+                for(let i = 0; i < storage.images.length; i++) {
+                    let url: string;
+                    let mimetype: string;
+
+                    if(storage.images[i].uri.startsWith("data:")) {
+                        url = storage.images[i].uri;
+                        mimetype = storage.images[i].uri.slice(5, storage.images[i].uri.indexOf(";"))
+                    } else {
+                        url = `${binariesSrc}/${storage.images[i].uri}`;
+                        mimetype = `image/${storage.images[i].uri.slice(storage.images[i].uri.lastIndexOf(".") + 1)}`;
+                    }
+
+                    fetch(url)
+                        .then(data => data.blob())
+                        .then(data => data.arrayBuffer())
+                        .then(data => {
+                            const uint8 = new Uint8Array(data);
+                            let string = "";
+
+                            for(let i = 0; i < uint8.length; i++) {
+                                string += String.fromCharCode(uint8[i]);
+                            }
+
+                            const image = new Image();
+                            image.onload = () => {
+                                // Get image data
+                                const canvas = document.createElement("canvas");
+                                canvas.width = image.width;
+                                canvas.height = image.height;
+
+                                const ctx = canvas.getContext("2d");
+                                ctx.drawImage(image, 0, 0);
+
+                                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+                                // Add file
+                                this.loadImage(storage.images[i].uri, (imageData as unknown) as Uint8Array, canvas.width, canvas.height)
+                                count++;
+    
+                                if(count === (storage.buffers || []).length + (storage.images || []).length) {
+                                    this.parseMeshes(res, storage);
+                                }
+                            }
+                            
+                            image.src = `data:${mimetype};base64,${btoa(string)}`;
+                        })
+                }
             }
-
-            meshes = this.parseGLTF(JSON.parse(jsonstring) as IGLTFStorage);
-        }
-
-        return meshes;
+        });
     }
 }
 
