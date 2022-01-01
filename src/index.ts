@@ -2,9 +2,25 @@ import IMesh from "./client/contracts/mesh";
 import GLTFLoader from "./client/lib/mesh-loader/gltf-loader/gltf-loader";
 import * as BABYLON from "babylonjs";
 import PBRMaterial from "./client/materials/pbr";
+import Volume from "./client/mesh/volume";
+import Texture3D from "./client/texture/texture3d";
 
 let loader = new GLTFLoader();
 
+const volume = new Volume({
+    texture: new Texture3D({
+        width: 32,
+        height: 32,
+        depth: 32,
+        frames: [new Float32Array(32 * 32 * 32)],
+        framesPerSecond: 0,
+        colorMode: 0,
+        textureFormat: 7,
+        samplingMode: 0,
+    })
+})
+
+console.log(volume, volume.material.getShader());
 
 fetch("/models/long_rocket.glb")
     .then(data => data.blob())
@@ -12,7 +28,7 @@ fetch("/models/long_rocket.glb")
     .then(gltf => {
         loader.loadMeshes(gltf, "/models")
             .then(meshes => main(meshes[0]));
-    })
+    });
 
 function main(data: IMesh) {
     // Get the canvas DOM element
@@ -77,8 +93,6 @@ function main(data: IMesh) {
 
     const material = new BABYLON.StandardMaterial("", scene);
     material.backFaceCulling = false;
-
-    console.log(pbrmaterial.emissiveTexture.getRawData(0));
 
     material.diffuseColor = new BABYLON.Color3(1.0, 1.0, 1.0);
     material.emissiveTexture = new BABYLON.RawTexture(pbrmaterial.emissiveTexture.getRawData(0), pbrmaterial.emissiveTexture.dimensions[0], pbrmaterial.emissiveTexture.dimensions[1], BABYLON.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Engine.TEXTURE_TRILINEAR_SAMPLINGMODE, BABYLON.Engine.TEXTURETYPE_UNSIGNED_BYTE);
