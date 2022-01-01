@@ -12,13 +12,13 @@ import Texture2D from "../../../texture/texture2d";
 import GLTFDataType from "../../constants/mesh-loader/gltf-loader/data-type";
 import GLTFPrimitiveMode from "../../constants/mesh-loader/gltf-loader/primitive-mode";
 import IGLTFBinary from "../../contracts/mesh-loader/gltf-loader/gltf-binary";
-import { IGLTFStorage, GLTFAccessor, IGLTFBufferView, IGLTFBuffer } from "../../contracts/mesh-loader/gltf-loader/gltf-types";
+import { IGLTFStorage, GLTFAccessor, IGLTFBufferView, IGLTFBuffer, GLTFImage } from "../../contracts/mesh-loader/gltf-loader/gltf-types";
 import IMeshLoader from "../../contracts/mesh-loader/mesh-loader";
 import { convertToFloat } from "./gltf-helper-functions";
 import { GLTFUnMipMappedTextureFilter } from "../../constants/mesh-loader/gltf-loader/texture-filter";
 import ColorTexture from "../../../texture/color";
 import PBRMaterial from "../../../materials/pbr";
-import IGLTFFile from "../../contracts/mesh-loader/gltf-loader/gltf-file";
+import IGLTFChunk from "../../contracts/mesh-loader/gltf-loader/gltf-chunk";
 
 class GLTFLoader implements IMeshLoader {
     private binaries: Array<IGLTFBinary>;
@@ -37,9 +37,78 @@ class GLTFLoader implements IMeshLoader {
         this.binaries = binaries;
     }
 
-    parseGLB(view: DataView): Array<IMesh> {
-        // TODO: Add GLB parser
-        return [];
+    /**
+     * Parses GLB file, loads all external files and internal binary.
+     * 
+     * @param buffer - Binary data represented in ArrayBuffer
+     * @returns JSON object ( GLTFStorage ), taken from GLB file ( buffer ).
+     */
+    loadGLB(buffer: ArrayBuffer): IGLTFStorage {
+        const view = new DataView(buffer.slice(4)); // Skip magic "glTF"
+        let currentOffset = 0;
+
+        const version = view.getUint32(currentOffset);
+        currentOffset += 4;
+
+        if(version !== 0x02000000) {
+            console.warn(`Ultra3.GLTFLoader: Unexpected version ${version} for GLB file. File may be interpreted incorrectly.`)
+        }
+
+        const length = view.getUint32(currentOffset, true);
+        currentOffset += 4;
+
+        let storage: IGLTFStorage;
+
+        /*
+        *********************************************
+        *                Parse chunks               *
+        *********************************************
+        */
+        const chunks: Array<IGLTFChunk> = [];
+        let totalLength = 0;
+
+        while(totalLength < length - 28) {
+            // Read header
+
+            const chunkLength = view.getUint32(currentOffset, true);
+            currentOffset += 4;
+
+            const chunkType = view.getUint32(currentOffset);
+            currentOffset += 4;
+
+            totalLength += chunkLength;
+
+            switch(chunkType) {
+                case 0x4A534F4E: // JSON chunk
+                case 0x42494E00: { // BIN chunk
+                    chunks.push({
+                        chunkType,
+                        chunkData: new Uint8Array(buffer.slice(currentOffset + 4), 0, chunkLength),
+                        chunkLength
+                    });
+                    currentOffset += chunkLength;
+                    break;
+                }
+
+                default: {
+                    console.warn(`Ultra3.GLTFLoader: Unknown chunk type "${chunkType}".`);
+                }
+            }
+        }
+
+
+        const decoder = new TextDecoder();
+
+        storage = JSON.parse(decoder.decode(chunks[0].chunkData)); // First chunk is always GLTF storage.
+
+        if(chunks[1]) { // Second chunk is always internal binary or undefined
+            this.loadBinaries([{
+                name: "",
+                data: chunks[1].chunkData.buffer
+            }]);
+        }
+
+        return storage;
     }
 
     accessBuffer(buffer: `${string}.bin` | `${string}.glbin` | `${string}.glbuf` | `data:application/octet-stream;base64,${string}` | `data:application/gltf-buffer;base64,${string}`): ArrayBuffer {
@@ -89,13 +158,10 @@ class GLTFLoader implements IMeshLoader {
 
         if(storage.meshes) {
             // Parse meshes
-
             for(let i = 0; i < storage.meshes.length; i++) {
                 // Parse primitives
-
                 for(let j = 0; j < storage.meshes[i].primitives.length; j++) {
                     let mesh: IMesh;
-
                     let points: Array<IVector> = [];
                     let indices: Array<number> = [];
 
@@ -140,7 +206,6 @@ class GLTFLoader implements IMeshLoader {
                     
                     const verticesBufferView: IGLTFBufferView = storage.bufferViews[verticesAccessor.bufferView];
                     const verticesBuffer: IGLTFBuffer = storage.buffers[verticesBufferView.buffer];
-
                     let pointsBinary: Float32Array;
 
                     if(verticesBufferView.byteStride) {
@@ -182,7 +247,6 @@ class GLTFLoader implements IMeshLoader {
                         const indicesAccessor: GLTFAccessor = storage.accessors[storage.meshes[i].primitives[j].indices];
                         const indicesBufferView: IGLTFBufferView = storage.bufferViews[indicesAccessor.bufferView];
                         const indicesBuffer: IGLTFBuffer = storage.buffers[indicesBufferView.buffer];
-
                         let indicesBinary: Uint8Array | Uint16Array | Uint32Array | Int8Array | Int16Array | Float32Array;
                         let elementSize: 1 | 2 | 4;
                         let arrayType: Uint8ArrayConstructor | Int8ArrayConstructor | Uint16ArrayConstructor | Int16ArrayConstructor | Uint32ArrayConstructor | Float32ArrayConstructor;
@@ -535,7 +599,6 @@ class GLTFLoader implements IMeshLoader {
                         *           Get albedo texture          *
                         *****************************************
                         */
-                        
                         if (GLTFMaterial.pbrMetallicRoughness.baseColorTexture) {
                             const texture = storage.textures[GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index];
                             const image = storage.images[texture.source];
@@ -755,7 +818,6 @@ class GLTFLoader implements IMeshLoader {
                     *          Get emissive texture         *
                     *****************************************
                     */
-
                     if (GLTFMaterial.emissiveTexture) {
                         const texture = storage.textures[GLTFMaterial.emissiveTexture.index];
                         const image = storage.images[texture.source];
@@ -806,28 +868,13 @@ class GLTFLoader implements IMeshLoader {
                     mesh = {
                         castsShadow: true,
                         verticesMode: verticesMode,
-
                         vertices: points,
                         indices: indices,
                         normals: normals,
                         uvs: uvs,
-
-                        pos: {
-                            x: 0, 
-                            y: 0, 
-                            z: 0
-                        },
-                        scale: {
-                            x: 1, 
-                            y: 1, 
-                            z: 1
-                        },
-                        rotation: {
-                            x: 0, 
-                            y: 0, 
-                            z: 0
-                        },
-
+                        pos: { x: 0, y: 0, z: 0 },
+                        scale: { x: 1, y: 1, z: 1 },
+                        rotation: { x: 0, y: 0, z: 0 },
                         material: material
                     }
 
@@ -840,20 +887,200 @@ class GLTFLoader implements IMeshLoader {
     }
 
     parseMeshes(res: (meshes: Array<IMesh>) => any, storage: IGLTFStorage) {
-        console.log(storage);
         res(this.parseGLTF(storage));
     }
 
+    loadAllExternalFiles(storage: IGLTFStorage, cb: Function, binariesSrc: string) {
+        let count = 0; // Count of loaded external files
+        let externalFilesCount = 0;
+        const externalBuffers: Array<IGLTFBuffer> = [];
+        const externalImages: Array<GLTFImage> = [];
+
+        for(let i = 0; i < storage.buffers.length; i++) {
+            if(!storage.buffers[i].uri) {
+                continue;
+            }
+
+            externalBuffers.push(storage.buffers[i]);
+        }
+
+        for(let i = 0; i < storage.images.length; i++) {
+            if(!storage.images[i].uri) {
+                continue;
+            }
+
+            externalImages.push(storage.images[i]);
+        }
+
+        externalFilesCount = externalBuffers.length + externalImages.length;
+
+        if(externalFilesCount === 0) {
+            cb();
+            return;
+        }
+
+        // Load all external buffers
+        for(let i = 0; i < externalBuffers.length; i++) {
+            let url: string;
+
+            if(storage.buffers[i].uri.startsWith("data:")) {
+                url = storage.buffers[i].uri;
+            } else {
+                url = `${binariesSrc}/${storage.buffers[i].uri}`;
+            }
+
+            fetch(url)
+                .then(data => data.blob())
+                .then(data => data.arrayBuffer())
+                .then(data => {
+                    this.loadBinaries([
+                        {
+                            name: storage.buffers[i].uri,
+                            data: data
+                        }
+                    ]);
+                    count++;
+
+                    if(count === externalFilesCount) { // Call callback if we loaded all external files and there is no more files to load
+                        cb()
+                    }
+                })
+        }
+
+        // Load all external images
+        for(let i = 0; i < externalImages.length; i++) {
+            let url: string;
+            let mimetype: string;
+
+            if(storage.images[i].uri.startsWith("data:")) {
+                url = storage.images[i].uri;
+                mimetype = storage.images[i].uri.slice(5, storage.images[i].uri.indexOf(";"))
+            } else {
+                url = `${binariesSrc}/${storage.images[i].uri}`;
+                mimetype = `image/${storage.images[i].uri.slice(storage.images[i].uri.lastIndexOf(".") + 1)}`;
+            }
+
+            fetch(url)
+                .then(data => data.blob())
+                .then(data => data.arrayBuffer())
+                .then(data => {
+                    const uint8 = new Uint8Array(data);
+                    let string = "";
+
+                    for(let i = 0; i < uint8.length; i++) {
+                        string += String.fromCharCode(uint8[i]);
+                    }
+
+                    const image = new Image();
+                    image.onload = () => {
+                        // Get image data
+                        const canvas = document.createElement("canvas");
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(image, 0, 0);
+
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+                        // Add file
+                        this.loadImage(storage.images[i].uri, (imageData as unknown) as Uint8Array, canvas.width, canvas.height)
+                        count++;
+    
+                        if(count === externalFilesCount) { // Call callback if we loaded all external files and there is no more files to load
+                            cb();
+                        }
+                    }
+                    
+                    image.src = `data:${mimetype};base64,${btoa(string)}`;
+                })
+        }
+    }
+
+    /**
+     * @param storage - Storage
+     * @param binary - Built-in binary ( for GLB )
+     * @returns Promise, that triggers when all internal images were loaded. Promise returns new GLTFStorage with image URI's
+     */
+    loadAllInternalImages(storage: IGLTFStorage, binary: ArrayBuffer): Promise<IGLTFStorage> {
+        return new Promise(res => {
+            if(!storage.images) {
+                res(storage);
+                return;
+            }
+    
+            const newStorage: IGLTFStorage = JSON.parse(JSON.stringify(storage)) as IGLTFStorage; // Prevent from linking
+            let count = 0;
+            const internalImages: Array<GLTFImage> = [];
+    
+            // Get all internal images. Needed to find out how much there is internal images.
+            for(let i = 0; i < storage.images.length; i++) {
+                if(storage.images[i].bufferView) {
+                    const bufferView = storage.bufferViews[storage.images[i].bufferView];
+                    const buffer = storage.buffers[bufferView.buffer];
+    
+                    if(!buffer.uri) {
+                        internalImages.push(storage.images[i]);
+                        const extension = storage.images[i].mimeType.slice(6) as ('png' | "jpeg");
+    
+                        newStorage.images[i].uri = `${storage.images[i].name}.${extension}` || `image${internalImages.length - 1}.${extension}`;
+                    }
+                }
+            }
+    
+            for(let i = 0; i < internalImages.length; i++) {
+                const bufferView = storage.bufferViews[internalImages[i].bufferView];
+                let uint8 = new Uint8Array(binary.slice(bufferView.byteOffset || 0));
+                let base64 = `data:${internalImages[i].mimeType};base64,${btoa(String.fromCharCode(...uint8))}`;
+                const image = new Image();
+    
+                image.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+    
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(image, 0, 0);
+    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                    const extension = internalImages[i].mimeType.slice(6);
+    
+                    this.loadImage(`${internalImages[i].name}.${extension}` || `image${i}.${extension}`, (imageData as unknown) as Uint8Array, canvas.width, canvas.height);
+    
+                    count++;
+    
+                    if(count === internalImages.length) {
+                        res(newStorage);
+                    }
+                }
+    
+                image.src = base64;
+            }
+        });
+    }
+
     loadMeshes(buffer: ArrayBuffer, binariesSrc: string = ""): Promise<Array<IMesh>> {
+        // Unload all binaries and images
+        this.binaries = [];
+        this.images = {};
+
         return new Promise((res) => {
             let view = new DataView(buffer);
-            let meshes: Array<IMesh> = [];
 
             let magic = view.getUint32(0);
 
-            if(magic === 0x46546C67) {
+            if(magic === 0x676C5446) {
                 // GLB format
-                meshes = this.parseGLB(view);
+
+                const storage = this.loadGLB(buffer);
+                
+                this.loadAllExternalFiles(storage, () => {
+                    this.loadAllInternalImages(storage, this.binaries[this.binaries.length - 1].data) // If GLB file contains internal buffer, this buffer would be placed in the end of buffers array
+                        .then(newStorage => {
+                            this.parseMeshes(res, newStorage);
+                        })
+                }, binariesSrc);
+
             } else if(view.getUint8(0) === 0x7b) { // view.getUint8(0) === '{'
                 // GLTF format
                 let jsonstring = '{';
@@ -864,88 +1091,9 @@ class GLTFLoader implements IMeshLoader {
 
                 const storage: IGLTFStorage = JSON.parse(jsonstring) as IGLTFStorage;
 
-                /*
-                **************************************
-                *       Load all external files      *
-                **************************************
-                */
-                const files: Array<IGLTFFile> = new Array((storage.buffers || []).length + (storage.images || []).length);
-                let count = 0;
-
-                for(let i = 0; i < storage.buffers.length; i++) {
-                    let url: string;
-
-                    if(storage.buffers[i].uri.startsWith("data:")) {
-                        url = storage.buffers[i].uri;
-                    } else {
-                        url = `${binariesSrc}/${storage.buffers[i].uri}`;
-                    }
-
-                    fetch(url)
-                        .then(data => data.blob())
-                        .then(data => data.arrayBuffer())
-                        .then(data => {
-                            this.loadBinaries([
-                                {
-                                    name: storage.buffers[i].uri,
-                                    data: data
-                                }
-                            ]);
-                            count++;
-
-                            if(count === (storage.buffers || []).length + (storage.images || []).length) {
-                                this.parseMeshes(res, storage);
-                            }
-                        })
-                }
-
-                for(let i = 0; i < storage.images.length; i++) {
-                    let url: string;
-                    let mimetype: string;
-
-                    if(storage.images[i].uri.startsWith("data:")) {
-                        url = storage.images[i].uri;
-                        mimetype = storage.images[i].uri.slice(5, storage.images[i].uri.indexOf(";"))
-                    } else {
-                        url = `${binariesSrc}/${storage.images[i].uri}`;
-                        mimetype = `image/${storage.images[i].uri.slice(storage.images[i].uri.lastIndexOf(".") + 1)}`;
-                    }
-
-                    fetch(url)
-                        .then(data => data.blob())
-                        .then(data => data.arrayBuffer())
-                        .then(data => {
-                            const uint8 = new Uint8Array(data);
-                            let string = "";
-
-                            for(let i = 0; i < uint8.length; i++) {
-                                string += String.fromCharCode(uint8[i]);
-                            }
-
-                            const image = new Image();
-                            image.onload = () => {
-                                // Get image data
-                                const canvas = document.createElement("canvas");
-                                canvas.width = image.width;
-                                canvas.height = image.height;
-
-                                const ctx = canvas.getContext("2d");
-                                ctx.drawImage(image, 0, 0);
-
-                                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-
-                                // Add file
-                                this.loadImage(storage.images[i].uri, (imageData as unknown) as Uint8Array, canvas.width, canvas.height)
-                                count++;
-    
-                                if(count === (storage.buffers || []).length + (storage.images || []).length) {
-                                    this.parseMeshes(res, storage);
-                                }
-                            }
-                            
-                            image.src = `data:${mimetype};base64,${btoa(string)}`;
-                        })
-                }
+                this.loadAllExternalFiles(storage, () => this.parseMeshes(res, storage), binariesSrc);
+            } else {
+                throw new Error(`Ultra3.GLTFLoader: Cannot recognize GLTF type ("${magic}").`);
             }
         });
     }

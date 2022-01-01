@@ -6,7 +6,7 @@ Graphics made up with Babylon.JS
 ## Features:
 ### Mesh loaders
 Supported formats:
-GLTF
+GLTF/GLB
 ### Shaders
 Volumetric shader
 Bicubic texture filtering
