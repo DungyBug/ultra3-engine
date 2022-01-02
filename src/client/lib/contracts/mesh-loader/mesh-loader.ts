@@ -1,7 +1,7 @@
-import IMesh from "../../../contracts/mesh";
+import IScene from "../../../contracts/scene";
 
 interface IMeshLoader {
-    loadMeshes(buffer: ArrayBuffer): Promise<Array<IMesh>>;
+    loadMeshes(buffer: ArrayBuffer): Promise<IScene>;
 }
 
 export default IMeshLoader;

@@ -19,6 +19,7 @@ import { GLTFUnMipMappedTextureFilter } from "../../constants/mesh-loader/gltf-l
 import ColorTexture from "../../../texture/color";
 import PBRMaterial from "../../../materials/pbr";
 import IGLTFChunk from "../../contracts/mesh-loader/gltf-loader/gltf-chunk";
+import IScene from "../../../contracts/scene";
 
 class GLTFLoader implements IMeshLoader {
     private binaries: Array<IGLTFBinary>;
@@ -153,7 +154,7 @@ class GLTFLoader implements IMeshLoader {
         };
     }
 
-    parseGLTF(storage: IGLTFStorage): Array<IMesh> {
+    parseGLTF(storage: IGLTFStorage): IScene {
         let meshes: Array<IMesh> = [];
 
         if(storage.meshes) {
@@ -883,10 +884,13 @@ class GLTFLoader implements IMeshLoader {
             }
         }
 
-        return meshes;
+        return {
+            lights: [],
+            meshes: meshes
+        };
     }
 
-    parseMeshes(res: (meshes: Array<IMesh>) => any, storage: IGLTFStorage) {
+    parseMeshes(res: (meshes: IScene) => any, storage: IGLTFStorage) {
         res(this.parseGLTF(storage));
     }
 
@@ -1059,7 +1063,7 @@ class GLTFLoader implements IMeshLoader {
         });
     }
 
-    loadMeshes(buffer: ArrayBuffer, binariesSrc: string = ""): Promise<Array<IMesh>> {
+    loadMeshes(buffer: ArrayBuffer, binariesSrc: string = ""): Promise<IScene> {
         // Unload all binaries and images
         this.binaries = [];
         this.images = {};

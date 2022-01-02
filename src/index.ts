@@ -27,7 +27,7 @@ fetch("/models/long_rocket.glb")
     .then(data => data.arrayBuffer())
     .then(gltf => {
         loader.loadMeshes(gltf, "/models")
-            .then(meshes => main(meshes[0]));
+            .then(scene => main(scene.meshes[0]));
     });
 
 function main(data: IMesh) {
