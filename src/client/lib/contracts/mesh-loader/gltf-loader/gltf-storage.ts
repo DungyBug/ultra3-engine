@@ -9,12 +9,13 @@ import GLTFImage from "./gltf-image";
 import GLTFMaterial from "./gltf-material";
 import IGLTFMesh from "./gltf-mesh";
 import IGLTFNode from "./gltf-node";
+import IGLTFExtesionPunctualLight from "./gltf-punctual-light";
 import IGLTFSampler from "./gltf-sampler";
 import IGLTFScene from "./gltf-scene";
 import IGLTFSkin from "./gltf-skin";
 import IGLTFTexture from "./gltf-texture";
 
-interface IGLTFStorage extends IGLTFExtensionable {
+interface IGLTFStorage {
     [k: string]: any;
     asset: IGLTFAsset;
     scenes?: Array<IGLTFScene>;
@@ -33,6 +34,13 @@ interface IGLTFStorage extends IGLTFExtensionable {
     extensionsRequired?: Array<string>;
     cameras?: Array<GLTFCamera>;
     animations?: Array<IGLTFAnimation>;
+
+    // Extensions with different type from standard IGLTFExtensionable
+    extensions?: {
+        [k: `KHR_${string}`]: Record<string, any>,
+        KHR_lights_punctual?: IGLTFExtesionPunctualLight
+    };
+    extras?: any; // string | number | boolean | Array<string | number | boolean> | Record<string, any>
 }
 
 export default IGLTFStorage;

@@ -9,8 +9,6 @@ interface IGLTFSampler extends IGLTFExtensionable {
     wrapS?: GLTFWrapMode; // 10497 ( REPEAT ) default
     wrapT?: GLTFWrapMode; // 10497 ( REPEAT ) default
     name?: string;
-    extensions?: Array<Record<string, any>>;
-    extras?: Array<any>;
 }
 
 export default IGLTFSampler;
