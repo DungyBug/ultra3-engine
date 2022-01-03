@@ -632,7 +632,7 @@ class GLTFLoader implements IMeshLoader {
                                     }
                                 }
 
-                                let samplingMode: SamplingMode;
+                                let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                                 if (texture.sampler) {
                                     const sampler = storage.samplers[texture.sampler];
@@ -657,7 +657,10 @@ class GLTFLoader implements IMeshLoader {
                                     framesPerSecond: 0,
                                     colorMode: ColorMode.RGBA,
                                     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                    samplingMode: samplingMode
+                                    samplingMode: samplingMode,
+                                    offset: GLTFMaterial.pbrMetallicRoughness.baseColorTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
+                                    rotation: [GLTFMaterial.pbrMetallicRoughness.baseColorTexture.extensions?.KHR_texture_transform?.rotation || 0],
+                                    scale: GLTFMaterial.pbrMetallicRoughness.baseColorTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
                                 });
                             } else {
                                 let color: [number, number, number, number] = [1.0, 1.0, 1.0, 1.0];
@@ -695,7 +698,7 @@ class GLTFLoader implements IMeshLoader {
                                     }
                                 }
 
-                                let samplingMode: SamplingMode;
+                                let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                                 if (texture.sampler) {
                                     const sampler = storage.samplers[texture.sampler];
@@ -720,7 +723,10 @@ class GLTFLoader implements IMeshLoader {
                                     framesPerSecond: 0,
                                     colorMode: ColorMode.LUMINANCE,
                                     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                    samplingMode: samplingMode
+                                    samplingMode: samplingMode,
+                                    offset: GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
+                                    rotation: [GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.rotation || 0],
+                                    scale: GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
                                 });
 
                                 roughness = new Texture2D<IUint8TextureOptions>({
@@ -730,7 +736,10 @@ class GLTFLoader implements IMeshLoader {
                                     framesPerSecond: 0,
                                     colorMode: ColorMode.LUMINANCE,
                                     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                    samplingMode: samplingMode
+                                    samplingMode: samplingMode,
+                                    offset: GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
+                                    rotation: [GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.rotation || 0],
+                                    scale: GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
                                 });
                             } else {
                                 let metallicFactor = 1.0 || GLTFMaterial.pbrMetallicRoughness.metallicFactor;
@@ -753,7 +762,7 @@ class GLTFLoader implements IMeshLoader {
                             const accessedImage = this.accessImage(image.uri);
                             const imageData = accessedImage.data;
 
-                            let samplingMode: SamplingMode;
+                            let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
                                 const sampler = storage.samplers[texture.sampler];
@@ -778,7 +787,10 @@ class GLTFLoader implements IMeshLoader {
                                 framesPerSecond: 0,
                                 colorMode: ColorMode.RGB,
                                 textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                samplingMode: samplingMode
+                                samplingMode: samplingMode,
+                                offset: GLTFMaterial.normalTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
+                                rotation: [GLTFMaterial.normalTexture.extensions?.KHR_texture_transform?.rotation || 0],
+                                scale: GLTFMaterial.normalTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
                             });
                         } else {
                             normalsTexture = new ColorTexture(ColorMode.RGB, [0.5, 0.5, 1.0]);
@@ -796,7 +808,7 @@ class GLTFLoader implements IMeshLoader {
                             const accessedImage = this.accessImage(image.uri);
                             const imageData = accessedImage.data;
 
-                            let samplingMode: SamplingMode;
+                            let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
                                 const sampler = storage.samplers[texture.sampler];
@@ -821,7 +833,10 @@ class GLTFLoader implements IMeshLoader {
                                 framesPerSecond: 0,
                                 colorMode: ColorMode.RGB,
                                 textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                samplingMode: samplingMode
+                                samplingMode: samplingMode,
+                                offset: GLTFMaterial.occlusionTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
+                                rotation: [GLTFMaterial.occlusionTexture.extensions?.KHR_texture_transform?.rotation || 0],
+                                scale: GLTFMaterial.occlusionTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
                             });
                         } else {
                             occlusion = new ColorTexture(ColorMode.LUMINANCE, 1.0);
@@ -839,7 +854,7 @@ class GLTFLoader implements IMeshLoader {
                             const accessedImage = this.accessImage(image.uri);
                             const imageData = accessedImage.data;
 
-                            let samplingMode: SamplingMode;
+                            let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
                                 const sampler = storage.samplers[texture.sampler];
@@ -864,7 +879,10 @@ class GLTFLoader implements IMeshLoader {
                                 framesPerSecond: 0,
                                 colorMode: ColorMode.RGB,
                                 textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                samplingMode: samplingMode
+                                samplingMode: samplingMode,
+                                offset: GLTFMaterial.emissiveTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
+                                rotation: [GLTFMaterial.emissiveTexture.extensions?.KHR_texture_transform?.rotation || 0],
+                                scale: GLTFMaterial.emissiveTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
                             });
                         } else {
                             emissive = new ColorTexture(ColorMode.LUMINANCE, 1.0);
@@ -1120,6 +1138,7 @@ class GLTFLoader implements IMeshLoader {
                 this.loadAllExternalFiles(storage, () => {
                     this.loadAllInternalImages(storage, this.binaries[this.binaries.length - 1].data) // If GLB file contains internal buffer, this buffer would be placed in the end of buffers array
                         .then(newStorage => {
+                            console.log(newStorage);
                             this.parseMeshes(res, newStorage);
                         })
                 }, binariesSrc);

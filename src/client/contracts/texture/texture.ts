@@ -3,6 +3,10 @@ import SamplingMode from "../../constants/sampling-mode";
 import TypedArray from "../common/typed-array";
 
 interface ITexture<T extends TypedArray> {
+    offset: Array<number>;
+    rotation: Array<number>;
+    scale: Array<number>;
+
     /**
      * Gets texture at time ( for animated textures )
      * @param time - time in seconds

@@ -6,14 +6,20 @@ import ITexture2D from "../contracts/texture/texture2d";
 import Texture2DOptions from "../contracts/texture/texture2d-opts";
 
 class Texture2D<T extends TextureOptions> implements ITexture2D<TextureOptsToArrayType<T>> {
+    public offset: [number, number];
+    public rotation: [number];
+    public scale: [number, number];
+    public samplingMode: SamplingMode;
     protected width: number;
     protected height: number;
-    public samplingMode: SamplingMode;
-    readonly colorMode: ColorMode;
     protected frames: Array<TypedArray>;
     protected framesPerSecond: number;
+    readonly colorMode: ColorMode;
 
     constructor(options: Texture2DOptions<T>) {
+        this.offset = options.offset || [0, 0];
+        this.rotation = options.rotation || [0];
+        this.scale = options.scale || [1, 1];
         this.width = options.width;
         this.height = options.height;
         this.samplingMode = options.samplingMode;

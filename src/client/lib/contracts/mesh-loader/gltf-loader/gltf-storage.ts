@@ -9,7 +9,7 @@ import GLTFImage from "./gltf-image";
 import GLTFMaterial from "./gltf-material";
 import IGLTFMesh from "./gltf-mesh";
 import IGLTFNode from "./gltf-node";
-import IGLTFExtesionPunctualLight from "./gltf-punctual-light";
+import IGLTFExtesionPunctualLight from "./extensions/gltf-punctual-light";
 import IGLTFSampler from "./gltf-sampler";
 import IGLTFScene from "./gltf-scene";
 import IGLTFSkin from "./gltf-skin";

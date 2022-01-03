@@ -1,13 +1,12 @@
 import GLTFLoader from "./client/lib/mesh-loader/gltf-loader/gltf-loader";
 import * as BABYLON from "babylonjs";
-import PBRMaterial from "./client/materials/pbr";
 import { World } from "./core/world";
 import IScene from "./client/contracts/scene";
 
 const world = new World();
 let loader = new GLTFLoader(world);
 
-fetch("/models/long_rocket.glb")
+fetch("/models/waterbottle.gltf")
     .then(data => data.blob())
     .then(data => data.arrayBuffer())
     .then(gltf => {

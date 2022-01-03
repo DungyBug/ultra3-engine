@@ -3,68 +3,53 @@ import SamplingMode from "../../constants/sampling-mode";
 import TextureFormat from "../../constants/texture-format";
 import TypedArray from "../common/typed-array";
 
-interface IUint8TextureOptions {
+interface IBaseTextureOptions {
+    colorMode: ColorMode;
+    framesPerSecond: number;
+    samplingMode: SamplingMode;
+    shift?: Array<number>;
+    rotation?: Array<number>;
+    scale?: Array<number>;
+}
+
+interface IUint8TextureOptions extends IBaseTextureOptions {
     frames: Array<Uint8Array>;
-    framesPerSecond: number;
-    colorMode: ColorMode;
     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE;
-    samplingMode: SamplingMode;
 }
 
-interface IInt8TextureOptions {
+interface IInt8TextureOptions extends IBaseTextureOptions {
     frames: Array<Int8Array>;
-    framesPerSecond: number;
-    colorMode: ColorMode;
     textureFormat: TextureFormat.TEXTUREFORMAT_BYTE;
-    samplingMode: SamplingMode;
 }
 
-interface IUint16TextureOptions {
+interface IUint16TextureOptions extends IBaseTextureOptions {
     frames: Array<Uint16Array>;
-    framesPerSecond: number;
-    colorMode: ColorMode;
     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_SHORT;
-    samplingMode: SamplingMode;
 }
 
-interface IInt16TextureOptions {
+interface IInt16TextureOptions extends IBaseTextureOptions {
     frames: Array<Int16Array>;
-    framesPerSecond: number;
-    colorMode: ColorMode;
     textureFormat: TextureFormat.TEXTUREFORMAT_SHORT;
-    samplingMode: SamplingMode;
 }
 
-interface IUint32TextureOptions {
+interface IUint32TextureOptions extends IBaseTextureOptions {
     frames: Array<Uint32Array>;
-    framesPerSecond: number;
-    colorMode: ColorMode;
     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_INT;
-    samplingMode: SamplingMode;
 }
 
-interface IInt32TextureOptions {
+interface IInt32TextureOptions extends IBaseTextureOptions {
     frames: Array<Int32Array>;
-    framesPerSecond: number;
-    colorMode: ColorMode;
     textureFormat: TextureFormat.TEXTUREFORMAT_INT;
-    samplingMode: SamplingMode;
 }
 
-interface IFloat16TextureOptions {
+interface IFloat16TextureOptions extends IBaseTextureOptions {
     frames: Array<Uint16Array>;
-    framesPerSecond: number;
-    colorMode: ColorMode;
     textureFormat: TextureFormat.TEXTUREFORMAT_HALF_FLOAT;
-    samplingMode: SamplingMode;
 }
 
-interface IFloat32TextureOptions {
+interface IFloat32TextureOptions extends IBaseTextureOptions {
     frames: Array<Float32Array>;
-    framesPerSecond: number;
-    colorMode: ColorMode;
     textureFormat: TextureFormat.TEXTUREFORMAT_FLOAT;
-    samplingMode: SamplingMode;
 }
 
 type TextureOptions = IUint8TextureOptions | IUint16TextureOptions | IUint32TextureOptions | IInt8TextureOptions | IInt16TextureOptions | IInt32TextureOptions | IFloat32TextureOptions | IFloat16TextureOptions;

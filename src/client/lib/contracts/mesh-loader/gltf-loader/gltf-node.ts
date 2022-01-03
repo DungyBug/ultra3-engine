@@ -1,3 +1,4 @@
+import { IGLTFNodeExtesionPunctualLight } from "./extensions/gltf-punctual-light";
 import IGLTFExtensionable from "./gltf-extensionable";
 
 interface IGLTFNode extends IGLTFExtensionable {
@@ -12,6 +13,10 @@ interface IGLTFNode extends IGLTFExtensionable {
     skin?: number;
     mesh?: number;
     weights?: Array<number>;
+
+    extensions?: {
+        KHR_lights_punctual?: IGLTFNodeExtesionPunctualLight,
+    }
 }
 
 export default IGLTFNode;
