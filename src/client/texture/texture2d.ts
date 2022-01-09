@@ -9,7 +9,8 @@ class Texture2D<T extends TextureOptions> implements ITexture2D<TextureOptsToArr
     public offset: [number, number];
     public rotation: [number];
     public scale: [number, number];
-    public samplingMode: SamplingMode;
+    public magSamplingMode: SamplingMode;
+    public minSamplingMode: SamplingMode;
     protected width: number;
     protected height: number;
     protected frames: Array<TypedArray>;
@@ -22,7 +23,8 @@ class Texture2D<T extends TextureOptions> implements ITexture2D<TextureOptsToArr
         this.scale = options.scale || [1, 1];
         this.width = options.width;
         this.height = options.height;
-        this.samplingMode = options.samplingMode;
+        this.magSamplingMode = options.magSamplingMode;
+        this.minSamplingMode = options.minSamplingMode;
         this.colorMode = options.colorMode;
         this.framesPerSecond = options.framesPerSecond;
         this.frames = options.frames

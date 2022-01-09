@@ -18,8 +18,12 @@ class TexturedMaterial<T extends TypedArray = TypedArray> implements IMaterial {
                 value: this.texture
             },
             {
-                name: "useBicubicFiltration",
-                value: this.texture.samplingMode === SamplingMode.BICUBIC
+                name: "useMagBicubicFiltration",
+                value: this.texture.magSamplingMode === SamplingMode.BICUBIC
+            },
+            {
+                name: "useMinBicubicFiltration",
+                value: this.texture.minSamplingMode === SamplingMode.BICUBIC
             }
             ],
             name: "u3textured"

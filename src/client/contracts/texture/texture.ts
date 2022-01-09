@@ -17,7 +17,8 @@ interface ITexture<T extends TypedArray> {
      * Returns texture size in dimensions.
      */
     get dimensions(): Array<number>;
-    get samplingMode(): SamplingMode;
+    get magSamplingMode(): SamplingMode;
+    get minSamplingMode(): SamplingMode;
     get colorMode(): ColorMode;
 };
 

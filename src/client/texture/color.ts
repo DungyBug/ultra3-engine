@@ -73,7 +73,8 @@ class ColorTexture<T extends ColorMode = ColorMode> extends Texture2D<ArrayTypeT
             frames: [image],
             framesPerSecond: 0,
             colorMode: colorMode,
-            samplingMode: SamplingMode.NEAREST,
+            magSamplingMode: SamplingMode.NEAREST,
+            minSamplingMode: SamplingMode.NEAREST,
             textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE
         });
     }

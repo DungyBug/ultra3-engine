@@ -6,7 +6,7 @@ import IScene from "./client/contracts/scene";
 const world = new World();
 let loader = new GLTFLoader(world);
 
-fetch("/models/waterbottle.gltf")
+fetch("/models/long_rocket.glb")
     .then(data => data.blob())
     .then(data => data.arrayBuffer())
     .then(gltf => {
@@ -15,6 +15,7 @@ fetch("/models/waterbottle.gltf")
     });
 
 function main(GLTFScene: IScene) {
+    console.log(scene);
     // Get the canvas DOM element
     var canvas = document.createElement('canvas');
     canvas.width = window.innerWidth;
@@ -47,9 +48,6 @@ function main(GLTFScene: IScene) {
     light.intensity = 10000;
     light.shadowEnabled = true;
     light.radius = 1;
-
-    let shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
-    shadowGenerator.usePercentageCloserFiltering = true;
 
     // Load all meshes
     for(let i = 0; i < GLTFScene.meshes.length; i++) {
@@ -94,9 +92,6 @@ function main(GLTFScene: IScene) {
         //material.emissiveTexture = new BABYLON.RawTexture(pbrmaterial.emissiveTexture.getRawData(0), pbrmaterial.emissiveTexture.dimensions[0], pbrmaterial.emissiveTexture.dimensions[1], BABYLON.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Engine.TEXTURE_TRILINEAR_SAMPLINGMODE, BABYLON.Engine.TEXTURETYPE_UNSIGNED_BYTE);
         material.glossiness = 0;
         customMesh.material = material;
-        customMesh.receiveShadows = true;
-
-        shadowGenerator.getShadowMap().renderList.push(customMesh);
     }
 
     // Load all lights

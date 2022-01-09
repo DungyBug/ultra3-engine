@@ -9,7 +9,8 @@ class Texture3D<T extends Texture3DOptions> implements ITexture3D<TextureOptsToA
     public offset: [number, number, number];
     public rotation: [number, number, number];
     public scale: [number, number, number];
-    public samplingMode: SamplingMode;
+    public magSamplingMode: SamplingMode;
+    public minSamplingMode: SamplingMode;
     protected width: number;
     protected height: number;
     protected depth: number;
@@ -24,7 +25,8 @@ class Texture3D<T extends Texture3DOptions> implements ITexture3D<TextureOptsToA
         this.width = options.width;
         this.height = options.height;
         this.depth = options.depth;
-        this.samplingMode = options.samplingMode;
+        this.magSamplingMode = options.magSamplingMode;
+        this.minSamplingMode = options.minSamplingMode;
         this.colorMode = options.colorMode;
         this.framesPerSecond = options.framesPerSecond;
         this.frames = options.frames

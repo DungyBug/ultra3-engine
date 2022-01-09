@@ -6,7 +6,8 @@ import TypedArray from "../common/typed-array";
 interface IBaseTextureOptions {
     colorMode: ColorMode;
     framesPerSecond: number;
-    samplingMode: SamplingMode;
+    magSamplingMode: SamplingMode;
+    minSamplingMode: SamplingMode;
     shift?: Array<number>;
     rotation?: Array<number>;
     scale?: Array<number>;

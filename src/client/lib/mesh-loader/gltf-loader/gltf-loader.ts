@@ -15,7 +15,7 @@ import IGLTFBinary from "../../contracts/mesh-loader/gltf-loader/gltf-binary";
 import { IGLTFStorage, GLTFAccessor, IGLTFBufferView, IGLTFBuffer, GLTFImage } from "../../contracts/mesh-loader/gltf-loader/gltf-types";
 import IMeshLoader from "../../contracts/mesh-loader/mesh-loader";
 import { convertToFloat } from "./gltf-helper-functions";
-import { GLTFUnMipMappedTextureFilter } from "../../constants/mesh-loader/gltf-loader/texture-filter";
+import GLTFMipMappedTextureFilter, { GLTFUnMipMappedTextureFilter } from "../../constants/mesh-loader/gltf-loader/texture-filter";
 import ColorTexture from "../../../texture/color";
 import PBRMaterial from "../../../materials/pbr";
 import IGLTFChunk from "../../contracts/mesh-loader/gltf-loader/gltf-chunk";
@@ -632,19 +632,37 @@ class GLTFLoader implements IMeshLoader {
                                     }
                                 }
 
-                                let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                                let magSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                                let minSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                                 if (texture.sampler) {
                                     const sampler = storage.samplers[texture.sampler];
                                     
-                                    // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
                                     switch(sampler.magFilter) {
                                         case GLTFUnMipMappedTextureFilter.NEAREST: {
-                                            samplingMode = SamplingMode.NEAREST;
+                                            magSamplingMode = SamplingMode.NEAREST;
                                             break;
                                         }
                                         case GLTFUnMipMappedTextureFilter.LINEAR: {
-                                            samplingMode = SamplingMode.TRILINEAR;
+                                            magSamplingMode = SamplingMode.TRILINEAR;
+                                            break;
+                                        }
+                                    }
+
+                                    switch(sampler.minFilter) {
+                                        case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_LINEAR:
+                                        case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_NEAREST:
+                                        case GLTFMipMappedTextureFilter.NEAREST: {
+                                            minSamplingMode = SamplingMode.NEAREST;
+                                            break;
+                                        }
+                                        case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_LINEAR:
+                                        case GLTFMipMappedTextureFilter.LINEAR: {
+                                            minSamplingMode = SamplingMode.TRILINEAR;
+                                            break;
+                                        }
+                                        case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_NEAREST: {
+                                            minSamplingMode = SamplingMode.BILINEAR;
                                             break;
                                         }
                                     }
@@ -657,7 +675,8 @@ class GLTFLoader implements IMeshLoader {
                                     framesPerSecond: 0,
                                     colorMode: ColorMode.RGBA,
                                     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                    samplingMode: samplingMode,
+                                    magSamplingMode: magSamplingMode,
+                                    minSamplingMode: minSamplingMode,
                                     offset: GLTFMaterial.pbrMetallicRoughness.baseColorTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
                                     rotation: [GLTFMaterial.pbrMetallicRoughness.baseColorTexture.extensions?.KHR_texture_transform?.rotation || 0],
                                     scale: GLTFMaterial.pbrMetallicRoughness.baseColorTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
@@ -698,19 +717,37 @@ class GLTFLoader implements IMeshLoader {
                                     }
                                 }
 
-                                let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                                let magSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                                let minSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                                 if (texture.sampler) {
                                     const sampler = storage.samplers[texture.sampler];
                                     
-                                    // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
                                     switch(sampler.magFilter) {
                                         case GLTFUnMipMappedTextureFilter.NEAREST: {
-                                            samplingMode = SamplingMode.NEAREST;
+                                            magSamplingMode = SamplingMode.NEAREST;
                                             break;
                                         }
                                         case GLTFUnMipMappedTextureFilter.LINEAR: {
-                                            samplingMode = SamplingMode.TRILINEAR;
+                                            magSamplingMode = SamplingMode.TRILINEAR;
+                                            break;
+                                        }
+                                    }
+
+                                    switch(sampler.minFilter) {
+                                        case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_LINEAR:
+                                        case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_NEAREST:
+                                        case GLTFMipMappedTextureFilter.NEAREST: {
+                                            minSamplingMode = SamplingMode.NEAREST;
+                                            break;
+                                        }
+                                        case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_LINEAR:
+                                        case GLTFMipMappedTextureFilter.LINEAR: {
+                                            minSamplingMode = SamplingMode.TRILINEAR;
+                                            break;
+                                        }
+                                        case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_NEAREST: {
+                                            minSamplingMode = SamplingMode.BILINEAR;
                                             break;
                                         }
                                     }
@@ -723,7 +760,8 @@ class GLTFLoader implements IMeshLoader {
                                     framesPerSecond: 0,
                                     colorMode: ColorMode.LUMINANCE,
                                     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                    samplingMode: samplingMode,
+                                    magSamplingMode: magSamplingMode,
+                                    minSamplingMode: minSamplingMode,
                                     offset: GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
                                     rotation: [GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.rotation || 0],
                                     scale: GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
@@ -736,7 +774,8 @@ class GLTFLoader implements IMeshLoader {
                                     framesPerSecond: 0,
                                     colorMode: ColorMode.LUMINANCE,
                                     textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                    samplingMode: samplingMode,
+                                    magSamplingMode: magSamplingMode,
+                                    minSamplingMode: minSamplingMode,
                                     offset: GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
                                     rotation: [GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.rotation || 0],
                                     scale: GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
@@ -762,19 +801,37 @@ class GLTFLoader implements IMeshLoader {
                             const accessedImage = this.accessImage(image.uri);
                             const imageData = accessedImage.data;
 
-                            let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                            let magSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                            let minSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
                                 const sampler = storage.samplers[texture.sampler];
                                 
-                                // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
                                 switch(sampler.magFilter) {
                                     case GLTFUnMipMappedTextureFilter.NEAREST: {
-                                        samplingMode = SamplingMode.NEAREST;
+                                        magSamplingMode = SamplingMode.NEAREST;
                                         break;
                                     }
                                     case GLTFUnMipMappedTextureFilter.LINEAR: {
-                                        samplingMode = SamplingMode.TRILINEAR;
+                                        magSamplingMode = SamplingMode.TRILINEAR;
+                                        break;
+                                    }
+                                }
+
+                                switch(sampler.minFilter) {
+                                    case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_LINEAR:
+                                    case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_NEAREST:
+                                    case GLTFMipMappedTextureFilter.NEAREST: {
+                                        minSamplingMode = SamplingMode.NEAREST;
+                                        break;
+                                    }
+                                    case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_LINEAR:
+                                    case GLTFMipMappedTextureFilter.LINEAR: {
+                                        minSamplingMode = SamplingMode.TRILINEAR;
+                                        break;
+                                    }
+                                    case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_NEAREST: {
+                                        minSamplingMode = SamplingMode.BILINEAR;
                                         break;
                                     }
                                 }
@@ -787,7 +844,8 @@ class GLTFLoader implements IMeshLoader {
                                 framesPerSecond: 0,
                                 colorMode: ColorMode.RGB,
                                 textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                samplingMode: samplingMode,
+                                magSamplingMode: magSamplingMode,
+                                minSamplingMode: minSamplingMode,
                                 offset: GLTFMaterial.normalTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
                                 rotation: [GLTFMaterial.normalTexture.extensions?.KHR_texture_transform?.rotation || 0],
                                 scale: GLTFMaterial.normalTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
@@ -808,19 +866,37 @@ class GLTFLoader implements IMeshLoader {
                             const accessedImage = this.accessImage(image.uri);
                             const imageData = accessedImage.data;
 
-                            let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                            let magSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                            let minSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
                                 const sampler = storage.samplers[texture.sampler];
                                 
-                                // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
                                 switch(sampler.magFilter) {
                                     case GLTFUnMipMappedTextureFilter.NEAREST: {
-                                        samplingMode = SamplingMode.NEAREST;
+                                        magSamplingMode = SamplingMode.NEAREST;
                                         break;
                                     }
                                     case GLTFUnMipMappedTextureFilter.LINEAR: {
-                                        samplingMode = SamplingMode.TRILINEAR;
+                                        magSamplingMode = SamplingMode.TRILINEAR;
+                                        break;
+                                    }
+                                }
+
+                                switch(sampler.minFilter) {
+                                    case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_LINEAR:
+                                    case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_NEAREST:
+                                    case GLTFMipMappedTextureFilter.NEAREST: {
+                                        minSamplingMode = SamplingMode.NEAREST;
+                                        break;
+                                    }
+                                    case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_LINEAR:
+                                    case GLTFMipMappedTextureFilter.LINEAR: {
+                                        minSamplingMode = SamplingMode.TRILINEAR;
+                                        break;
+                                    }
+                                    case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_NEAREST: {
+                                        minSamplingMode = SamplingMode.BILINEAR;
                                         break;
                                     }
                                 }
@@ -833,7 +909,8 @@ class GLTFLoader implements IMeshLoader {
                                 framesPerSecond: 0,
                                 colorMode: ColorMode.RGB,
                                 textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                samplingMode: samplingMode,
+                                magSamplingMode: magSamplingMode,
+                                minSamplingMode: minSamplingMode,
                                 offset: GLTFMaterial.occlusionTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
                                 rotation: [GLTFMaterial.occlusionTexture.extensions?.KHR_texture_transform?.rotation || 0],
                                 scale: GLTFMaterial.occlusionTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
@@ -854,19 +931,37 @@ class GLTFLoader implements IMeshLoader {
                             const accessedImage = this.accessImage(image.uri);
                             const imageData = accessedImage.data;
 
-                            let samplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                            let magSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                            let minSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
                                 const sampler = storage.samplers[texture.sampler];
                                 
-                                // Use only magnification filter. May be in future I'll add magnification and minification filter for textures.
                                 switch(sampler.magFilter) {
                                     case GLTFUnMipMappedTextureFilter.NEAREST: {
-                                        samplingMode = SamplingMode.NEAREST;
+                                        magSamplingMode = SamplingMode.NEAREST;
                                         break;
                                     }
                                     case GLTFUnMipMappedTextureFilter.LINEAR: {
-                                        samplingMode = SamplingMode.TRILINEAR;
+                                        magSamplingMode = SamplingMode.TRILINEAR;
+                                        break;
+                                    }
+                                }
+
+                                switch(sampler.minFilter) {
+                                    case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_LINEAR:
+                                    case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_NEAREST:
+                                    case GLTFMipMappedTextureFilter.NEAREST: {
+                                        minSamplingMode = SamplingMode.NEAREST;
+                                        break;
+                                    }
+                                    case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_LINEAR:
+                                    case GLTFMipMappedTextureFilter.LINEAR: {
+                                        minSamplingMode = SamplingMode.TRILINEAR;
+                                        break;
+                                    }
+                                    case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_NEAREST: {
+                                        minSamplingMode = SamplingMode.BILINEAR;
                                         break;
                                     }
                                 }
@@ -879,7 +974,8 @@ class GLTFLoader implements IMeshLoader {
                                 framesPerSecond: 0,
                                 colorMode: ColorMode.RGB,
                                 textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-                                samplingMode: samplingMode,
+                                magSamplingMode: magSamplingMode,
+                                minSamplingMode: minSamplingMode,
                                 offset: GLTFMaterial.emissiveTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
                                 rotation: [GLTFMaterial.emissiveTexture.extensions?.KHR_texture_transform?.rotation || 0],
                                 scale: GLTFMaterial.emissiveTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
@@ -1138,7 +1234,6 @@ class GLTFLoader implements IMeshLoader {
                 this.loadAllExternalFiles(storage, () => {
                     this.loadAllInternalImages(storage, this.binaries[this.binaries.length - 1].data) // If GLB file contains internal buffer, this buffer would be placed in the end of buffers array
                         .then(newStorage => {
-                            console.log(newStorage);
                             this.parseMeshes(res, newStorage);
                         })
                 }, binariesSrc);
