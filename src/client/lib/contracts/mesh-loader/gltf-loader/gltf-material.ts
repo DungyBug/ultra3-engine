@@ -1,7 +1,8 @@
+import IGLTFSpecularMaterial from "./extensions/gltf-specular-material";
 import IGLTFTextureTransformExtension from "./extensions/gltf-texture-transform";
 import IGLTFExtensionable from "./gltf-extensionable";
 
-interface ITexturePointer extends IGLTFExtensionable {
+export interface ITexturePointer extends IGLTFExtensionable {
     index: number;
     texCoord?: number;
 
@@ -42,6 +43,11 @@ interface IBaseGLTFMaterial extends IGLTFExtensionable {
     emissiveFactor?: number;
     alphaMode?: "OPAQUE" | "MASK" | "BLEND";
     doubleSided?: boolean;
+
+    extensions?: {
+        [k: `KHR_${string}`]: Record<string, any>;
+        KHR_materials_specular?: IGLTFSpecularMaterial;
+    }
 };
 
 interface IGLTFOpaqueMaterial extends IBaseGLTFMaterial {

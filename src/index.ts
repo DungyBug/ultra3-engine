@@ -6,7 +6,7 @@ import IScene from "./client/contracts/scene";
 const world = new World();
 let loader = new GLTFLoader(world);
 
-fetch("/models/long_rocket.glb")
+fetch("/models/waterbottle.gltf")
     .then(data => data.blob())
     .then(data => data.arrayBuffer())
     .then(gltf => {
@@ -15,7 +15,7 @@ fetch("/models/long_rocket.glb")
     });
 
 function main(GLTFScene: IScene) {
-    console.log(scene);
+    console.log(GLTFScene);
     // Get the canvas DOM element
     var canvas = document.createElement('canvas');
     canvas.width = window.innerWidth;

@@ -984,13 +984,168 @@ class GLTFLoader implements IMeshLoader {
                             emissive = new ColorTexture(ColorMode.LUMINANCE, 1.0);
                         }
 
+                        let specularFactor = 0.0;
+                        let specularTexture: ITexture2D<Uint8Array>;
+                        let specularColor: ITexture2D<Uint8Array>;
+
+                        if(GLTFMaterial.extensions) {
+                            /*
+                            ********************************************
+                            *         Parse material extensions        *
+                            ********************************************
+                            */
+                            if(GLTFMaterial.extensions.KHR_materials_specular) {
+                                /*
+                                ********************************************
+                                *         Parse specular material          *
+                                ********************************************
+                                */
+                                if(GLTFMaterial.extensions.KHR_materials_specular.specularTexture) {
+                                    const factor = GLTFMaterial.extensions.KHR_materials_specular.specularFactor || 1.0;
+                                    const texture = storage.textures[GLTFMaterial.extensions.KHR_materials_specular.specularTexture.index];
+                                    const image = storage.images[texture.source];
+                                    const accessedImage = this.accessImage(image.uri);
+                                    const imageData = accessedImage.data;
+
+                                    for(let i = 0; i < imageData.length; i += 4) {
+                                        imageData[i] *= factor;
+                                        imageData[i + 1] *= factor;
+                                        imageData[i + 2] *= factor;
+                                    }
+
+                                    let magSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                                    let minSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+
+                                    if (texture.sampler) {
+                                        const sampler = storage.samplers[texture.sampler];
+                                        
+                                        switch(sampler.magFilter) {
+                                            case GLTFUnMipMappedTextureFilter.NEAREST: {
+                                                magSamplingMode = SamplingMode.NEAREST;
+                                                break;
+                                            }
+                                            case GLTFUnMipMappedTextureFilter.LINEAR: {
+                                                magSamplingMode = SamplingMode.TRILINEAR;
+                                                break;
+                                            }
+                                        }
+
+                                        switch(sampler.minFilter) {
+                                            case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_LINEAR:
+                                            case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_NEAREST:
+                                            case GLTFMipMappedTextureFilter.NEAREST: {
+                                                minSamplingMode = SamplingMode.NEAREST;
+                                                break;
+                                            }
+                                            case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_LINEAR:
+                                            case GLTFMipMappedTextureFilter.LINEAR: {
+                                                minSamplingMode = SamplingMode.TRILINEAR;
+                                                break;
+                                            }
+                                            case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_NEAREST: {
+                                                minSamplingMode = SamplingMode.BILINEAR;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    specularTexture = new Texture2D({
+                                        width: accessedImage.width,
+                                        height: accessedImage.height,
+                                        frames: [imageData],
+                                        framesPerSecond: 0,
+                                        colorMode: ColorMode.RGB,
+                                        textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                        magSamplingMode: magSamplingMode,
+                                        minSamplingMode: minSamplingMode,
+                                        offset: GLTFMaterial.extensions.KHR_materials_specular.specularTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
+                                        rotation: [GLTFMaterial.extensions.KHR_materials_specular.specularTexture.extensions?.KHR_texture_transform?.rotation || 0],
+                                        scale: GLTFMaterial.extensions.KHR_materials_specular.specularTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
+                                    })
+                                } else {
+                                    let factor = GLTFMaterial.extensions.KHR_materials_specular.specularFactor || 1.0;
+                                    specularTexture = new ColorTexture(ColorMode.RGB, [factor, factor, factor]);
+                                }
+
+                                if(GLTFMaterial.extensions.KHR_materials_specular.specularColorTexture) {
+                                    const factor = GLTFMaterial.extensions.KHR_materials_specular.specularColorFactor || [1.0, 1.0, 1.0];
+                                    const texture = storage.textures[GLTFMaterial.extensions.KHR_materials_specular.specularColorTexture.index];
+                                    const image = storage.images[texture.source];
+                                    
+                                    const accessedImage = this.accessImage(image.uri);
+                                    const imageData = accessedImage.data;
+
+                                    for(let i = 0; i < imageData.length; i += 4) {
+                                        imageData[i] *= factor[0];
+                                        imageData[i + 1] *= factor[1];
+                                        imageData[i + 2] *= factor[2];
+                                    }
+
+                                    let magSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+                                    let minSamplingMode: SamplingMode = SamplingMode.TRILINEAR;
+
+                                    if (texture.sampler) {
+                                        const sampler = storage.samplers[texture.sampler];
+                                        
+                                        switch(sampler.magFilter) {
+                                            case GLTFUnMipMappedTextureFilter.NEAREST: {
+                                                magSamplingMode = SamplingMode.NEAREST;
+                                                break;
+                                            }
+                                            case GLTFUnMipMappedTextureFilter.LINEAR: {
+                                                magSamplingMode = SamplingMode.TRILINEAR;
+                                                break;
+                                            }
+                                        }
+
+                                        switch(sampler.minFilter) {
+                                            case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_LINEAR:
+                                            case GLTFMipMappedTextureFilter.NEAREST_MIPMAP_NEAREST:
+                                            case GLTFMipMappedTextureFilter.NEAREST: {
+                                                minSamplingMode = SamplingMode.NEAREST;
+                                                break;
+                                            }
+                                            case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_LINEAR:
+                                            case GLTFMipMappedTextureFilter.LINEAR: {
+                                                minSamplingMode = SamplingMode.TRILINEAR;
+                                                break;
+                                            }
+                                            case GLTFMipMappedTextureFilter.LINEAR_MIPMAP_NEAREST: {
+                                                minSamplingMode = SamplingMode.BILINEAR;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    specularColor = new Texture2D({
+                                        width: accessedImage.width,
+                                        height: accessedImage.height,
+                                        frames: [imageData],
+                                        framesPerSecond: 0,
+                                        colorMode: ColorMode.RGB,
+                                        textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                        magSamplingMode: magSamplingMode,
+                                        minSamplingMode: minSamplingMode,
+                                        offset: GLTFMaterial.extensions.KHR_materials_specular.specularColorTexture.extensions?.KHR_texture_transform?.offset || [0, 0],
+                                        rotation: [GLTFMaterial.extensions.KHR_materials_specular.specularColorTexture.extensions?.KHR_texture_transform?.rotation || 0],
+                                        scale: GLTFMaterial.extensions.KHR_materials_specular.specularColorTexture.extensions?.KHR_texture_transform?.scale || [1, 1],
+                                    });
+                                } else {
+                                    specularColor = new ColorTexture(ColorMode.RGB, GLTFMaterial.extensions.KHR_materials_specular.specularColorFactor || [1.0, 1.0, 1.0]);
+                                }
+                            }
+                        }
+
                         material = new PBRMaterial({
                             albedoTexture: albedo,
                             metallicTexture: metallic,
                             roughnessTexture: roughness,
                             normalsTexture: normalsTexture,
                             occlusionTexture: occlusion,
-                            emissiveTexture: emissive
+                            emissiveTexture: emissive,
+                            specularTexture: specularTexture,
+                            specularColor: specularColor,
+                            specularFactor: specularFactor
                         });
 
                         mesh = {

@@ -12,6 +12,9 @@ class PBRMaterial implements IMaterial {
     heightTexture: ITexture2D<Uint8Array>;
     metallicTexture: ITexture2D<Uint8Array>;
     emissiveTexture: ITexture2D<Uint8Array>;
+    specularTexture: ITexture2D<Uint8Array>;
+    specularColor: ITexture2D<Uint8Array>;
+    specularFactor: number;
 
     constructor(params: IPBRMaterialProps) {
         this.albedoTexture = params.albedoTexture;
@@ -21,6 +24,9 @@ class PBRMaterial implements IMaterial {
         this.heightTexture = params.heightTexture || ColorTexture.Black();
         this.metallicTexture = params.metallicTexture || ColorTexture.Black();
         this.emissiveTexture = params.emissiveTexture || ColorTexture.Black();
+        this.specularTexture = params.specularTexture || ColorTexture.White();
+        this.specularColor = params.specularColor || ColorTexture.White();
+        this.specularFactor = params.specularFactor || 0.0;
     }
 
     getShader(): IShader {

@@ -9,6 +9,9 @@ interface IPBRMaterialProps {
     heightTexture?: ITexture2D<Uint8Array>;
     metallicTexture?: ITexture2D<Uint8Array>;
     emissiveTexture?: ITexture2D<Uint8Array>;
+    specularTexture?: ITexture2D<Uint8Array>;
+    specularColor?: ITexture2D<Uint8Array>;
+    specularFactor?: number;
 };
 
 export default IPBRMaterialProps;
