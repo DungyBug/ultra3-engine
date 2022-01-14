@@ -57,7 +57,8 @@ class PBRMaterial implements IMaterial {
                     value: this.emissiveTexture
                 }
             ],
-            name: "U3PBRMaterial"
+            name: "U3PBRMaterial",
+            type: "fragment"
         }
     }
 }

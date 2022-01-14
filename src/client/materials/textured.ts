@@ -26,7 +26,8 @@ class TexturedMaterial<T extends TypedArray = TypedArray> implements IMaterial {
                 value: this.texture.minSamplingMode === SamplingMode.BICUBIC
             }
             ],
-            name: "u3textured"
+            name: "u3textured",
+            type: "fragment"
         }
     }
 }

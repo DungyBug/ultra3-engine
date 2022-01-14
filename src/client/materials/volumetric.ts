@@ -26,7 +26,8 @@ class VolumetricMaterial<T extends TypedArray = TypedArray> implements IMaterial
                 value: this.texture.minSamplingMode === SamplingMode.BICUBIC
             }
             ],
-            name: "U3Volumetric"
+            name: "U3Volumetric",
+            type: "fragment"
         }
     }
 }

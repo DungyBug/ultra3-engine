@@ -39,7 +39,8 @@ class SpecularMaterial<T extends TypedArray = TypedArray> extends TexturedMateri
                 value: this.factor
             }
             ],
-            name: "u3specular"
+            name: "u3specular",
+            type: "fragment"
         }
     }
 }

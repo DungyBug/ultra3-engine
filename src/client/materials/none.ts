@@ -5,7 +5,8 @@ class NoMaterial implements IMaterial {
     getShader(): IShader {
         return {
             params: [],
-            name: "blackshader"
+            name: "blackshader",
+            type: "fragment"
         }
     }
 }
