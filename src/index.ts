@@ -4,7 +4,11 @@
 // import IScene from "./client/contracts/scene";
 
 import ComplexShaderMixMode from "./client/constants/complex-shader-mix-mode";
+import Compiler from "./client/lib/executer/compiler";
+import Executer from "./client/lib/executer/executer";
 import BaseRenderer from "./client/renderers/base-renderer";
+import HTTPTransporter from "./core/services/net/http-transporter";
+import Transport from "./core/services/transport";
 
 // const world = new World();
 // let loader = new GLTFLoader(world);
@@ -123,65 +127,65 @@ import BaseRenderer from "./client/renderers/base-renderer";
 //     });
 // }
 
-const renderer = new BaseRenderer();
+// const renderer = new BaseRenderer();
 
-renderer.setupShader({
-    name: "u3phong",
-    source: `vec4 u3phong() {\n\treturn vec4(1.0);\n\r};`,
-    entryPoint: "u3phong"
-});
+// renderer.setupShader({
+//     name: "u3phong",
+//     source: `vec4 u3phong() {\n\treturn vec4(1.0);\n\r};`,
+//     entryPoint: "u3phong"
+// });
 
-renderer.setupShader({
-    name: "u3fresnel",
-    source: `vec4 u3phong() {\n\treturn vec4(0.4);\n\r};`,
-    entryPoint: "u3phong"
-});
+// renderer.setupShader({
+//     name: "u3fresnel",
+//     source: `vec4 u3phong() {\n\treturn vec4(0.4);\n\r};`,
+//     entryPoint: "u3phong"
+// });
 
-renderer.setupShader({
-    name: "u3shader0",
-    source: `vec4 u3shader0() {\n\treturn vec4(0.6);\n\r};`,
-    entryPoint: "u3shader0"
-});
+// renderer.setupShader({
+//     name: "u3shader0",
+//     source: `vec4 u3shader0() {\n\treturn vec4(0.6);\n\r};`,
+//     entryPoint: "u3shader0"
+// });
 
-renderer.setupShader({
-    name: "u3shader1",
-    source: `vec4 u3shader1() {\n\treturn vec4(0.4);\n\r};`,
-    entryPoint: "u3shader1"
-});
+// renderer.setupShader({
+//     name: "u3shader1",
+//     source: `vec4 u3shader1() {\n\treturn vec4(0.4);\n\r};`,
+//     entryPoint: "u3shader1"
+// });
 
-renderer.setupMixShader({
-    name: "u3mix0",
-    source: `vec4 u3mix0(vec4 a, vec4 b, vec4 c) {\n\treturn vec4((a.rgb * a.a + b.rgb * b.a), 1.0) * c;\n\r};`,
-    entryPoint: "u3mix0"
-});
+// renderer.setupMixShader({
+//     name: "u3mix0",
+//     source: `vec4 u3mix0(vec4 a, vec4 b, vec4 c) {\n\treturn vec4((a.rgb * a.a + b.rgb * b.a), 1.0) * c;\n\r};`,
+//     entryPoint: "u3mix0"
+// });
 
-console.log(renderer.compileComplexShader({
-    type: "complex",
-    shaders: [{
-        name: "u3phong",
-        type: "fragment",
-        params: [],
-        entryPoint: "u3phong"
-    },{
-        name: "u3fresnel",
-        type: "fragment",
-        params: [],
-        entryPoint: "u3fresnel"
-    },{
-        type: "complex",
-        shaders: [{
-            name: "u3shader0",
-            type: "fragment",
-            params: [],
-            entryPoint: "u3shader0"
-        },{
-            name: "u3shader1",
-            type: "fragment",
-            params: [],
-            entryPoint: "u3shader1"
-        }],
-        mixMode: ComplexShaderMixMode.MULTIPLY,
-    }],
-    mixMode: ComplexShaderMixMode.CUSTOM,
-    mixShader: "u3mix0"
-}));
+// console.log(renderer.compileComplexShader({
+//     type: "complex",
+//     shaders: [{
+//         name: "u3phong",
+//         type: "fragment",
+//         params: [],
+//         entryPoint: "u3phong"
+//     },{
+//         name: "u3fresnel",
+//         type: "fragment",
+//         params: [],
+//         entryPoint: "u3fresnel"
+//     },{
+//         type: "complex",
+//         shaders: [{
+//             name: "u3shader0",
+//             type: "fragment",
+//             params: [],
+//             entryPoint: "u3shader0"
+//         },{
+//             name: "u3shader1",
+//             type: "fragment",
+//             params: [],
+//             entryPoint: "u3shader1"
+//         }],
+//         mixMode: ComplexShaderMixMode.MULTIPLY,
+//     }],
+//     mixMode: ComplexShaderMixMode.CUSTOM,
+//     mixShader: "u3mix0"
+// }));

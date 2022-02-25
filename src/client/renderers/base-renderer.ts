@@ -28,6 +28,11 @@ class BaseRenderer implements IRenderer {
     setupComplexShader(shader: ComplexShader) {
         const simpleShader = this.compileComplexShader(shader);
         
+        let source =
+        "attribute vec4 position\r\n"+
+        "attribute mat4 projection\r\n"+
+        "attribute vec4 normal\r\n"+
+        "attribute vec2 uv\r\n";
     }
 
     setupMixShader(shader: IMixShader) {
@@ -51,6 +56,7 @@ class BaseRenderer implements IRenderer {
                 entries = entries.concat(complex.entries);
                 complexShaderCount += complex.entries.length;
             } else {
+                params = [...params, ...shader.params];
                 source += '\n\n';
                 source += this.shaders[shader.name].source;
                 entries.push(shader.entryPoint || shader.name);
@@ -62,54 +68,54 @@ class BaseRenderer implements IRenderer {
         switch(complexShader.mixMode) {
             case ComplexShaderMixMode.ADD: {
                 source +=
-                `vec4 __complexshader${complexShaderCount}() {\n\r`+
-                "\tvec4 color = vec4(0.0);\n\r";
+                `vec4 __complexshader${complexShaderCount}() {\r\n`+
+                "\tvec4 color = vec4(0.0);\r\n";
 
                 for(let entry of entries) {
-                    source += `\tcolor += ${entry}();\n\r`;
+                    source += `\tcolor += ${entry}();\r\n`;
                 }
 
                 source +=
-                "\tcolor.w = clamp(color.w, 0.0, 1.0);\n\r"+
-                "\treturn color;\n\r"+
-                "}\n\r";
+                "\tcolor.w = clamp(color.w, 0.0, 1.0);\r\n"+
+                "\treturn color;\r\n"+
+                "}\r\n";
                 break;
             }
             case ComplexShaderMixMode.SUBTRACT: {
                 source +=
-                `vec4 __complexshader${complexShaderCount}() {\n\r`+
-                `\tvec4 color = ${entries[0]}();\n\r`;
+                `vec4 __complexshader${complexShaderCount}() {\r\n`+
+                `\tvec4 color = ${entries[0]}();\r\n`;
 
                 for(let i = 1; i < entries.length; i++) {
-                    source += `\tcolor -= ${entries[i]}();\n\r`;
+                    source += `\tcolor -= ${entries[i]}();\r\n`;
                 }
 
                 source +=
-                "\tcolor.w = clamp(color.w, 0.0, 1.0);\n\r"+
-                "\treturn color;\n\r"+
-                "}\n\r";
+                "\tcolor.w = clamp(color.w, 0.0, 1.0);\r\n"+
+                "\treturn color;\r\n"+
+                "}\r\n";
                 break;
             }
             case ComplexShaderMixMode.MULTIPLY: {
                 source +=
-                `vec4 __complexshader${complexShaderCount}() {\n\r`+
-                "\tvec4 color = vec4(1.0);\n\r";
+                `vec4 __complexshader${complexShaderCount}() {\r\n`+
+                "\tvec4 color = vec4(1.0);\r\n";
 
                 for(let entry of entries) {
-                    source += `\tcolor *= ${entry}();\n\r`;
+                    source += `\tcolor *= ${entry}();\r\n`;
                 }
 
                 source +=
-                "\tcolor.w = clamp(color.w, 0.0, 1.0);\n\r"+
-                "\treturn color;\n\r"+
-                "}\n\r";
+                "\tcolor.w = clamp(color.w, 0.0, 1.0);\r\n"+
+                "\treturn color;\r\n"+
+                "}\r\n";
                 break;
             }
             case ComplexShaderMixMode.CUSTOM: {
                 source +=
-                `vec4 __complexshader${complexShaderCount}() {\n\r`+
-                `\treturn ${complexShader.mixShader}(${entries.join('(),')}());\n\r`+
-                "}\n\r";
+                `vec4 __complexshader${complexShaderCount}() {\r\n`+
+                `\treturn ${complexShader.mixShader}(${entries.join('(),')}());\r\n`+
+                "}\r\n";
                 break;
             }
         }

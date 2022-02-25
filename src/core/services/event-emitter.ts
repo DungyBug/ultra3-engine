@@ -1,11 +1,11 @@
-export class EventEmitter {
+export class EventEmitter<T extends string = string> {
     protected callbacks: any;
 
     constructor() {
         this.callbacks = {};
     }
 
-    on(event: string, callback: (...args: any) => any) {
+    on(event: T, callback: (...args: any) => any) {
         if(this.callbacks.hasOwnProperty(event)) {
             this.callbacks[event].push(callback);
         } else {
@@ -13,7 +13,7 @@ export class EventEmitter {
         }
     }
 
-    emit(event: string, ...args: any): Array<any> {
+    emit(event: T, ...args: any): Array<any> {
         let results: Array<any> = [];
 
         if(this.callbacks.hasOwnProperty("all")) {
