@@ -4,13 +4,18 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "start": "webpack serve"
+    "start": "webpack serve",
+    "build:server": "webpack build --config webpack.server.config.js"
   },
   "author": "DungyBug",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "websocket": "^1.0.34"
+  },
   "devDependencies": {
     "@types/babylonjs": "^2.4.1",
+    "@types/node": "^17.0.21",
+    "@types/websocket": "^1.0.5",
     "babylonjs": "^4.2.0",
     "ts-loader": "^9.2.6",
     "typescript": "^4.5.4",

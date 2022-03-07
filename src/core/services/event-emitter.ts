@@ -18,7 +18,7 @@ export class EventEmitter<T extends string = string> {
 
         if(this.callbacks.hasOwnProperty("all")) {
             for(let i = 0; i < this.callbacks.all.length; i++) {
-                results.push(this.callbacks.all[i](args));
+                results.push(this.callbacks.all[i](...args));
             }
         }
 
@@ -27,7 +27,7 @@ export class EventEmitter<T extends string = string> {
         }
 
         for(let i = 0; i < this.callbacks[event].length; i++) {
-            results.push(this.callbacks[event][i](args));
+            results.push(this.callbacks[event][i](...args));
         }
 
         return results;

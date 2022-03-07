@@ -1,4 +1,4 @@
-import AbstractTransporter from "../../contracts/services/transporter/abstract-transporter";
+import AbstractTransporter from "../../../core/contracts/services/transporter/abstract-transporter";
 
 type URL = `${'http' | 'ftp'}${'s' | ''}://${string}`;
 
@@ -10,6 +10,10 @@ interface IHTTPSendOpts {
 class HTTPTransporter extends AbstractTransporter {
     constructor() {
         super();
+    }
+
+    get state(): "ready" {
+        return "ready";
     }
 
     send<T extends true | false>(opts: IHTTPSendOpts, waitForResponse: T): T extends true ? Promise<string> : void {

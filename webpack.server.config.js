@@ -1,8 +1,9 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/index.ts',
+    entry: './src/server/server.ts',
     mode: "development",
+    target: "node",
     module: {
         rules: [
         {
@@ -12,15 +13,11 @@ module.exports = {
         },
         ],
     },
-    devServer: {
-        open: true,
-        host: '192.168.0.21'
-    },
     resolve: {
         extensions: ['.ts', '.js'],
     },
     output: {
-        filename: 'bundle.js',
+        filename: 'server.js',
         path: path.resolve(__dirname, 'dist'),
     },
 };

@@ -11,18 +11,27 @@ interface ISendOpts {
     to: string;
 }
 
-type Events = "message" | "error";
+type Events = "message" | "error" | "ready";
 
 type EventCallback<T extends Events> =
     T extends "message" ?
-        (message: string) => Promise<string> | void
+        (message: string, res: (message: any) => void) => Promise<string> | void
         : T extends "error" ?
             (error: string) => void
-            : never;
+            : T extends "ready" ?
+                () => void
+                : never;
 
 abstract class AbstractTransporter extends EventEmitter<Events> {
+    /**
+     * Send a request or just a message to the server
+     * @param opts - send options
+     * @param waitForResponse - If true, a promise will be returned and transporter will wait for response from server
+     */
     abstract send<T extends true | false>(opts: ISendOpts, waitForResponse: T): T extends true ? Promise<string> : void;
 
+    abstract get state(): "ready" | "notready";
+    
     // Events
     on<E extends Events>(event: E, callback: EventCallback<E>) {
         super.on(event, callback);
