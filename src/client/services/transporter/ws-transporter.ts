@@ -90,7 +90,7 @@ class WSTransporter extends AbstractTransporter {
                 };
             }
 
-            this.emit("message", res.data, answer);
+            this.emit("message", res.id, answer);
         } else if (item) {
             item(res.data);
             this.queue[id] = undefined;

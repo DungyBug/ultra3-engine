@@ -1,11 +1,13 @@
 import { IVector } from "./base/vector";
+import { IWorld } from "./world";
 
 export interface IEntityParams {
     classname: string;
     pos?: IVector;
-};
+}
 
 export interface IEntityState {
+    classname: string;
     id: number;
     pos: IVector;
     deleted: boolean;
@@ -41,7 +43,7 @@ export interface IEntity {
      * @param linkMe - add to linked entities of entity this entity ( call "link" method from entity )
      */
     link(entity: IEntity, linkMe: boolean): void;
-    
+
     /**
      * Unlink entity
      * @param entity - entity to link to
@@ -62,7 +64,11 @@ export interface IEntity {
 
     /**
      * Set current state of the entity.
-     * @param state 
+     * @param state
      */
     setEntityState(state: IEntityState): void;
+}
+
+export interface IEntityConstructor {
+    new (params: IEntityParams, world: IWorld): IEntity;
 }

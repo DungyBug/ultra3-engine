@@ -1,4 +1,10 @@
-import { IEntity } from "./entity";
+import { IEntity, IEntityState } from "./entity";
+
+export interface IWorldState {
+    // TODO: addedEntitiesCount...
+    entities: Array<IEntityState>;
+    mapobjects: Array<Record<string, any>>;
+}
 
 export interface IWorld {
     entities: Array<IEntity>;
@@ -12,6 +18,8 @@ export interface IWorld {
     addEntity(entity: IEntity): number;
     getEntity(id: number): IEntity | null;
     deletePendingEntities(): void;
+    setState(state: IWorldState): void;
+    getState(): IWorldState;
     runTick(): void;
     getTime(): number;
-};
+}

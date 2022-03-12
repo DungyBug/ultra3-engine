@@ -1,32 +1,28 @@
-import AbstractTransporter from "../../../core/contracts/services/transporter/abstract-transporter";
+import AbstractTransporter, {
+    ServerEvents,
+} from "../../../core/contracts/services/transporter/abstract-transporter";
 import WSMessage from "../../../core/contracts/services/transporter/ws/ws-message";
 import WSQueue from "../../../core/contracts/services/transporter/ws/ws-queue";
 import * as WS from "websocket";
 import * as http from "http";
+import { IWSSendOpts, IWSSendToAllOpts } from "../../contracts/ws-send-opts";
 
-type IP = `${number}.${number}.${number}.${number}`;
-
-interface IWSSendOpts {
-    data: string;
-    to: IP;
-}
-
-class WSTransporter extends AbstractTransporter {
+class WSTransporter extends AbstractTransporter<ServerEvents> {
     private ws: WS.server;
-    private calls: { [K: IP]: number };
-    private connections: {
-        [K: IP]: {
-            ws: WS.connection;
-            queue: WSQueue;
-        };
-    };
+    private connections: Array<{
+        ip: string;
+        calls: number;
+        ws: WS.connection;
+        queue: WSQueue;
+    }>;
+    private freeAddresses: Array<number>; // Array of indexes, that were freed somewhen and are available now in connections array
 
     constructor(httpServer: http.Server) {
         super();
         this.ws = new WS.server({
             httpServer,
             maxReceivedFrameSize: 64 * 1024, // 64KB
-            maxReceivedMessageSize: 16 * 1024 * 1024, // 16MB
+            maxReceivedMessageSize: 16 * 1048576, // 16MB
             keepalive: true,
             keepaliveInterval: 30000, // 30 secs
             dropConnectionOnKeepaliveTimeout: true,
@@ -36,8 +32,8 @@ class WSTransporter extends AbstractTransporter {
             ignoreXForwardedFor: false,
         });
 
-        this.calls = {};
-        this.connections = {};
+        this.connections = [];
+        this.freeAddresses = [];
 
         this.ws.on("connect", this.handleConnection.bind(this));
     }
@@ -46,26 +42,33 @@ class WSTransporter extends AbstractTransporter {
         return "ready";
     }
 
-    send<T extends boolean>(
-        opts: IWSSendOpts,
-        waitForResponse: T
+    send<T extends boolean, U extends IWSSendOpts>(
+        opts: U,
+        waitForResponse?: U extends IWSSendToAllOpts ? never : T
     ): T extends true ? Promise<string> : void {
-        if (this.connections[opts.to] !== undefined) {
+        if (!opts.to) {
+            // Send to all
+
+            for (const connection of this.connections) {
+                connection.ws.send(opts.data);
+            }
+        } else if (this.connections[opts.to] !== undefined) {
+            // Won't pass even if "undefined"
             if (waitForResponse) {
                 return <T extends true ? Promise<string> : void>(
                     new Promise<string>((res) => {
                         this.connections[opts.to].queue[
-                            this.calls[opts.to] + 1
+                            this.connections[opts.to].calls + 1
                         ] = res;
                         this.connections[opts.to].ws.send(
                             JSON.stringify({
-                                id: this.calls[opts.to] + 1, // We add 1 to prevent sending messages with id 0 ( id 0 means that message is no-reply )
+                                id: this.connections[opts.to].calls + 1, // We add 1 to prevent sending messages with id 0 ( id 0 means that message is no-reply )
                                 type: "request",
                                 data: opts.data,
                             })
                         );
 
-                        this.calls[opts.to]++;
+                        this.connections[opts.to].calls++;
                     })
                 );
             }
@@ -78,9 +81,10 @@ class WSTransporter extends AbstractTransporter {
                 })
             );
         } else {
+            // Won't pass even if "undefined"
             if (waitForResponse) {
                 return <T extends true ? Promise<string> : void>(
-                    new Promise((res, rej) => rej("No such IP."))
+                    new Promise((res, rej) => rej("No such client."))
                 );
             }
         }
@@ -93,23 +97,41 @@ class WSTransporter extends AbstractTransporter {
     handleConnection(connection: WS.connection) {
         // Take queue and calls number out, to make unique queues and ids for every client ( so client 1 can't answer to request for client 2 )
         const queue: WSQueue = {};
+        let disconnected = false;
 
-        this.connections[<IP>connection.remoteAddress] = {
+        // Pick connection id from first address in freeAddresses array if available, otherwise pick a new id
+        const connectionID = this.freeAddresses.length
+            ? this.freeAddresses.shift()
+            : this.connections.length;
+
+        this.emit("connection", connectionID);
+
+        this.connections[connectionID] = {
             ws: connection,
             queue: queue,
+            ip: connection.remoteAddress,
+            calls: 0,
         };
 
-        this.calls[<IP>connection.remoteAddress] = 0;
-
         connection.on("error", (err: Error) => {
-            this.connections[<IP>connection.remoteAddress] = undefined;
-            this.calls[<IP>connection.remoteAddress] = undefined;
-            this.handleError(err);
+            // Check if client have already been disconnected
+            if (!disconnected) {
+                this.emit("disconnection", connectionID);
+                disconnected = true;
+                this.connections[connectionID] = undefined;
+                this.freeAddresses.push(connectionID);
+                this.handleError(err);
+            }
         });
 
         connection.on("close", (code: number, desc: string) => {
-            this.connections[<IP>connection.remoteAddress] = undefined;
-            this.calls[<IP>connection.remoteAddress] = undefined;
+            // Check if client have already been disconnected
+            if (!disconnected) {
+                disconnected = true;
+                this.emit("disconnection", connectionID);
+                this.connections[connectionID] = undefined;
+                this.freeAddresses.push(connectionID);
+            }
         });
 
         connection.on("message", (data: WS.Message) => {
@@ -135,7 +157,7 @@ class WSTransporter extends AbstractTransporter {
                         };
                     }
 
-                    this.emit("message", res.data, answer);
+                    this.emit("message", res.data, answer, connectionID);
                 } else if (item) {
                     item(res.data);
                     queue[id] = undefined;

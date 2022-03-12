@@ -15,40 +15,59 @@ class Transport {
     }
 
     private handleReadyState() {
-        for(let q of this.queue) {
-            if(q.waitForResponse) {
-                this.transporter.send<true>({data: q.message, to: q.to}, true).then(q.res);
+        for (let q of this.queue) {
+            if (q.waitForResponse) {
+                this.transporter
+                    .send<true>({ data: q.message, to: q.to }, true)
+                    .then(q.res);
             } else {
-                this.transporter.send<false>({data: q.message, to: q.to}, false);
+                this.transporter.send<false>(
+                    { data: q.message, to: q.to },
+                    false
+                );
             }
         }
     }
 
-    send<T extends true | false>(message: string, waitForResponse: T, to: string = this.address): T extends true ? Promise<string> : void {
-        if(this.transporter.state === "ready") {
-            return this.transporter.send<T>({data: message, to}, waitForResponse);
+    send<T extends true | false>(
+        message: string,
+        waitForResponse: T,
+        to: string = this.address
+    ): T extends true ? Promise<string> : void {
+        if (this.transporter.state === "ready") {
+            return this.transporter.send<T>(
+                { data: message, to },
+                waitForResponse
+            );
         }
         // Send message when transporter will be ready
 
-        if(waitForResponse) {
-            return <T extends true ? Promise<string> : void>new Promise<string>(res => {
-                this.queue.push({
-                    waitForResponse: true,
-                    res,
-                    to,
-                    message
-                });
-            });
+        if (waitForResponse) {
+            return <T extends true ? Promise<string> : void>(
+                new Promise<string>((res) => {
+                    this.queue.push({
+                        waitForResponse: true,
+                        res,
+                        to,
+                        message,
+                    });
+                })
+            );
         }
 
         this.queue.push({
             waitForResponse: false,
             to,
-            message
+            message,
         });
     }
 
-    onMessage(callback: (message: string, res: (message: string) => void) => Promise<string> | void) {
+    onMessage(
+        callback: (
+            message: string,
+            res: (message: string) => void
+        ) => Promise<string> | void
+    ) {
         this.transporter.on("message", callback);
     }
 

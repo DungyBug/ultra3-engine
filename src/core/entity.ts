@@ -1,6 +1,6 @@
-import { IVector } from './contracts/base/vector';
-import { IEntity, IEntityParams, IEntityState } from './contracts/entity';
-import { IWorld } from './contracts/world';
+import { IVector } from "./contracts/base/vector";
+import { IEntity, IEntityParams, IEntityState } from "./contracts/entity";
+import { IWorld } from "./contracts/world";
 
 export class Entity implements IEntity {
     readonly classname: string;
@@ -19,7 +19,7 @@ export class Entity implements IEntity {
         this.pos = params.pos || {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         this.deleted = false;
         this.links = [];
@@ -36,9 +36,9 @@ export class Entity implements IEntity {
 
     delete() {
         this.deleted = false;
-        
+
         // Unlink entities from this entity
-        for(let i = 0; i < this.links.length; i++) {
+        for (let i = 0; i < this.links.length; i++) {
             this.links[i].unlink(this); // Unlink self from other entities
         }
     }
@@ -50,7 +50,8 @@ export class Entity implements IEntity {
     unlink(entity: IEntity) {
         let entityIndex = this.links.indexOf(entity);
 
-        if(entityIndex !== -1) { // Check if entity is exists in our array
+        if (entityIndex !== -1) {
+            // Check if entity is exists in our array
             this.links.splice(entityIndex, 1); // Unlink entity
         }
     }
@@ -58,7 +59,7 @@ export class Entity implements IEntity {
     link(entity: IEntity, linkMe: boolean = false) {
         this.links.push(entity);
 
-        if(linkMe) {
+        if (linkMe) {
             entity.link(this, false);
         }
     }
@@ -70,16 +71,17 @@ export class Entity implements IEntity {
      */
     setState(newState: number) {
         this.requestingState = newState;
-    };
+    }
 
     getEntityState(): IEntityState {
         let links = [];
 
-        for(let i = 0; i < this.links.length; i++) {
+        for (let i = 0; i < this.links.length; i++) {
             links.push(this.links[i].id);
         }
 
         return {
+            classname: this.classname,
             id: this.id,
             pos: this.pos,
             deleted: this.deleted,
@@ -87,8 +89,8 @@ export class Entity implements IEntity {
             linkedKeys: this.linkedKeys,
             nextthink: this.nextthink,
             requestingState: this.requestingState,
-            currentState: this.currentState
-        }
+            currentState: this.currentState,
+        };
     }
 
     setEntityState(state: IEntityState): void {
@@ -101,11 +103,11 @@ export class Entity implements IEntity {
         this.links = [];
         this.linkedKeys = [];
 
-        for(let i = 0; i < state.links.length; i++) {
+        for (let i = 0; i < state.links.length; i++) {
             this.links.push(this.world.getEntity(state.links[i]));
         }
 
-        for(let j = 0; j < state.linkedKeys.length; j++) {
+        for (let j = 0; j < state.linkedKeys.length; j++) {
             this.linkedKeys[j] = state.linkedKeys[j];
         }
 
@@ -113,4 +115,4 @@ export class Entity implements IEntity {
         this.requestingState = state.requestingState;
         this.currentState = state.currentState;
     }
-};
+}
