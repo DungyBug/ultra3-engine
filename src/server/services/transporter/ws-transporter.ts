@@ -28,7 +28,7 @@ class WSTransporter extends AbstractTransporter<ServerEvents> {
             dropConnectionOnKeepaliveTimeout: true,
             keepaliveGracePeriod: 40000, // 40 secs
             useNativeKeepalive: false,
-            autoAcceptConnections: true,
+            autoAcceptConnections: false,
             ignoreXForwardedFor: false,
         });
 
@@ -36,6 +36,7 @@ class WSTransporter extends AbstractTransporter<ServerEvents> {
         this.freeAddresses = [];
 
         this.ws.on("connect", this.handleConnection.bind(this));
+        this.ws.on("request", this.handleRequest.bind(this));
     }
 
     get state(): "ready" {
@@ -94,6 +95,24 @@ class WSTransporter extends AbstractTransporter<ServerEvents> {
         this.emit("error", e);
     }
 
+    handleRequest(connection: WS.request) {
+        const connectionID = this.freeAddresses.length
+            ? this.freeAddresses.shift()
+            : this.connections.length;
+
+        const results = this.emit("request", connectionID);
+
+        for (const result of results) {
+            if (result === false) {
+                this.freeAddresses.push(connectionID);
+                connection.reject();
+                return;
+            }
+        }
+
+        connection.accept();
+    }
+
     handleConnection(connection: WS.connection) {
         // Take queue and calls number out, to make unique queues and ids for every client ( so client 1 can't answer to request for client 2 )
         const queue: WSQueue = {};
@@ -116,8 +135,8 @@ class WSTransporter extends AbstractTransporter<ServerEvents> {
         connection.on("error", (err: Error) => {
             // Check if client have already been disconnected
             if (!disconnected) {
-                this.emit("disconnection", connectionID);
                 disconnected = true;
+                this.emit("disconnection", connectionID);
                 this.connections[connectionID] = undefined;
                 this.freeAddresses.push(connectionID);
                 this.handleError(err);

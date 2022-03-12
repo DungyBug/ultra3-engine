@@ -12,7 +12,7 @@ interface ISendOpts {
 }
 
 type Events = "message" | "error" | "ready";
-export type ServerEvents = Events | "connection" | "disconnection";
+export type ServerEvents = Events | "connection" | "disconnection" | "request";
 
 type EventCallback<T extends ServerEvents> = T extends "message"
     ? (
@@ -24,7 +24,7 @@ type EventCallback<T extends ServerEvents> = T extends "message"
     ? (error: string) => void
     : T extends "ready"
     ? () => void
-    : T extends "connection" | "disconnection"
+    : T extends "connection" | "disconnection" | "request"
     ? (connectionID: number) => boolean | void
     : never;
 
