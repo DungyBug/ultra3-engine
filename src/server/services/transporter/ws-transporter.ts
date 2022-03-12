@@ -102,9 +102,11 @@ class WSTransporter extends AbstractTransporter<ServerEvents> {
 
         const results = this.emit("request", connectionID);
 
+        // Free address, so connection handler can take it
+        this.freeAddresses.push(connectionID);
+
         for (const result of results) {
             if (result === false) {
-                this.freeAddresses.push(connectionID);
                 connection.reject();
                 return;
             }
