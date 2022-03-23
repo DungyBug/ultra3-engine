@@ -34,7 +34,7 @@ export class World implements IWorld {
     }
 
     getEntity(id: number): Entity | null {
-        for (let i = 0; i < id && i < this.entities.length; i++) {
+        for (let i = 0; i < this.entities.length; i++) {
             if (this.entities[i].id === id) {
                 return this.entities[i];
             }
@@ -63,6 +63,7 @@ export class World implements IWorld {
     setState(state: IWorldState) {
         for (const entityState of state.entities) {
             const entity = this.getEntity(entityState.id);
+            console.log(entityState.id, entity);
 
             // Check if entity exists in world
             if (entity !== null) {

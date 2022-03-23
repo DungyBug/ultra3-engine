@@ -7,7 +7,7 @@ export interface IMapObjectProps {
     rotation: IVector;
     pos: IVector;
     scale: IVector;
-};
+}
 
 export interface IMapObject {
     // shape: string; // IShape
@@ -21,4 +21,4 @@ export interface IMapObject {
     getShape(): string;
     getState(): number;
     think(): void;
-};
+}

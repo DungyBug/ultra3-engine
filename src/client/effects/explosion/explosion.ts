@@ -1,8 +1,8 @@
 import { IExplosionEntityParams } from "./explosion-params";
 import { VectorMath } from "../../../core/vector-math";
-import { World } from "../../../core/world";
 import EffectEntity from "../../entities/effect";
 import SmallExplosionEffect from "./small-explosion";
+import ClientWorld from "../../client-world";
 
 class ExplosionEffect extends EffectEntity {
     private startTime: number;
@@ -11,9 +11,9 @@ class ExplosionEffect extends EffectEntity {
     duration: number;
     timeBetweenExplosions: number;
     radius: number;
-    world: World;
+    world: ClientWorld;
 
-    constructor(params: IExplosionEntityParams, world: World) {
+    constructor(params: IExplosionEntityParams, world: ClientWorld) {
         super(params, world);
 
         this.subExplosionsCount = params.subExplosionsCount;
@@ -32,16 +32,30 @@ class ExplosionEffect extends EffectEntity {
 
         let deltaTime = Date.now() - this.startTime;
 
-        if(deltaTime % this.timeBetweenExplosions === 0 && this.explosions.length < this.subExplosionsCount) {
-            this.explosions.push(new SmallExplosionEffect({
-                classname: "effect_small_explosion",
-                model: null,
-                pos: VectorMath.add(this.pos, VectorMath.multiply({
-                    x: Math.random() * 2 - 1,
-                    y: Math.random() * 2 - 1,
-                    z: Math.random() * 2 - 1
-                }, Math.random() * this.radius))
-            }, this.world));
+        if (
+            deltaTime % this.timeBetweenExplosions === 0 &&
+            this.explosions.length < this.subExplosionsCount
+        ) {
+            this.explosions.push(
+                new SmallExplosionEffect(
+                    {
+                        classname: "effect_small_explosion",
+                        model: null,
+                        pos: VectorMath.add(
+                            this.pos,
+                            VectorMath.multiply(
+                                {
+                                    x: Math.random() * 2 - 1,
+                                    y: Math.random() * 2 - 1,
+                                    z: Math.random() * 2 - 1,
+                                },
+                                Math.random() * this.radius
+                            )
+                        ),
+                    },
+                    this.world
+                )
+            );
         }
     }
 }

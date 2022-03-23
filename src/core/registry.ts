@@ -3,6 +3,10 @@ import { IEntityConstructor } from "./contracts/entity";
 export class Registry {
     private _classnames: Record<string, IEntityConstructor>;
 
+    constructor() {
+        this._classnames = {};
+    }
+
     /**
      * Registers entity classname and its constructor to the state
      * @param classname - entity classname start ( everything before underscore ) or full entity classname

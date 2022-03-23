@@ -13,6 +13,7 @@ interface IRenderer {
     setupScreenPostEffect(frag: string, uniforms?: Array<IKey>): 0 | -1; // 0 - ok, -1 - error
 
     render(): void;
+    runRenderLoop(): void;
     resizeCanvas(width: number, height: number): void;
 }
 
