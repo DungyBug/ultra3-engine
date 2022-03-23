@@ -1,16 +1,21 @@
 import { PickableEntity } from "../../core/entities/pickable";
-import { World } from "../../core/world";
+import ClientWorld from "../client-world";
 import { IClientPhysicalEntityParams } from "../contracts/entities/base/physical";
 import { IClientPickableEntity } from "../contracts/entities/pickable";
 import IMesh from "../contracts/mesh";
 
-class ClientPickableEntity extends PickableEntity implements IClientPickableEntity {
+class ClientPickableEntity
+    extends PickableEntity
+    implements IClientPickableEntity
+{
     model: IMesh;
 
-    constructor(params: IClientPhysicalEntityParams, world: World) {
+    constructor(params: IClientPhysicalEntityParams, world: ClientWorld) {
         super(params, world);
 
         this.model = params.model;
+
+        world.pushEntityToRenderQueue(this);
     }
 }
 
