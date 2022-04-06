@@ -2,7 +2,12 @@ import { DoorState } from "../../constants/door-state/door-state";
 import { IVector } from "../../contracts/base/vector";
 import { IEntity } from "../../contracts/entity";
 import { IMapEvent } from "../../contracts/map-event";
-import { IDoor, IDoorProps } from "../../contracts/map-objects/door";
+import { IMapObjectState } from "../../contracts/map-object";
+import {
+    IDoor,
+    IDoorProps,
+    IDoorState,
+} from "../../contracts/map-objects/door";
 import { MapObject } from "../../map-object";
 import { World } from "../../world";
 
@@ -46,27 +51,30 @@ export class Door extends MapObject implements IDoor {
         this.state = DoorState.closing;
 
         this.nextthink = time + Math.round(this.distance / this.speed);
-
     }
 
     think() {
         let time = this.world.getTime();
 
-        switch(this.state) {
+        switch (this.state) {
             case DoorState.opening: {
                 // Set position for current time
-                let coff = (time - this.prevthink) / (this.nextthink - this.prevthink);
-        
-                this.props.pos.x = this.origin.x + this.direction.x * this.speed * coff;
-                this.props.pos.y = this.origin.y + this.direction.y * this.speed * coff;
-                this.props.pos.z = this.origin.z + this.direction.z * this.speed * coff;
+                let coff =
+                    (time - this.prevthink) / (this.nextthink - this.prevthink);
+
+                this.props.pos.x =
+                    this.origin.x + this.direction.x * this.speed * coff;
+                this.props.pos.y =
+                    this.origin.y + this.direction.y * this.speed * coff;
+                this.props.pos.z =
+                    this.origin.z + this.direction.z * this.speed * coff;
 
                 // Check if door finished opening
-                if(this.nextthink >= time) {
+                if (this.nextthink >= time) {
                     this.state = DoorState.waiting;
 
                     // Check if we should close after some time
-                    if(this.delay) {
+                    if (this.delay) {
                         this.nextthink = time + this.delay;
                     }
                 }
@@ -76,7 +84,7 @@ export class Door extends MapObject implements IDoor {
             case DoorState.waiting: {
                 // Check for closing delay
 
-                if(this.nextthink >= time && this.delay) {
+                if (this.nextthink >= time && this.delay) {
                     this.close(null);
                 }
 
@@ -84,14 +92,18 @@ export class Door extends MapObject implements IDoor {
             }
             case DoorState.closing: {
                 // Set position for current time
-                let coff = (time - this.prevthink) / (this.nextthink - this.prevthink);
-        
-                this.props.pos.x = this.origin.x + this.direction.x * this.speed * coff;
-                this.props.pos.y = this.origin.y + this.direction.y * this.speed * coff;
-                this.props.pos.z = this.origin.z + this.direction.z * this.speed * coff;
+                let coff =
+                    (time - this.prevthink) / (this.nextthink - this.prevthink);
+
+                this.props.pos.x =
+                    this.origin.x + this.direction.x * this.speed * coff;
+                this.props.pos.y =
+                    this.origin.y + this.direction.y * this.speed * coff;
+                this.props.pos.z =
+                    this.origin.z + this.direction.z * this.speed * coff;
 
                 // Check if door finished closing
-                if(this.nextthink >= time) {
+                if (this.nextthink >= time) {
                     this.state = DoorState.idling;
                 }
 
@@ -99,13 +111,45 @@ export class Door extends MapObject implements IDoor {
             }
         }
     }
-    
+
+    setMapObjectState(state: IDoorState): void {
+        super.setMapObjectState(state);
+
+        this.delay = state.props.delay || this.delay;
+        this.speed = state.props.speed;
+        this.distance = state.props.distance;
+        this.direction = state.props.direction;
+        this.openOn = state.props.openOn || this.openOn;
+        this.closeOn = state.props.closeOn || this.closeOn;
+    }
+
+    getMapObjectState(): IDoorState {
+        const parentState = super.getMapObjectState();
+        return {
+            ...parentState,
+            props: {
+                ...parentState.props,
+                delay: this.delay,
+                speed: this.speed,
+                distance: this.distance,
+                direction: this.direction,
+                openOn: this.openOn,
+                closeOn: this.closeOn,
+            },
+            nextthink: this.nextthink,
+            prevthink: this.prevthink,
+            state: this.state,
+            origin: this.origin,
+        };
+    }
+
     emit(event: string, e: IMapEvent): Array<boolean> {
         super.emit(event, e);
-        
-        if(this.openOn.includes(event)) { // Check for opening event
+
+        if (this.openOn.includes(event)) {
+            // Check for opening event
             this.open(e.activators[0]);
-        } else if(this.closeOn.includes(event)) {
+        } else if (this.closeOn.includes(event)) {
             this.close(e.activators[0]);
         }
 

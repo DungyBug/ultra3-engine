@@ -10,6 +10,8 @@ export interface IMapObjectProps {
 }
 
 export interface IMapObject {
+    id: number;
+
     // shape: string; // IShape
     // props: IMapObjectProps;
     // state: number;
@@ -20,5 +22,14 @@ export interface IMapObject {
     getProps(): IMapObjectProps;
     getShape(): string;
     getState(): number;
+    setMapObjectState(state: IMapObjectState): void;
+    getMapObjectState(): IMapObjectState;
     think(): void;
+}
+
+export interface IMapObjectState {
+    id: number;
+    props: IMapObjectProps;
+    state: number;
+    targets: Array<number>;
 }

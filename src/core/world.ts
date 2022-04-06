@@ -11,6 +11,7 @@ export class World implements IWorld {
     protected _time: number = 0; // Global world time
     protected readonly _startTime: number = Date.now(); // World initialization time
     protected addedEntitiesCount: number = 0; // Increments every time a new entity has been added
+    protected addedObjectsCount: number = 0;
     private thinkPeriod: number = 0;
 
     constructor(worldProps: IWorldProps, private registry: Registry) {
@@ -45,6 +46,18 @@ export class World implements IWorld {
 
     addObject(object: IMapObject) {
         this.objects.push(object);
+
+        return this.addedObjectsCount++;
+    }
+
+    getObject(id: number): IMapObject | null {
+        for (let i = 0; i < this.objects.length; i++) {
+            if (this.objects[i].id === id) {
+                return this.objects[i];
+            }
+        }
+
+        return null;
     }
 
     getState() {

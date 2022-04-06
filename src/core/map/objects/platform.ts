@@ -2,12 +2,17 @@ import { PlatformDirection } from "../../constants/platform-direction";
 import { PlatformState } from "../../constants/platform-state/platform-state";
 import { IVector } from "../../contracts/base/vector";
 import { IEntity } from "../../contracts/entity";
-import { IPlatform, IPlatformProps } from "../../contracts/map-objects/platform";
+import {
+    IPlatform,
+    IPlatformProps,
+    IPlatformState,
+} from "../../contracts/map-objects/platform";
 import { IBaseTrain } from "../../contracts/map-objects/train";
 import { ITrainStart } from "../../contracts/map-objects/train-start";
 import { MapObject } from "../../map-object";
 import { VectorMath } from "../../vector-math";
 import { World } from "../../world";
+import { TrainStart } from "./train-start";
 
 export class Platform extends MapObject implements IPlatform {
     protected nextthink: number;
@@ -57,35 +62,58 @@ export class Platform extends MapObject implements IPlatform {
     think() {
         let time = this.world.getTime();
 
-        switch(this.state) {
+        switch (this.state) {
             case PlatformState.moving: {
                 let trainIndex = Math.floor(this.currentPathPos);
                 let currentTrain: IBaseTrain;
                 let nextTrain: IBaseTrain;
-                
+
                 let nodes = this.train.getNodesList();
                 let speed: number;
 
-                if(trainIndex < nodes.length && this.direction === PlatformDirection.forward) { // Check for path end
+                if (
+                    trainIndex < nodes.length &&
+                    this.direction === PlatformDirection.forward
+                ) {
+                    // Check for path end
                     // Move forward
 
                     currentTrain = nodes[trainIndex];
                     nextTrain = nodes[trainIndex + 1];
-                    speed = this.speeds[Math.min(trainIndex, this.speeds.length - 1)]; // Get speed for current train or take last available speed
-                } else if (trainIndex >= 0 && this.direction === PlatformDirection.backward) { // Check for path end
+                    speed =
+                        this.speeds[
+                            Math.min(trainIndex, this.speeds.length - 1)
+                        ]; // Get speed for current train or take last available speed
+                } else if (
+                    trainIndex >= 0 &&
+                    this.direction === PlatformDirection.backward
+                ) {
+                    // Check for path end
                     // Move backward
-                    
+
                     currentTrain = nodes[trainIndex];
                     nextTrain = nodes[trainIndex - 1];
-                    speed = this.speeds[Math.min(trainIndex, this.speeds.length - 1)]; // Get speed for current train or take last available speed
+                    speed =
+                        this.speeds[
+                            Math.min(trainIndex, this.speeds.length - 1)
+                        ]; // Get speed for current train or take last available speed
                 } else {
                     break;
                 }
-                let travelTime = VectorMath.getLength(VectorMath.subtract(nextTrain.getPos(), currentTrain.getPos())) / speed;
+                let travelTime =
+                    VectorMath.getLength(
+                        VectorMath.subtract(
+                            nextTrain.getPos(),
+                            currentTrain.getPos()
+                        )
+                    ) / speed;
                 let deltaTime = (time - this.prevthink) * 0.001;
 
                 let direction: IVector = VectorMath.subdivide(
-                    VectorMath.subtract(nextTrain.getPos(), currentTrain.getPos()),
+                    VectorMath.subtract(
+                        nextTrain.getPos(),
+                        currentTrain.getPos()
+                    ),
                     travelTime // Get already magnituted vector
                 );
 
@@ -93,18 +121,23 @@ export class Platform extends MapObject implements IPlatform {
                 this.props.pos.y += direction.y * deltaTime;
                 this.props.pos.z += direction.z * deltaTime;
 
-                if(Math.floor(this.currentPathPos) !== Math.floor(this.currentPathPos + travelTime * deltaTime)) {
-                    if(this.currentPathPos <= 0) { // Check if we come to start point
+                if (
+                    Math.floor(this.currentPathPos) !==
+                    Math.floor(this.currentPathPos + travelTime * deltaTime)
+                ) {
+                    if (this.currentPathPos <= 0) {
+                        // Check if we come to start point
                         this.currentPathPos = 0;
                         this.stopMoving(null);
-                        
+
                         this.direction = PlatformDirection.forward;
                     }
-                    
-                    if(this.currentPathPos >= nodes.length) { // Check if we come to end point
+
+                    if (this.currentPathPos >= nodes.length) {
+                        // Check if we come to end point
                         this.currentPathPos = nodes.length;
                         this.stopMoving(null);
-                        
+
                         this.direction = PlatformDirection.backward;
                     }
                 }
@@ -115,5 +148,44 @@ export class Platform extends MapObject implements IPlatform {
         }
 
         this.prevthink = time;
+    }
+
+    setMapObjectState(state: IPlatformState): void {
+        super.setMapObjectState(state);
+
+        this.speeds = state.speeds;
+        const train = this.world.getObject(state.props.train);
+
+        if (train instanceof TrainStart) {
+            this.train = train;
+        } else {
+            this.train = null;
+        }
+
+        this.prevthink = state.prevthink;
+        this.nextthink = state.nextthink;
+        this.currentPathPos = state.currentPathPos;
+        this.speeds = state.speeds;
+        this.origin = state.origin;
+        this.direction = state.direction;
+    }
+
+    getMapObjectState(): IPlatformState {
+        const parentState = super.getMapObjectState();
+
+        return {
+            ...parentState,
+            props: {
+                ...parentState.props,
+                speed: this.speeds[0],
+                train: this.train.id,
+            },
+            prevthink: this.prevthink,
+            nextthink: this.nextthink,
+            currentPathPos: this.currentPathPos,
+            speeds: this.speeds,
+            origin: this.origin,
+            direction: this.direction,
+        };
     }
 }
