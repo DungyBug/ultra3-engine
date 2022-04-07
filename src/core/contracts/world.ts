@@ -1,9 +1,10 @@
 import { IEntity, IEntityState } from "./entity";
+import { IMapObjectState } from "./map-object";
 
 export interface IWorldState {
     // TODO: addedEntitiesCount...
     entities: Array<IEntityState>;
-    mapobjects: Array<Record<string, any>>;
+    mapobjects: Array<IMapObjectState>;
 }
 
 export interface IWorld {

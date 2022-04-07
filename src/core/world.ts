@@ -70,10 +70,16 @@ export class World implements IWorld {
             state.entities.push(entity.getEntityState());
         }
 
+        for (const mapObject of this.objects) {
+            state.mapobjects.push(mapObject.getMapObjectState());
+        }
+
         return state;
     }
 
     setState(state: IWorldState) {
+        console.log(state);
+
         for (const entityState of state.entities) {
             const entity = this.getEntity(entityState.id);
             console.log(entityState.id, entity);
@@ -91,6 +97,14 @@ export class World implements IWorld {
                     const newEntity = new EntityConstructor(entityState, this);
                     newEntity.setEntityState(entityState);
                 }
+            }
+        }
+
+        for (const mapObjectState of state.mapobjects) {
+            const object = this.getObject(mapObjectState.id);
+
+            if (object !== null) {
+                object.setMapObjectState(mapObjectState);
             }
         }
     }

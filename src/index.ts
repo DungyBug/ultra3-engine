@@ -4,6 +4,7 @@ import { Registry } from "./core/registry";
 import BabylonRenderer from "./client/renderers/babylon-renderer";
 import { Player } from "./core/entities/player";
 import ViewableEntity from "./client/entities/base/viewable";
+import { Door } from "./core/map/objects/door";
 
 // let state: Record<string, any> = {};
 // let attached = false;
@@ -28,6 +29,19 @@ const client = new Client(
     new BabylonRenderer(canvas)
 );
 
+new Door(
+    "",
+    {
+        speed: 10,
+        distance: 10,
+        direction: { x: 0, y: -1, z: 0 },
+        name: "door1",
+        rotation: { x: 0, y: 0, z: 0 },
+        pos: { x: 0, y: 10, z: 0 },
+        scale: { x: 1, y: 1, z: 1 },
+    },
+    client
+);
 client.start(new WSTransporter("ws://192.168.0.21:3003/"));
 
 // const engine = new BABYLON.Engine(canvas, true, {

@@ -21,6 +21,7 @@ export class MapObject extends EventEmitter implements IMapObject {
         this.props = props;
         this.world = world;
         this.state = 0;
+        this.targets = [];
         this.id = world.addObject(this);
     }
 
