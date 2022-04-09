@@ -12,27 +12,7 @@ class ViewableEntity extends Entity implements IViewableEntity {
 
     constructor(params: IViewableEntityParams, world: ClientWorld) {
         super(params, world);
-        // this.model = params.model;
-        this.model = {
-            pos: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 },
-            scale: { x: 1, y: 1, z: 1 },
-            vertices: [],
-            indices: [],
-            uvs: [],
-            normals: [],
-            castsShadow: false,
-            verticesMode: 0,
-            material: {
-                getShader: function () {
-                    return {
-                        params: [],
-                        name: "",
-                        type: "fragment",
-                    };
-                },
-            },
-        };
+        this.model = params.model;
 
         world.pushEntityToRenderQueue(this);
     }

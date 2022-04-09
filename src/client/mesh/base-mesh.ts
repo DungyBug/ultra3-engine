@@ -1,6 +1,6 @@
 import { IVector } from "../../core/contracts/base/vector";
+import DrawMode from "../constants/draw-mode";
 import IBaseMesh from "../contracts/base-mesh";
-import IMaterial from "../contracts/material";
 import IBaseMeshOptions from "../contracts/mesh/base-mesh-opts";
 
 class BaseMesh implements IBaseMesh {
@@ -8,14 +8,14 @@ class BaseMesh implements IBaseMesh {
     pos: IVector;
     scale: IVector;
     rotation: IVector;
-    material: IMaterial;
+    drawMode: DrawMode;
 
     constructor(options: IBaseMeshOptions) {
         this.pos = options.pos;
         this.scale = options.scale;
         this.rotation = options.rotation;
-        this.material = options.material;
         this.vertices = options.vertices;
+        this.drawMode = options.drawMode || DrawMode.DYNAMIC;
     }
 }
 

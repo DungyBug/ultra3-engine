@@ -1,4 +1,5 @@
 import { IVector } from "../../core/contracts/base/vector";
+import DrawMode from "../constants/draw-mode";
 import TypedArray from "../contracts/common/typed-array";
 import IVolume from "../contracts/mesh/volume";
 import IVolumeOptions from "../contracts/mesh/volume-opts";
@@ -11,12 +12,14 @@ class Volume implements IVolume {
     public pos: IVector;
     public scale: IVector;
     public rotation: IVector;
+    public drawMode: DrawMode;
 
     constructor(options: IVolumeOptions) {
-        this.pos = options.pos || {x: 0, y: 0, z: 0};
-        this.scale = options.scale || {x: 0, y: 0, z: 0};
-        this.rotation = options.rotation || {x: 0, y: 0, z: 0};
+        this.pos = options.pos || { x: 0, y: 0, z: 0 };
+        this.scale = options.scale || { x: 0, y: 0, z: 0 };
+        this.rotation = options.rotation || { x: 0, y: 0, z: 0 };
         this.texture = options.texture;
+        this.drawMode = DrawMode.STATIC;
         this._material = new VolumetricMaterial(this.texture);
     }
 
