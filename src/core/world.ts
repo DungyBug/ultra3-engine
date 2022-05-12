@@ -119,6 +119,15 @@ export class World implements IWorld {
                 this.entities.splice(i, 1);
             }
         }
+
+        // Delete all links to deleted entities
+        for (let i = 0; i < this.entities.length; i++) {
+            for (let j = 0; j < this.entities[i].links.length; j++) {
+                if(this.entities[i].links[j].deleted) {
+                    this.entities[i].unlink(this.entities[i].links[j]);
+                }
+            }
+        }
     }
 
     runTick() {

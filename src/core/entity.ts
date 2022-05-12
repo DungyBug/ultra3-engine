@@ -35,7 +35,7 @@ export class Entity implements IEntity {
     }
 
     delete() {
-        this.deleted = false;
+        this.deleted = true;
 
         // Unlink entities from this entity
         for (let i = 0; i < this.links.length; i++) {
@@ -48,8 +48,8 @@ export class Entity implements IEntity {
     }
 
     unlink(entity: IEntity) {
-        let entityIndex = this.links.indexOf(entity);
-
+        const entityIndex = this.links.indexOf(entity);
+        
         if (entityIndex !== -1) {
             // Check if entity is exists in our array
             this.links.splice(entityIndex, 1); // Unlink entity

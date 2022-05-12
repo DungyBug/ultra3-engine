@@ -1,174 +1,206 @@
-import WSTransporter from "./client/services/transporter/ws-transporter";
-import Client from "./client/client";
+// import WSTransporter from "./client/services/transporter/ws-transporter";
+// import Client from "./client/client";
+// import { Registry } from "./core/registry";
+// import BabylonRenderer from "./client/renderers/babylon-renderer";
+// import { Player } from "./core/entities/player";
+// import ViewableEntity from "./client/entities/base/viewable";
+// import { Door } from "./core/map/objects/door";
+
+import { Entity } from "./core/entity";
 import { Registry } from "./core/registry";
-import BabylonRenderer from "./client/renderers/babylon-renderer";
-import { Player } from "./core/entities/player";
-import ViewableEntity from "./client/entities/base/viewable";
-import { Door } from "./core/map/objects/door";
+import { World } from "./core/world";
 
-// let state: Record<string, any> = {};
-// let attached = false;
-// const keys: Array<boolean> = new Array(113).fill(false);
+// // let state: Record<string, any> = {};
+// // let attached = false;
+// // const keys: Array<boolean> = new Array(113).fill(false);
 
-// UI side
-const canvas = document.createElement("canvas");
-canvas.width = 1920;
-canvas.height = 1080;
-document.body.append(canvas);
+// // UI side
+// const canvas = document.createElement("canvas");
+// canvas.width = 1920;
+// canvas.height = 1080;
+// document.body.append(canvas);
 
-const registry = new Registry();
+// const registry = new Registry();
 
-registry.registerClass("player_player", ViewableEntity);
+// registry.registerClass("player_player", ViewableEntity);
 
-const client = new Client(
-    {
-        gravity: 9.81,
-        thinkPeriod: 100 / 6,
-    },
-    registry,
-    new BabylonRenderer(canvas)
-);
-
-new Door(
-    "",
-    {
-        speed: 10,
-        distance: 10,
-        direction: { x: 0, y: -1, z: 0 },
-        name: "door1",
-        rotation: { x: 0, y: 0, z: 0 },
-        pos: { x: 0, y: 10, z: 0 },
-        scale: { x: 1, y: 1, z: 1 },
-    },
-    client
-);
-client.start(new WSTransporter("ws://192.168.0.21:3003/"));
-
-// const engine = new BABYLON.Engine(canvas, true, {
-//     preserveDrawingBuffer: true,
-//     stencil: true,
-// });
-
-// const scene = new BABYLON.Scene(engine);
-
-// const camera = new BABYLON.FreeCamera(
-//     "camera",
-//     new BABYLON.Vector3(0, 0, -2),
-//     scene
+// const client = new Client(
+//     {
+//         gravity: 9.81,
+//         thinkPeriod: 100 / 6,
+//     },
+//     registry,
+//     new BabylonRenderer(canvas)
 // );
 
-// camera.setTarget(BABYLON.Vector3.Zero());
-
-// camera.attachControl(canvas, true);
-
-// const light = new PointLight("light", new BABYLON.Vector3(1, 1.5, 0), scene);
-
-// const sphere = BABYLON.MeshBuilder.CreateSphere(
-//     "sphere",
-//     { segments: 8, diameter: 2, sideOrientation: BABYLON.Mesh.FRONTSIDE },
-//     scene
+// new Door(
+//     "",
+//     {
+//         speed: 10,
+//         distance: 10,
+//         direction: { x: 0, y: -1, z: 0 },
+//         name: "door1",
+//         rotation: { x: 0, y: 0, z: 0 },
+//         pos: { x: 0, y: 10, z: 0 },
+//         scale: { x: 1, y: 1, z: 1 },
+//     },
+//     client
 // );
-// sphere.position = BABYLON.Vector3.Zero();
+// client.start(new WSTransporter("ws://192.168.0.21:3003/"));
 
-// const ground = BABYLON.MeshBuilder.CreateGround(
-//     "ground",
-//     { width: 6, height: 6, updatable: false },
-//     scene
-// );
+// // const engine = new BABYLON.Engine(canvas, true, {
+// //     preserveDrawingBuffer: true,
+// //     stencil: true,
+// // });
 
-// engine.runRenderLoop(() => {
-//     scene.render();
+// // const scene = new BABYLON.Scene(engine);
 
-//     if (state.hasOwnProperty("entities") && state.thisEntity !== -1) {
-//         const entity = state.entities[state.thisEntity] as IEntityState;
+// // const camera = new BABYLON.FreeCamera(
+// //     "camera",
+// //     new BABYLON.Vector3(0, 0, -2),
+// //     scene
+// // );
 
-//         camera.position = new BABYLON.Vector3(
-//             entity.pos.x,
-//             entity.pos.y,
-//             entity.pos.z
-//         );
-//     }
+// // camera.setTarget(BABYLON.Vector3.Zero());
 
-//     if (keys[87]) {
-//         server.send(
-//             JSON.stringify({
-//                 type: "update-player-state",
-//                 data: {
-//                     event: "move",
-//                     angle: camera.rotation.y,
-//                 },
-//             }),
-//             false
-//         );
-//     }
-//     if (keys[83]) {
-//         server.send(
-//             JSON.stringify({
-//                 type: "update-player-state",
-//                 data: {
-//                     event: "move",
-//                     angle: camera.rotation.y + Math.PI,
-//                 },
-//             }),
-//             false
-//         );
-//     }
-//     if (keys[65]) {
-//         server.send(
-//             JSON.stringify({
-//                 type: "update-player-state",
-//                 data: {
-//                     event: "move",
-//                     angle: camera.rotation.y - Math.PI * 0.5,
-//                 },
-//             }),
-//             false
-//         );
-//     }
-//     if (keys[68]) {
-//         server.send(
-//             JSON.stringify({
-//                 type: "update-player-state",
-//                 data: {
-//                     event: "move",
-//                     angle: camera.rotation.y + Math.PI * 0.5,
-//                 },
-//             }),
-//             false
-//         );
-//     }
-// });
+// // camera.attachControl(canvas, true);
 
-// // Client side
+// // const light = new PointLight("light", new BABYLON.Vector3(1, 1.5, 0), scene);
 
-// let server = new Transport(new WSTransporter("ws://192.168.0.21:3003/"));
+// // const sphere = BABYLON.MeshBuilder.CreateSphere(
+// //     "sphere",
+// //     { segments: 8, diameter: 2, sideOrientation: BABYLON.Mesh.FRONTSIDE },
+// //     scene
+// // );
+// // sphere.position = BABYLON.Vector3.Zero();
 
-// server.onMessage((message, res) => {
-//     console.log(message);
-//     res("asdf");
-// });
+// // const ground = BABYLON.MeshBuilder.CreateGround(
+// //     "ground",
+// //     { width: 6, height: 6, updatable: false },
+// //     scene
+// // );
 
-// function frame() {
-//     server
-//         .send(
-//             JSON.stringify({
-//                 type: "get-state",
-//             }),
-//             true
-//         )
-//         .then((data: string) => {
-//             state = JSON.parse(data);
-//         });
+// // engine.runRenderLoop(() => {
+// //     scene.render();
 
-//     requestAnimationFrame(frame);
-// }
+// //     if (state.hasOwnProperty("entities") && state.thisEntity !== -1) {
+// //         const entity = state.entities[state.thisEntity] as IEntityState;
 
-// frame();
+// //         camera.position = new BABYLON.Vector3(
+// //             entity.pos.x,
+// //             entity.pos.y,
+// //             entity.pos.z
+// //         );
+// //     }
 
-// document.addEventListener("keydown", (e) => {
-//     keys[e.keyCode] = true;
-// });
+// //     if (keys[87]) {
+// //         server.send(
+// //             JSON.stringify({
+// //                 type: "update-player-state",
+// //                 data: {
+// //                     event: "move",
+// //                     angle: camera.rotation.y,
+// //                 },
+// //             }),
+// //             false
+// //         );
+// //     }
+// //     if (keys[83]) {
+// //         server.send(
+// //             JSON.stringify({
+// //                 type: "update-player-state",
+// //                 data: {
+// //                     event: "move",
+// //                     angle: camera.rotation.y + Math.PI,
+// //                 },
+// //             }),
+// //             false
+// //         );
+// //     }
+// //     if (keys[65]) {
+// //         server.send(
+// //             JSON.stringify({
+// //                 type: "update-player-state",
+// //                 data: {
+// //                     event: "move",
+// //                     angle: camera.rotation.y - Math.PI * 0.5,
+// //                 },
+// //             }),
+// //             false
+// //         );
+// //     }
+// //     if (keys[68]) {
+// //         server.send(
+// //             JSON.stringify({
+// //                 type: "update-player-state",
+// //                 data: {
+// //                     event: "move",
+// //                     angle: camera.rotation.y + Math.PI * 0.5,
+// //                 },
+// //             }),
+// //             false
+// //         );
+// //     }
+// // });
 
-// document.addEventListener("keyup", (e) => {
-//     keys[e.keyCode] = false;
-// });
+// // // Client side
+
+// // let server = new Transport(new WSTransporter("ws://192.168.0.21:3003/"));
+
+// // server.onMessage((message, res) => {
+// //     console.log(message);
+// //     res("asdf");
+// // });
+
+// // function frame() {
+// //     server
+// //         .send(
+// //             JSON.stringify({
+// //                 type: "get-state",
+// //             }),
+// //             true
+// //         )
+// //         .then((data: string) => {
+// //             state = JSON.parse(data);
+// //         });
+
+// //     requestAnimationFrame(frame);
+// // }
+
+// // frame();
+
+// // document.addEventListener("keydown", (e) => {
+// //     keys[e.keyCode] = true;
+// // });
+
+// // document.addEventListener("keyup", (e) => {
+// //     keys[e.keyCode] = false;
+// // });
+
+const world = new World({gravity: -9.81, thinkPeriod: 100/6}, new Registry());
+
+let entity1 = new Entity({
+    classname: "entity",
+    pos: {x: 0, y: 0, z: 0}
+}, world);
+
+let entity2 = new Entity({
+    classname: "entity2",
+    pos: {x: 0, y: 0, z: 0}
+}, world);
+
+let entity3 = new Entity({
+    classname: "entity3",
+    pos: {x: 0, y: 0, z: 0}
+}, world);
+
+world.runTick();
+
+entity1.link(entity2);
+entity1.link(entity3);
+
+entity2.delete();
+
+
+(<any>window)["entity"] = entity1;
+(<any>window)["world"] = world;
