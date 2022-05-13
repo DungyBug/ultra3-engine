@@ -4,9 +4,9 @@ export interface IMagazineGunEntityParams extends IWeaponParams {
     maxAmmo?: number; // 120 by default
     startAmmo?: number; // 0 by default
     hasMagazine: true;
-    magazineAmmoCount: number; // 0 if hasn't magazine and 30 if has
+    magazineAmmoCount: number;
     reloadTime: number; // Reload time between patrons
-    magazineReloadTime: number; // 10 seconds by default ( 10000 )
+    magazineReloadTime: number; // 10 seconds by default
 }
 
 export interface ISingleShotGunEntityParams extends IWeaponParams {

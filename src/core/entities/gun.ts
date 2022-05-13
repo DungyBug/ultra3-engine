@@ -10,6 +10,7 @@ export class GunEntity extends Weapon implements IGunEntity {
     protected ammo: number; // 0 by default
     protected ammoInMagazine: number; // 0 by default
     protected readonly magazineAmmoCount: number; // 0 if hasn't magazine and 30 if has
+    protected magazineReloadEnd: number;
 
     constructor(params: IGunEntityParams, world: World) {
         super(params, world);
@@ -19,7 +20,8 @@ export class GunEntity extends Weapon implements IGunEntity {
         this.magazineReloadTime = (this.hasMagazine ? (params as IMagazineGunEntityParams).magazineReloadTime : 0);
         this.ammo = params.startAmmo || 0;
         this.maxAmmo = params.maxAmmo || 120;
-        this.ammoInMagazine = this.magazineAmmoCount;
+        this.magazineReloadEnd = 0;
+        this.ammoInMagazine = 0;
     }
 
     addAmmo(ammo: number) {
@@ -30,14 +32,29 @@ export class GunEntity extends Weapon implements IGunEntity {
     }
 
     reloadMagazine() {
-        // TODO: Add state changing ( to prevent shooting while reloading magazine )
-        
-        let ammoToAdd = this.magazineAmmoCount - this.ammoInMagazine; // Get amount of ammo we need to add to magazine to make it full ( we need add 5 bullets to 45 to make magazine full )
+        if(this.currentState !== 1 && this.ammoInMagazine < this.magazineAmmoCount) {
+            let ammoToAdd = this.magazineAmmoCount - this.ammoInMagazine; // Get amount of ammo we need to add to magazine to make it full ( we need add 5 bullets to 45 to make magazine full )
 
-        ammoToAdd = Math.min(this.ammo, ammoToAdd); // We can't fill empty magazine by 30 bullets if we have only 14, so check for ammo left
+            ammoToAdd = Math.min(this.ammo, ammoToAdd); // We can't fill empty magazine by 30 bullets if we have only 14, so check for ammo left
 
-        this.ammo -= ammoToAdd;
-        this.ammoInMagazine += ammoToAdd;
+            this.ammo -= ammoToAdd;
+            this.ammoInMagazine += ammoToAdd;
+
+            this.requestingState = 1;
+            this.magazineReloadEnd = this.world.getTime() + this.magazineReloadTime;
+        }
+    }
+
+    think() {
+        super.think();
+
+        if(this.currentState === 1) {
+            if(this.world.getTime() >= this.magazineReloadEnd) {
+                this.requestingState = 0;
+            }
+        }
+
+        this.currentState = this.requestingState;
     }
     
     getEntityState(): GunEntityState {

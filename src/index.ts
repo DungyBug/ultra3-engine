@@ -6,6 +6,8 @@
 // import ViewableEntity from "./client/entities/base/viewable";
 // import { Door } from "./core/map/objects/door";
 
+import { GunEntity } from "./core/entities/gun";
+import { Player } from "./core/entities/player";
 import { Entity } from "./core/entity";
 import { Registry } from "./core/registry";
 import { World } from "./core/world";
@@ -177,30 +179,41 @@ import { World } from "./core/world";
 // //     keys[e.keyCode] = false;
 // // });
 
-const world = new World({gravity: -9.81, thinkPeriod: 100/6}, new Registry());
+const world = new World({gravity: -9.81, thinkPeriod: 100}, new Registry());
 
-let entity1 = new Entity({
-    classname: "entity",
-    pos: {x: 0, y: 0, z: 0}
+let gun = new GunEntity({
+    startAmmo: 60,
+    hasMagazine: true,
+    magazineAmmoCount: 10,
+    reloadTime: 0,
+    magazineReloadTime: 2000,
+    damage: 10,
+    classname: "wp_test",
+    physicalModel: {
+        type: 0,
+        shift: {x: 0, y: 0, z: 0},
+        rotation: {x: 0, y: 0, z: 0},
+        scale: {x: 1, y: 1, z: 1}
+    }
 }, world);
 
-let entity2 = new Entity({
-    classname: "entity2",
-    pos: {x: 0, y: 0, z: 0}
-}, world);
-
-let entity3 = new Entity({
-    classname: "entity3",
+let entity = new Player({
+    classname: "player_test",
     pos: {x: 0, y: 0, z: 0}
 }, world);
 
 world.runTick();
 
-entity1.link(entity2);
-entity1.link(entity3);
+entity.pick(gun);
 
-entity2.delete();
+console.log((<any>gun).ammoInMagazine);
+console.log((<any>gun).currentState);
 
+gun.reloadMagazine();
 
-(<any>window)["entity"] = entity1;
+console.log((<any>gun).ammoInMagazine);
+console.log((<any>gun).currentState);
+
+(<any>window)["gun"] = gun;
+(<any>window)["entity"] = entity;
 (<any>window)["world"] = world;
