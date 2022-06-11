@@ -10,10 +10,7 @@ class ClientGunEntity extends GunEntity implements IClientGunEntity {
 
     constructor(params: IClientGunEntityParams, world: ClientWorld) {
         super(params, world);
-
         this.model = params.model;
-
-        world.pushEntityToRenderQueue(this);
     }
 }
 

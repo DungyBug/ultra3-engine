@@ -7,7 +7,7 @@ import {
 import { World } from "./world";
 import { EventEmitter } from "./services/event-emitter";
 
-export class MapObject extends EventEmitter implements IMapObject {
+export class MapObject extends EventEmitter<Record<string, [IMapEvent]>> implements IMapObject {
     id: number;
     protected shape: string; // IShape
     protected props: IMapObjectProps;
@@ -48,14 +48,12 @@ export class MapObject extends EventEmitter implements IMapObject {
         }
     }
 
-    on(event: string, callback: (e: IMapEvent) => boolean) {
+    on(event: string, callback: (e: IMapEvent) => void) {
         super.on(event, callback);
     }
 
-    emit(event: string, e: IMapEvent): Array<boolean> {
-        // All callbacks returns boolean ( whether event need to be counted, f.e. if you try to open door, door can block this attempt, 'cause callback returned false )
-        let result = super.emit(event, e);
-        return result;
+    emit(event: string, e: IMapEvent): any[] {
+        return super.emit(event, e);
     }
 
     setMapObjectState(state: IMapObjectState): void {

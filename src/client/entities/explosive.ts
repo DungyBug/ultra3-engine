@@ -14,10 +14,7 @@ class ClientExplosiveEntity
 
     constructor(params: IClientExplosiveEntityParams, world: ClientWorld) {
         super(params, world);
-
         this.model = params.model;
-
-        world.pushEntityToRenderQueue(this);
     }
 }
 

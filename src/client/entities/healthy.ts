@@ -13,9 +13,7 @@ class ClientHealthyEntity
 
     constructor(params: IClientHealthyEntityParams, world: ClientWorld) {
         super(params, world);
-
         this.model = params.model;
-        world.pushEntityToRenderQueue(this);
     }
 }
 

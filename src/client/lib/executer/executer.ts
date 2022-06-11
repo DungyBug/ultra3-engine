@@ -3,7 +3,7 @@ import IExecuter from "../contracts/mesh-loader/executer/executer";
 import IExecuterInstance from "../contracts/mesh-loader/executer/instance";
 import ExecuterMessage from "../contracts/mesh-loader/executer/message";
 
-class Executer extends EventEmitter<"message" | "error"> implements IExecuter {
+class Executer extends EventEmitter<Record<"message" | "error", any[]>> implements IExecuter {
     private instance: IExecuterInstance;
     private url: string;
     private worker: Worker;

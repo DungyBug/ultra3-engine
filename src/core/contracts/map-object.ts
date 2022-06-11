@@ -17,8 +17,8 @@ export interface IMapObject {
     // state: number;
 
     activate(): void; // Calls when player triggers a trigger, connected to this object
-    emit(event: string, e: IMapEvent): Array<boolean>;
-    on(event: string, callback: (e: IMapEvent) => boolean): void;
+    emit(event: string, e: IMapEvent): void;
+    on(event: string, callback: (e: IMapEvent) => void): void;
     getProps(): IMapObjectProps;
     getShape(): string;
     getState(): number;

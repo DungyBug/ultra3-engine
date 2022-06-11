@@ -1,11 +1,11 @@
-export class EventEmitter<T extends string = string> {
+export class EventEmitter<V extends Record<string, unknown[]>> {
     protected callbacks: any;
 
     constructor() {
         this.callbacks = {};
     }
 
-    on(event: T, callback: (...args: any) => any) {
+    on<T extends keyof V>(event: T, callback: (...args: V[T]) => void) {
         if(this.callbacks.hasOwnProperty(event)) {
             this.callbacks[event].push(callback);
         } else {
@@ -13,7 +13,7 @@ export class EventEmitter<T extends string = string> {
         }
     }
 
-    emit(event: T, ...args: any): Array<any> {
+    emit<T extends keyof V>(event: T, ...args: V[T]): Array<any> {
         let results: Array<any> = [];
 
         if(this.callbacks.hasOwnProperty("all")) {

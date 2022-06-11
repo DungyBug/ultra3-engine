@@ -11,10 +11,7 @@ class ClientWeapon extends Weapon implements IClientWeapon {
 
     constructor(params: IClientWeaponParams, world: ClientWorld) {
         super(params, world);
-
         this.model = params.model;
-
-        world.pushEntityToRenderQueue(this);
     }
 }
 

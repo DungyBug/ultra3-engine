@@ -30,7 +30,7 @@ type EventCallback<T extends ServerEvents> = T extends "message"
 
 abstract class AbstractTransporter<
     T extends string = Events
-> extends EventEmitter<Events | T> {
+> extends EventEmitter<Record<Events | T, any[]>> {
     /**
      * Send a request or just a message to the server
      * @param opts - send options

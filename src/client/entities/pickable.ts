@@ -12,10 +12,7 @@ class ClientPickableEntity
 
     constructor(params: IClientPhysicalEntityParams, world: ClientWorld) {
         super(params, world);
-
         this.model = params.model;
-
-        world.pushEntityToRenderQueue(this);
     }
 }
 

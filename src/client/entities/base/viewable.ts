@@ -13,8 +13,6 @@ class ViewableEntity extends Entity implements IViewableEntity {
     constructor(params: IViewableEntityParams, world: ClientWorld) {
         super(params, world);
         this.model = params.model;
-
-        world.pushEntityToRenderQueue(this);
     }
 
     setEntityState(state: IEntityState): void {

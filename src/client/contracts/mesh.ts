@@ -5,7 +5,6 @@ import IBaseMesh from "./base-mesh";
 import IMaterial from "./material";
 
 interface IMesh extends IBaseMesh {
-    castsShadow: boolean;
     verticesMode: VerticesMode;
 
     get vertices(): Array<IVector>;

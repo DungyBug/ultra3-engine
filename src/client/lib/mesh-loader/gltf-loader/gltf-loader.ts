@@ -1748,7 +1748,6 @@ class GLTFLoader implements IMeshLoader {
                         });
 
                         mesh = {
-                            castsShadow: true,
                             verticesMode: verticesMode,
                             vertices: points,
                             indices: indices,

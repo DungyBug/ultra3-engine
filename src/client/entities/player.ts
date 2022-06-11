@@ -10,10 +10,7 @@ class ClientPlayer extends Player implements IClientPlayer {
 
     constructor(params: IClientPlayerParams, world: ClientWorld) {
         super(params, world);
-
         this.model = params.model;
-
-        world.pushEntityToRenderQueue(this);
     }
 }
 

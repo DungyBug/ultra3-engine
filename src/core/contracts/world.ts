@@ -1,5 +1,8 @@
 import { IEntity, IEntityState } from "./entity";
 import { IMapObjectState } from "./map-object";
+import BaseModule from "./module";
+import BaseGraphicsModule from "../../client/contracts/modules/graphics-module";
+import BasePhysicsModule from "./modules/physics-module";
 
 export interface IWorldState {
     // TODO: addedEntitiesCount...
@@ -9,6 +12,9 @@ export interface IWorldState {
 
 export interface IWorld {
     entities: Array<IEntity>;
+
+    addModule(module: BaseModule): void;
+    setPhysicsModule(module: BasePhysicsModule): void;
 
     /**
      * Adds entity to the world.
