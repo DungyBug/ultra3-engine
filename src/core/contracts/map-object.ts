@@ -1,5 +1,6 @@
 import { IVector } from "./base/vector";
 import { IMapEvent } from "./map-event";
+import IPhysicalMesh from "./physical-mesh";
 
 export interface IMapObjectProps {
     name: string;
@@ -20,7 +21,7 @@ export interface IMapObject {
     emit(event: string, e: IMapEvent): void;
     on(event: string, callback: (e: IMapEvent) => void): void;
     getProps(): IMapObjectProps;
-    getShape(): string;
+    getShape(): IPhysicalMesh;
     getState(): number;
     setMapObjectState(state: IMapObjectState): void;
     getMapObjectState(): IMapObjectState;

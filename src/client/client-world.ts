@@ -1,33 +1,22 @@
-import WorldModuleEvents from "../core/contracts/world-module-events";
+import { IWorld } from "../core/contracts/world";
 import { IWorldProps } from "../core/contracts/world-porps";
 import { Registry } from "../core/registry";
 import { World } from "../core/world";
-import IClientWorld from "./contracts/client-world";
+import ClientWorldEvents from "./contracts/client-world-events";
 import { IViewableEntity } from "./contracts/entities/base/viewable";
-import BaseGraphicsModule from "./contracts/modules/graphics-module";
 
-class ClientWorld extends World implements IClientWorld {
+class ClientWorld<T extends Record<string, unknown[]> & ClientWorldEvents = ClientWorldEvents> extends World<T> implements IWorld {
     protected viewableEntities: Array<IViewableEntity>;
-    protected graphicsModule: BaseGraphicsModule;
-
+    
     constructor(props: IWorldProps, registry: Registry) {
         super(props, registry);
 
         this.viewableEntities = [];
     }
 
-    setGraphicsModule(module: BaseGraphicsModule, width: number, height: number, fov: number): void {
-        this.graphicsModule = module;
-        this.graphicsModule.init({
-            width,
-            height,
-            fov,
-            context: this.context
-        });
-    }
-
-    runRenderLoop() {
-        this.context.emitter.emit("start");
+    runTickLoop() {
+        this.emit("start");
+        this.runTick();
     }
 
     runTick() {

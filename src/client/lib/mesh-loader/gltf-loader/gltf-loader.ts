@@ -24,14 +24,14 @@ import { convertToFloat } from "./gltf-helper-functions";
 import GLTFMipMappedTextureFilter, {
     GLTFUnMipMappedTextureFilter,
 } from "../../constants/mesh-loader/gltf-loader/texture-filter";
-import ColorTexture from "../../../texture/color";
-import PBRMaterial from "../../../materials/pbr";
+import PBRMaterial from "../../../materials/pbr-material";
 import IGLTFChunk from "../../contracts/mesh-loader/gltf-loader/gltf-chunk";
 import IScene from "../../../contracts/scene";
 import ILight from "../../../contracts/entities/light";
 import LightEntity from "../../../entities/light";
 import { World } from "../../../../core/world";
 import DrawMode from "../../../constants/draw-mode";
+import ClientEngine from "../../../client-engine";
 
 class GLTFLoader implements IMeshLoader {
     private binaries: Array<IGLTFBinary>;
@@ -44,11 +44,13 @@ class GLTFLoader implements IMeshLoader {
         }
     >;
     private world: World;
+    private engine: ClientEngine;
 
-    constructor(world: World) {
+    constructor(world: World, engine: ClientEngine = null) {
         this.binaries = [];
         this.images = {};
         this.world = world;
+        this.engine = engine;
     }
 
     loadBinaries(binaries: Array<IGLTFBinary>) {
@@ -925,7 +927,7 @@ class GLTFLoader implements IMeshLoader {
                              */
                             if (
                                 GLTFMaterial.pbrMetallicRoughness
-                                    .baseColorTexture
+                                    .baseColorTexture && this.engine !== null
                             ) {
                                 const texture =
                                     storage.textures[
@@ -1030,8 +1032,8 @@ class GLTFLoader implements IMeshLoader {
                                         ?.KHR_texture_transform?.scale || [
                                         1, 1,
                                     ],
-                                });
-                            } else {
+                                }, this.engine);
+                            } else if(this.engine !== null) {
                                 let color: [number, number, number, number] = [
                                     1.0, 1.0, 1.0, 1.0,
                                 ];
@@ -1045,10 +1047,16 @@ class GLTFLoader implements IMeshLoader {
                                             .baseColorFactor;
                                 }
 
-                                albedo = new ColorTexture(
-                                    ColorMode.RGBA,
-                                    color
-                                );
+                                albedo = new Texture2D({
+                                    width: 1,
+                                    height: 1,
+                                    frames: [new Uint8Array(color)],
+                                    textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                    colorMode: ColorMode.RGBA,
+                                    framesPerSecond: 1,
+                                    magSamplingMode: SamplingMode.NEAREST,
+                                    minSamplingMode: SamplingMode.NEAREST
+                                }, this.engine);
                             }
 
                             /*
@@ -1058,7 +1066,7 @@ class GLTFLoader implements IMeshLoader {
                              */
                             if (
                                 GLTFMaterial.pbrMetallicRoughness
-                                    .metallicRoughnessTexture
+                                    .metallicRoughnessTexture && this.engine !== null
                             ) {
                                 const texture =
                                     storage.textures[
@@ -1177,7 +1185,7 @@ class GLTFLoader implements IMeshLoader {
                                         ?.KHR_texture_transform?.scale || [
                                         1, 1,
                                     ],
-                                });
+                                }, this.engine);
 
                                 roughness = new Texture2D<IUint8TextureOptions>(
                                     {
@@ -1208,9 +1216,9 @@ class GLTFLoader implements IMeshLoader {
                                             ?.KHR_texture_transform?.scale || [
                                             1, 1,
                                         ],
-                                    }
+                                    }, this.engine
                                 );
-                            } else {
+                            } else if(this.engine !== null) {
                                 let metallicFactor =
                                     1.0 ||
                                     GLTFMaterial.pbrMetallicRoughness
@@ -1220,14 +1228,26 @@ class GLTFLoader implements IMeshLoader {
                                     GLTFMaterial.pbrMetallicRoughness
                                         .roughnessFactor;
 
-                                metallic = new ColorTexture(
-                                    ColorMode.LUMINANCE,
-                                    metallicFactor
-                                );
-                                roughness = new ColorTexture(
-                                    ColorMode.LUMINANCE,
-                                    roughnessFactor
-                                );
+                                metallic = new Texture2D({
+                                    width: 1,
+                                    height: 1,
+                                    frames: [new Uint8Array([metallicFactor])],
+                                    textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                    colorMode: ColorMode.LUMINANCE,
+                                    framesPerSecond: 1,
+                                    magSamplingMode: SamplingMode.NEAREST,
+                                    minSamplingMode: SamplingMode.NEAREST
+                                }, this.engine);
+                                roughness = new Texture2D({
+                                    width: 1,
+                                    height: 1,
+                                    frames: [new Uint8Array([roughnessFactor])],
+                                    textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                    colorMode: ColorMode.LUMINANCE,
+                                    framesPerSecond: 1,
+                                    magSamplingMode: SamplingMode.NEAREST,
+                                    minSamplingMode: SamplingMode.NEAREST
+                                }, this.engine);
                             }
                         }
 
@@ -1236,7 +1256,7 @@ class GLTFLoader implements IMeshLoader {
                          *          Get normals texture          *
                          *****************************************
                          */
-                        if (GLTFMaterial.normalTexture) {
+                        if (GLTFMaterial.normalTexture && this.engine !== null) {
                             const texture =
                                 storage.textures[
                                     GLTFMaterial.normalTexture.index
@@ -1310,12 +1330,18 @@ class GLTFLoader implements IMeshLoader {
                                         ?.KHR_texture_transform?.scale || [
                                         1, 1,
                                     ],
-                                });
-                        } else {
-                            normalsTexture = new ColorTexture(
-                                ColorMode.RGB,
-                                [0.5, 0.5, 1.0]
-                            );
+                                }, this.engine);
+                        } else if(this.engine !== null) {
+                            normalsTexture = new Texture2D({
+                                width: 1,
+                                height: 1,
+                                frames: [new Uint8Array([128, 128, 255])],
+                                textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                colorMode: ColorMode.LUMINANCE,
+                                framesPerSecond: 1,
+                                magSamplingMode: SamplingMode.NEAREST,
+                                minSamplingMode: SamplingMode.NEAREST
+                            }, this.engine);
                         }
 
                         /*
@@ -1323,7 +1349,7 @@ class GLTFLoader implements IMeshLoader {
                          *         Get occlusion texture         *
                          *****************************************
                          */
-                        if (GLTFMaterial.occlusionTexture) {
+                        if (GLTFMaterial.occlusionTexture && this.engine !== null) {
                             const texture =
                                 storage.textures[
                                     GLTFMaterial.occlusionTexture.index
@@ -1392,12 +1418,18 @@ class GLTFLoader implements IMeshLoader {
                                 ],
                                 scale: GLTFMaterial.occlusionTexture.extensions
                                     ?.KHR_texture_transform?.scale || [1, 1],
-                            });
-                        } else {
-                            occlusion = new ColorTexture(
-                                ColorMode.LUMINANCE,
-                                1.0
-                            );
+                            }, this.engine);
+                        } else if(this.engine !== null) {
+                            occlusion = new Texture2D({
+                                width: 1,
+                                height: 1,
+                                frames: [new Uint8Array([255])],
+                                textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                colorMode: ColorMode.LUMINANCE,
+                                framesPerSecond: 1,
+                                magSamplingMode: SamplingMode.NEAREST,
+                                minSamplingMode: SamplingMode.NEAREST
+                            }, this.engine);
                         }
 
                         /*
@@ -1405,7 +1437,7 @@ class GLTFLoader implements IMeshLoader {
                          *          Get emissive texture         *
                          *****************************************
                          */
-                        if (GLTFMaterial.emissiveTexture) {
+                        if (GLTFMaterial.emissiveTexture && this.engine !== null) {
                             const texture =
                                 storage.textures[
                                     GLTFMaterial.emissiveTexture.index
@@ -1474,12 +1506,18 @@ class GLTFLoader implements IMeshLoader {
                                 ],
                                 scale: GLTFMaterial.emissiveTexture.extensions
                                     ?.KHR_texture_transform?.scale || [1, 1],
-                            });
-                        } else {
-                            emissive = new ColorTexture(
-                                ColorMode.LUMINANCE,
-                                1.0
-                            );
+                            }, this.engine);
+                        } else if(this.engine !== null) {
+                            emissive = new Texture2D({
+                                width: 1,
+                                height: 1,
+                                frames: [new Uint8Array([255])],
+                                textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                colorMode: ColorMode.LUMINANCE,
+                                framesPerSecond: 1,
+                                magSamplingMode: SamplingMode.NEAREST,
+                                minSamplingMode: SamplingMode.NEAREST
+                            }, this.engine);
                         }
 
                         let specularFactor = 0.0;
@@ -1502,7 +1540,7 @@ class GLTFLoader implements IMeshLoader {
                                  */
                                 if (
                                     GLTFMaterial.extensions
-                                        .KHR_materials_specular.specularTexture
+                                        .KHR_materials_specular.specularTexture && this.engine !== null
                                 ) {
                                     const factor =
                                         GLTFMaterial.extensions
@@ -1604,22 +1642,28 @@ class GLTFLoader implements IMeshLoader {
                                             ?.KHR_texture_transform?.scale || [
                                             1, 1,
                                         ],
-                                    });
-                                } else {
+                                    }, this.engine);
+                                } else if(this.engine !== null) {
                                     let factor =
                                         GLTFMaterial.extensions
                                             .KHR_materials_specular
                                             .specularFactor || 1.0;
-                                    specularTexture = new ColorTexture(
-                                        ColorMode.RGB,
-                                        [factor, factor, factor]
-                                    );
+                                    specularTexture = new Texture2D({
+                                        width: 1,
+                                        height: 1,
+                                        frames: [new Uint8Array([factor, factor, factor])],
+                                        textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                        colorMode: ColorMode.LUMINANCE,
+                                        framesPerSecond: 1,
+                                        magSamplingMode: SamplingMode.NEAREST,
+                                        minSamplingMode: SamplingMode.NEAREST
+                                    }, this.engine);
                                 }
 
                                 if (
                                     GLTFMaterial.extensions
                                         .KHR_materials_specular
-                                        .specularColorTexture
+                                        .specularColorTexture && this.engine !== null
                                 ) {
                                     const factor = GLTFMaterial.extensions
                                         .KHR_materials_specular
@@ -1721,31 +1765,36 @@ class GLTFLoader implements IMeshLoader {
                                             ?.KHR_texture_transform?.scale || [
                                             1, 1,
                                         ],
-                                    });
-                                } else {
-                                    specularColor = new ColorTexture(
-                                        ColorMode.RGB,
-                                        GLTFMaterial.extensions
-                                            .KHR_materials_specular
-                                            .specularColorFactor || [
-                                            1.0, 1.0, 1.0,
-                                        ]
-                                    );
+                                    }, this.engine);
+                                } else if(this.engine !== null) {
+                                    specularColor = new Texture2D({
+                                        width: 1,
+                                        height: 1,
+                                        frames: [new Uint8Array(GLTFMaterial.extensions.KHR_materials_specular.specularColorFactor || [1.0, 1.0, 1.0])],
+                                        textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+                                        colorMode: ColorMode.RGB,
+                                        framesPerSecond: 1,
+                                        magSamplingMode: SamplingMode.NEAREST,
+                                        minSamplingMode: SamplingMode.NEAREST
+                                    }, this.engine);
                                 }
                             }
                         }
 
-                        material = new PBRMaterial({
-                            albedoTexture: albedo,
-                            metallicTexture: metallic,
-                            roughnessTexture: roughness,
-                            normalsTexture: normalsTexture,
-                            occlusionTexture: occlusion,
-                            emissiveTexture: emissive,
-                            specularTexture: specularTexture,
-                            specularColor: specularColor,
-                            specularFactor: specularFactor,
-                        });
+                        if(this.engine !== null) {
+                            material = new PBRMaterial(this.engine, {
+                                albedoTexture: albedo,
+                                metallicTexture: metallic,
+                                roughnessTexture: roughness,
+                                normalsTexture: normalsTexture,
+                                occlusionTexture: occlusion,
+                                emissiveTexture: emissive,
+                                specularTexture: specularTexture,
+                                specularColor: specularColor,
+                                specularFactor: specularFactor,
+                                heightTexture: null
+                            });
+                        }
 
                         mesh = {
                             verticesMode: verticesMode,

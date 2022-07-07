@@ -1,16 +1,20 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/index.ts',
+    entry: './example/index.ts',
     mode: "development",
     module: {
         rules: [
-        {
-            test: /\.ts$/,
-            use: 'ts-loader',
-            exclude: /node_modules/,
-        },
-        ],
+            {
+                test: /\.ts$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
+            {
+                test: /\.(glsl|vs|fs)$/,
+                loader: 'ts-shader-loader'
+            }
+        ]
     },
     devServer: {
         open: true,

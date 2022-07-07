@@ -13,9 +13,6 @@ export interface IWorldState {
 export interface IWorld {
     entities: Array<IEntity>;
 
-    addModule(module: BaseModule): void;
-    setPhysicsModule(module: BasePhysicsModule): void;
-
     /**
      * Adds entity to the world.
      * The main Entity class already adds itself to the world.

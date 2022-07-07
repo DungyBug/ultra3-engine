@@ -5,4 +5,5 @@ export interface IShader {
     name: string;
     type: "vertex" | "fragment";
     entryPoint?: string; // function name, name of shader by default
+    source: string;
 };

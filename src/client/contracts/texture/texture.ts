@@ -14,6 +14,11 @@ interface ITexture<T extends TypedArray> {
     getRawData(time: number): T;
 
     /**
+     * Frees texture from memory
+     */
+    free(): void;
+
+    /**
      * Returns texture size in dimensions.
      */
     get dimensions(): Array<number>;
