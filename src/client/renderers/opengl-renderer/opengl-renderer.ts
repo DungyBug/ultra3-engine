@@ -1,22 +1,23 @@
-import { VideoDome } from "babylonjs";
 import { IVector } from "../../../core/contracts/base/vector";
 import { BaseModuleEvents } from "../../../core/contracts/module";
 import BaseModuleContext from "../../../core/contracts/module-context";
 import ColorMode from "../../constants/color-mode";
 import SamplingMode from "../../constants/sampling-mode";
 import IMesh from "../../contracts/mesh";
+import ClientGraphicsModuleEvents from "../../contracts/modules/client-graphics-module-events";
 import BaseGraphicsModule, { BaseGraphicsModuleEvents } from "../../contracts/modules/graphics-module";
 import IGraphicsParameters from "../../contracts/modules/graphics-parameters";
-import ICompiledShaders, { IUniform } from "../../contracts/renderers/opengl-renderer/compiled-shader";
+import ICompiledShaders from "../../contracts/renderers/opengl-renderer/compiled-shader";
 import { IShader } from "../../contracts/shader";
 import TextureOptions, { TextureOptsToArrayType } from "../../contracts/texture/texture-opts";
 import Texture3DOptions from "../../contracts/texture/texture3d-opts";
 import ViewableEntity from "../../entities/base/viewable";
+import ClientMapObject from "../../map/client-object";
 import Texture2D from "../../texture/texture2d";
 import Texture3D from "../../texture/texture3d";
 import { mat4 } from "./gl-matrix/index";
 
-export default class OpenGLRenderer extends BaseGraphicsModule {
+export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents> {
     private width: number;
     private height: number;
     private fov: number;
@@ -25,8 +26,8 @@ export default class OpenGLRenderer extends BaseGraphicsModule {
     private canvas: HTMLCanvasElement;
     private gl: WebGLRenderingContext | WebGL2RenderingContext;
     private ver: 1 | 2 | 0; // Version of WebGL
-    private sampleTexture: WebGLTexture;
     private shaders: Record<string, ICompiledShaders>;
+    private clientMapObjects: Array<ClientMapObject>;
     private textures: Array<{
         texture: Texture2D | Texture3D;
         buffer: WebGLTexture;
@@ -43,6 +44,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule {
         this.ver = 0;
         this.textures = [];
         this.shaders = {};
+        this.clientMapObjects = [];
     }
 
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
@@ -281,28 +283,6 @@ export default class OpenGLRenderer extends BaseGraphicsModule {
         this.textures.splice(textureId, 1);
     }
 
-    loadSampleTexture() {
-        this.sampleTexture = this.gl.createTexture();
-
-        const tempcanvas = document.createElement("canvas");
-        const tmpctx = tempcanvas.getContext("2d");
-
-        const image = new Image();
-        image.src = "/textures/sample.png";
-
-        image.onload = () => {
-            tmpctx.drawImage(image, 0, 0);
-
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.sampleTexture);
-            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, image.width, image.height, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, tmpctx.getImageData(0, 0, image.width, image.height).data);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-            this.gl.generateMipmap(this.gl.TEXTURE_2D);
-        }
-    }
-
     init(parameters: IGraphicsParameters & { context: BaseModuleContext<BaseGraphicsModuleEvents & BaseModuleEvents>; }): void {
         super.init(parameters);
         this.width = parameters.width;
@@ -339,11 +319,15 @@ export default class OpenGLRenderer extends BaseGraphicsModule {
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
         // Load sample texture
-        // this.loadSampleTexture();
 
         document.body.append(this.canvas);
 
         this.context.emitter.on("frameend", this.render.bind(this));
+        this.context.emitter.on("clientmapobject", this.handleClientMapObject.bind(this));
+    }
+
+    handleClientMapObject(object: ClientMapObject) {
+        this.clientMapObjects.push(object);
     }
 
     setParams(parameters: Partial<IGraphicsParameters>) {
@@ -381,7 +365,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule {
             }
         }
 
-        // TODO: Add map objects meshes
+        // TODO: Add map objects meshes [ FIXED ]
+        for(const object of this.clientMapObjects) {
+            meshes.push(object.mesh);
+        }
 
         for(const mesh of meshes) {
             let textureCount = 0;

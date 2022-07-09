@@ -6,10 +6,8 @@ import BaseModuleContext from "../../../core/contracts/module-context";
 import IGraphicsParameters from "./graphics-parameters";
 import Texture2D from "../../texture/texture2d";
 import Texture3D from "../../texture/texture3d";
-import IMaterial from "../material";
 import TextureOptions from "../texture/texture-opts";
 import Texture3DOptions from "../texture/texture3d-opts";
-import { VideoDome } from "babylonjs";
 import { IShader } from "../shader";
 
 export type BaseGraphicsModuleEvents = {

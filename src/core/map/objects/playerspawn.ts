@@ -12,7 +12,7 @@ export class PlayerSpawn extends MapObject implements IPlayerSpawn {
     protected _difficulty: IDifficulty;
 
     constructor(props: IPlayerSpawnProps, world: World) {
-        super("", props, world);
+        super(null, props, world);
         this._difficulty = props.difficulty;
     }
 

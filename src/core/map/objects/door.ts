@@ -24,7 +24,7 @@ export class Door extends MapObject implements IDoor {
     protected origin: IVector;
 
     constructor(shape: string, props: IDoorProps, world: World) {
-        super(shape, props, world);
+        super(null, props, world);
         this.direction = props.direction;
         this.delay = props.delay || 30000;
         this.distance = props.distance;

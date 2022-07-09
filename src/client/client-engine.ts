@@ -1,7 +1,9 @@
+import BaseModuleContext from "../core/contracts/module-context";
+import WorldModuleEvents from "../core/contracts/world-module-events";
 import Engine from "../core/engine"
 import ClientWorld from "./client-world";
 import ClientWorldEvents from "./contracts/client-world-events";
-import IMaterial from "./contracts/material";
+import ClientGraphicsModuleEvents from "./contracts/modules/client-graphics-module-events";
 import BaseGraphicsModule from "./contracts/modules/graphics-module";
 import { IShader } from "./contracts/shader";
 import TextureOptions from "./contracts/texture/texture-opts";
@@ -10,9 +12,10 @@ import Texture2D from "./texture/texture2d";
 import Texture3D from "./texture/texture3d";
 
 export default class ClientEngine<T extends Record<string, unknown[]> & ClientWorldEvents = ClientWorldEvents> extends Engine<T> {
-    protected graphicsModule: BaseGraphicsModule | null;
+    protected graphicsModule: BaseGraphicsModule<ClientGraphicsModuleEvents> | null;
     protected world: ClientWorld;
     private requestedTextures: Array<Texture2D | Texture3D>;
+    protected context: BaseModuleContext<WorldModuleEvents & ClientWorldEvents>;
     protected textures: Array<{
         id: number;
         texture: Texture2D | Texture3D;
@@ -22,6 +25,8 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         super(world);
 
         this.world.on("start", () => this.emit("start"));
+        this.world.on("clientmapobject", (object) => this.emit("clientmapobject", object));
+        this.world.on("clientmapobject", (object) =>  this.context.emitter.emit("clientmapobject", object));
         this.graphicsModule = null;
         this.textures = [];
         this.requestedTextures = [];
@@ -31,7 +36,7 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         this.graphicsModule.registerShader(name, vertex, fragment);
     }
 
-    setGraphicsModule(module: BaseGraphicsModule, width: number, height: number, fov: number): void {
+    setGraphicsModule(module: BaseGraphicsModule<ClientGraphicsModuleEvents>, width: number, height: number, fov: number): void {
         this.graphicsModule = module;
         this.graphicsModule.init({
             width,

@@ -6,16 +6,17 @@ import {
 } from "./contracts/map-object";
 import { World } from "./world";
 import { EventEmitter } from "./services/event-emitter";
+import IPhysicalMesh from "./contracts/physical-mesh";
 
 export class MapObject extends EventEmitter<Record<string, [IMapEvent]>> implements IMapObject {
     id: number;
-    protected shape: string; // IShape
+    protected shape: IPhysicalMesh; // IShape
     protected props: IMapObjectProps;
     protected state: number;
     protected world: World;
     protected targets: Array<IMapObject>;
 
-    constructor(shape: string, props: IMapObjectProps, world: World) {
+    constructor(shape: IPhysicalMesh, props: IMapObjectProps, world: World) {
         super();
         this.shape = shape;
         this.props = props;

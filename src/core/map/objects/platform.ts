@@ -9,6 +9,7 @@ import {
 } from "../../contracts/map-objects/platform";
 import { IBaseTrain } from "../../contracts/map-objects/train";
 import { ITrainStart } from "../../contracts/map-objects/train-start";
+import IPhysicalMesh from "../../contracts/physical-mesh";
 import { MapObject } from "../../map-object";
 import { VectorMath } from "../../vector-math";
 import { World } from "../../world";
@@ -29,7 +30,7 @@ export class Platform extends MapObject implements IPlatform {
     protected origin: IVector;
     protected direction: PlatformDirection;
 
-    constructor(shape: string, props: IPlatformProps, world: World) {
+    constructor(shape: IPhysicalMesh, props: IPlatformProps, world: World) {
         super(shape, props, world);
         this.train = props.train;
         this.speeds = [props.speed];

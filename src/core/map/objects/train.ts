@@ -6,7 +6,7 @@ export class BaseTrain extends MapObject implements IBaseTrain {
     readonly end: boolean;
 
     constructor(params: IBaseTrainProps, world: World) {
-        super("", params, world);
+        super(null, params, world);
         this.end = params.end;
     }
     
