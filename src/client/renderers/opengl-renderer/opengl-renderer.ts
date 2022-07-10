@@ -131,7 +131,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             }
         }
 
-        const data = texture.getRawData(0);
+        const data = texture.getFrame(0);
 
         let type: GLenum = this.texFormatToGLenum(data);
 
@@ -183,6 +183,62 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         return this.textures.length - 1;
     }
 
+    updateTexture2D(textureId: number, time: number, timedelta: number) {
+        const {texture, buffer} = this.textures[textureId];
+
+        // Check if current frame is changed
+        if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
+            return; // It hasn't changed yet
+        }
+
+        let mode: GLenum = this.gl.LUMINANCE;
+
+        switch(texture.colorMode) {
+            case ColorMode.R: {
+                if(this.ver === 2) {
+                    mode = this.gl.RED;
+                }
+                break;
+            }
+            case ColorMode.RG: {
+                if(this.ver === 2) {
+                    mode = this.gl.RG;
+                }
+                break;
+            }
+            case ColorMode.RGB: {
+                mode = this.gl.RGB;
+                break;
+            }
+            case ColorMode.RGBA: {
+                mode = this.gl.RGBA;
+                break;
+            }
+            case ColorMode.LUMINANCE: {
+                mode = this.gl.LUMINANCE;
+                break;
+            }
+            case ColorMode.LUMINANCE_ALPHA: {
+                mode = this.gl.LUMINANCE_ALPHA;
+                break;
+            }
+            case ColorMode.ALPHA: {
+                mode = this.gl.ALPHA;
+                break;
+            }
+        }
+        const data = texture.getRawData(time);
+
+        // if(data.length === 0) {
+        //     return;
+        // }
+        
+        let type: GLenum = this.texFormatToGLenum(data);
+
+        this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+    }
+
     createTexture3D<T extends Texture3DOptions = Texture3DOptions>(texture: Texture3D<T>): number {
         if(this.ver === 2) {
             const buffer = this.gl.createTexture();
@@ -224,11 +280,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                 }
             }
     
-            const data = texture.getRawData(0);
+            const data = texture.getFrame(0);
     
             let type: GLenum = this.texFormatToGLenum(data);
     
-            this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, texture.getRawData(0));
+            this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, data);
             this.gl.texParameteri(this.gl.TEXTURE_3D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
             this.gl.texParameteri(this.gl.TEXTURE_3D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
     
@@ -277,6 +333,65 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             console.warn("OpenGLRenderer: attempt to create unsupported texture3D.");
             return -1;
         }
+    }
+
+    updateTexture3D(textureId: number, time: number, timedelta: number) {
+        if(this.ver !== 2) {
+            return;
+        }
+
+        const {texture, buffer} = this.textures[textureId];
+
+        // Check if current frame is changed
+        if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
+            return; // It hasn't changed yet
+        }
+
+        let mode: GLenum = this.gl.LUMINANCE;
+
+        switch(texture.colorMode) {
+            case ColorMode.R: {
+                if(this.ver === 2) {
+                    mode = this.gl.RED;
+                }
+                break;
+            }
+            case ColorMode.RG: {
+                if(this.ver === 2) {
+                    mode = this.gl.RG;
+                }
+                break;
+            }
+            case ColorMode.RGB: {
+                mode = this.gl.RGB;
+                break;
+            }
+            case ColorMode.RGBA: {
+                mode = this.gl.RGBA;
+                break;
+            }
+            case ColorMode.LUMINANCE: {
+                mode = this.gl.LUMINANCE;
+                break;
+            }
+            case ColorMode.LUMINANCE_ALPHA: {
+                mode = this.gl.LUMINANCE_ALPHA;
+                break;
+            }
+            case ColorMode.ALPHA: {
+                mode = this.gl.ALPHA;
+                break;
+            }
+        }
+        const data = texture.getRawData(time);
+        // if(data.length === 0) {
+        //     return;
+        // }
+        
+        let type: GLenum = this.texFormatToGLenum(data);
+
+        this.gl.bindTexture(this.gl.TEXTURE_3D, buffer);
+        this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, data);
     }
 
     freeTexture(textureId: number): void {
@@ -365,7 +480,6 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             }
         }
 
-        // TODO: Add map objects meshes [ FIXED ]
         for(const object of this.clientMapObjects) {
             meshes.push(object.mesh);
         }

@@ -32,6 +32,14 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
      * @returns id of texture ( that id is used in operations with that texture to identify texture ); -1 means that *texture can't be created*
      */
     abstract createTexture2D<T extends TextureOptions = TextureOptions>(texture: Texture2D<T>): number;
+
+    /**
+     * Updates current texture buffer ( needed for animation )
+     * @param textureId - texture id for which to update buffer
+     * @param time - time in seconds
+     * @param timedelta - time delta between this and last frame ( in seconds )
+     */
+    abstract updateTexture2D(textureId: number, time: number, timedelta: number): void;
     
     /**
      * Get texture ready for further using
@@ -39,6 +47,14 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
      * @returns id of texture ( that id is used in operations with that texture to identify texture ); -1 means that *texture can't be created*
      */
     abstract createTexture3D<T extends Texture3DOptions = Texture3DOptions>(texture: Texture3D<T>): number;
+
+    /**
+     * Updates current texture buffer ( needed for animation )
+     * @param textureId - texture id for which to update buffer
+     * @param time - time in seconds
+     * @param timedelta - time delta between this and last frame ( in seconds )
+     */
+    abstract updateTexture3D(textureId: number, time: number, timedelta: number): void;
 
     /**
      * Free texture from memory

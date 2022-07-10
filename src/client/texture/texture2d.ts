@@ -1,9 +1,8 @@
 import ClientEngine from "../client-engine";
 import ColorMode from "../constants/color-mode";
 import SamplingMode from "../constants/sampling-mode";
-import TextureFormat from "../constants/texture-format";
 import TypedArray from "../contracts/common/typed-array";
-import TextureOptions, { IUint8TextureOptions, TextureOptsToArrayType } from "../contracts/texture/texture-opts";
+import TextureOptions, { TextureOptsToArrayType } from "../contracts/texture/texture-opts";
 import ITexture2D from "../contracts/texture/texture2d";
 import Texture2DOptions from "../contracts/texture/texture2d-opts";
 
@@ -63,7 +62,11 @@ class Texture2D<T extends TextureOptions = TextureOptions> implements ITexture2D
             tmpctx.drawImage(image, 0, 0);
 
             this.frames[frame] = new Uint8Array(tmpctx.getImageData(0, 0, image.width, image.height).data.buffer);
-            this.register();
+
+            // Register only if first frame is loaded
+            if(this.frames[0] !== undefined) {
+                this.register();
+            }
         }
 
         return this;
@@ -84,6 +87,10 @@ class Texture2D<T extends TextureOptions = TextureOptions> implements ITexture2D
 
     getRawData(time: number = 0): TextureOptsToArrayType<T> {
         return this.frames[Math.floor(time * this.framesPerSecond) % this.frames.length] as TextureOptsToArrayType<T>;
+    }
+
+    getFrame(frame: number): TextureOptsToArrayType<T> {
+        return this.frames[frame] as TextureOptsToArrayType<T>;
     }
 
     get dimensions(): [number, number] {

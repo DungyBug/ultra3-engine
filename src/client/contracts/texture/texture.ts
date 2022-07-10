@@ -13,6 +13,8 @@ interface ITexture<T extends TypedArray> {
      */
     getRawData(time: number): T;
 
+    getFrame(frame: number): T;
+
     /**
      * Frees texture from memory
      */

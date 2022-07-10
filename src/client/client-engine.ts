@@ -11,15 +11,31 @@ import Texture3DOptions from "./contracts/texture/texture3d-opts";
 import Texture2D from "./texture/texture2d";
 import Texture3D from "./texture/texture3d";
 
+interface IdentifiedTextureStorage {
+    id: number;
+    type: "2d" | "3d";
+}
+
+interface Texture2DStorage {
+    type: "2d";
+    texture: Texture2D;
+}
+
+interface Texture3DStorage {
+    type: "3d";
+    texture: Texture3D;
+}
+
+type TextureStorage = (Texture2DStorage | Texture3DStorage) & IdentifiedTextureStorage;
+type RequestedTexture = Texture2DStorage | Texture3DStorage;
+
 export default class ClientEngine<T extends Record<string, unknown[]> & ClientWorldEvents = ClientWorldEvents> extends Engine<T> {
     protected graphicsModule: BaseGraphicsModule<ClientGraphicsModuleEvents> | null;
     protected world: ClientWorld;
-    private requestedTextures: Array<Texture2D | Texture3D>;
+    private requestedTextures: Array<RequestedTexture>;
     protected context: BaseModuleContext<WorldModuleEvents & ClientWorldEvents>;
-    protected textures: Array<{
-        id: number;
-        texture: Texture2D | Texture3D;
-    }>;
+    protected textures: Array<TextureStorage>;
+    protected prevTime: number;
 
     constructor(world: ClientWorld) {
         super(world);
@@ -27,9 +43,11 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         this.world.on("start", () => this.emit("start"));
         this.world.on("clientmapobject", (object) => this.emit("clientmapobject", object));
         this.world.on("clientmapobject", (object) =>  this.context.emitter.emit("clientmapobject", object));
+        this.world.on("framestart", () => this.tick());
         this.graphicsModule = null;
         this.textures = [];
         this.requestedTextures = [];
+        this.prevTime = 0;
     }
 
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
@@ -47,10 +65,15 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
 
         if(this.requestedTextures.length) {
             for(const texture of this.requestedTextures) {
-                if(texture.dimensions.length === 2) {
-                    this.registerTexture2D(texture as Texture2D);
-                } else {
-                    this.registerTexture3D(texture as Texture3D);
+                switch(texture.type) {
+                    case "2d": {
+                        this.registerTexture2D(texture.texture);
+                        break;
+                    }
+                    case "3d": {
+                        this.registerTexture3D(texture.texture);
+                        break;
+                    }
                 }
             }
         }
@@ -67,11 +90,15 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
             if(id !== -1) {
                 this.textures.push({
                     id,
+                    type: "2d",
                     texture
                 });
             }
         } else {
-            this.requestedTextures.push(texture);
+            this.requestedTextures.push({
+                type: "2d",
+                texture
+            });
         }
     }
 
@@ -82,11 +109,15 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
             if(id !== -1) {
                 this.textures.push({
                     id,
+                    type: "3d",
                     texture
                 });
             }
         } else {
-            this.requestedTextures.push(texture);
+            this.requestedTextures.push({
+                type: "3d",
+                texture
+            });
         }
     }
 
@@ -96,5 +127,28 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
                 this.textures.splice(i, 1);
             }
         }
+    }
+
+    tick() {
+        const time = this.world.getTime() / 1000;
+        const timedelta = time - this.prevTime;
+
+        // Update all textures
+        if(this.graphicsModule) {
+            for(const texture of this.textures) {
+                switch(texture.type) {
+                    case "2d": {
+                        this.graphicsModule.updateTexture2D(texture.id, time, timedelta);
+                        break;
+                    }
+                    case "3d": {
+                        this.graphicsModule.updateTexture3D(texture.id, time, timedelta);
+                        break;
+                    }
+                }
+            }
+        }
+
+        this.prevTime = time;
     }
 }

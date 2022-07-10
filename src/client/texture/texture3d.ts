@@ -53,6 +53,10 @@ class Texture3D<T extends Texture3DOptions = Texture3DOptions> implements ITextu
         return this.frames[Math.floor(time * this.framesPerSecond) % this.frames.length] as TextureOptsToArrayType<T>;
     }
 
+    getFrame(frame: number): TextureOptsToArrayType<T> {
+        return this.frames[frame] as TextureOptsToArrayType<T>;
+    }
+
     get dimensions(): [number, number, number] {
         return [this.width, this.height, this.depth];
     }
