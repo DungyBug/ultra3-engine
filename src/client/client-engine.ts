@@ -5,29 +5,13 @@ import ClientWorld from "./client-world";
 import ClientWorldEvents from "./contracts/client-world-events";
 import ClientGraphicsModuleEvents from "./contracts/modules/client-graphics-module-events";
 import BaseGraphicsModule from "./contracts/modules/graphics-module";
+import RequestedTexture from "./contracts/requested-texture";
 import { IShader } from "./contracts/shader";
+import TextureStorage from "./contracts/texture-storage";
 import TextureOptions from "./contracts/texture/texture-opts";
 import Texture3DOptions from "./contracts/texture/texture3d-opts";
 import Texture2D from "./texture/texture2d";
 import Texture3D from "./texture/texture3d";
-
-interface IdentifiedTextureStorage {
-    id: number;
-    type: "2d" | "3d";
-}
-
-interface Texture2DStorage {
-    type: "2d";
-    texture: Texture2D;
-}
-
-interface Texture3DStorage {
-    type: "3d";
-    texture: Texture3D;
-}
-
-type TextureStorage = (Texture2DStorage | Texture3DStorage) & IdentifiedTextureStorage;
-type RequestedTexture = Texture2DStorage | Texture3DStorage;
 
 export default class ClientEngine<T extends Record<string, unknown[]> & ClientWorldEvents = ClientWorldEvents> extends Engine<T> {
     protected graphicsModule: BaseGraphicsModule<ClientGraphicsModuleEvents> | null;
