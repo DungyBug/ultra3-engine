@@ -237,6 +237,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+        this.gl.generateMipmap(this.gl.TEXTURE_2D);
     }
 
     createTexture3D<T extends Texture3DOptions = Texture3DOptions>(texture: Texture3D<T>): number {

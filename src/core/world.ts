@@ -28,7 +28,7 @@ export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEven
      */
     constructor(worldProps: IWorldProps, private registry: Registry) {
         super();
-        this.thinkPeriod = worldProps.thinkPeriod;
+        this.thinkPeriod = worldProps.thinkPeriod || null;
 
         this.runTick = this.runTick.bind(this);
     }
