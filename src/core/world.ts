@@ -100,11 +100,8 @@ export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEven
     }
 
     setState(state: IWorldState) {
-        console.log(state);
-
         for (const entityState of state.entities) {
             const entity = this.getEntity(entityState.id);
-            console.log(entityState.id, entity);
 
             // Check if entity exists in world
             if (entity !== null) {
