@@ -15,6 +15,7 @@ import ViewableEntity from "../../entities/base/viewable";
 import ClientMapObject from "../../map/client-object";
 import Texture2D from "../../texture/texture2d";
 import Texture3D from "../../texture/texture3d";
+import TypedWebGLRenderingContext from "./contracts/typed-webgl-context";
 import { mat4 } from "./gl-matrix/index";
 
 export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents> {
@@ -24,8 +25,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private cameraPosition: IVector;
     private cameraRotation: IVector;
     private canvas: HTMLCanvasElement;
-    private gl: WebGLRenderingContext | WebGL2RenderingContext;
-    private ver: 1 | 2 | 0; // Version of WebGL
+    private gl: TypedWebGLRenderingContext;
     private shaders: Record<string, ICompiledShaders>;
     private clientMapObjects: Array<ClientMapObject>;
     private textures: Array<{
@@ -41,7 +41,6 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.cameraPosition = {x: 0, y: 0, z: 0};
         this.cameraRotation = {x: 0, y: 0, z: 0};
         this.canvas = document.createElement("canvas");
-        this.ver = 0;
         this.textures = [];
         this.shaders = {};
         this.clientMapObjects = [];
@@ -98,13 +97,13 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         switch(texture.colorMode) {
             case ColorMode.R: {
-                if(this.ver === 2) {
+                if(this.gl.type === "WebGL2RenderingContext") {
                     mode = this.gl.RED;
                 }
                 break;
             }
             case ColorMode.RG: {
-                if(this.ver === 2) {
+                if(this.gl.type === "WebGL2RenderingContext") {
                     mode = this.gl.RG;
                 }
                 break;
@@ -195,13 +194,13 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         switch(texture.colorMode) {
             case ColorMode.R: {
-                if(this.ver === 2) {
+                if(this.gl.type === "WebGL2RenderingContext") {
                     mode = this.gl.RED;
                 }
                 break;
             }
             case ColorMode.RG: {
-                if(this.ver === 2) {
+                if(this.gl.type === "WebGL2RenderingContext") {
                     mode = this.gl.RG;
                 }
                 break;
@@ -241,22 +240,18 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     createTexture3D<T extends Texture3DOptions = Texture3DOptions>(texture: Texture3D<T>): number {
-        if(this.ver === 2) {
+        if(this.gl.type === "WebGL2RenderingContext") {
             const buffer = this.gl.createTexture();
             this.gl.bindTexture(this.gl.TEXTURE_3D, buffer);
             let mode: GLenum = this.gl.LUMINANCE;
     
             switch(texture.colorMode) {
                 case ColorMode.R: {
-                    if(this.ver === 2) {
-                        mode = this.gl.RED;
-                    }
+                    mode = this.gl.RED;
                     break;
                 }
                 case ColorMode.RG: {
-                    if(this.ver === 2) {
-                        mode = this.gl.RG;
-                    }
+                    mode = this.gl.RG;
                     break;
                 }
                 case ColorMode.RGB: {
@@ -337,62 +332,56 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     updateTexture3D(textureId: number, time: number, timedelta: number) {
-        if(this.ver !== 2) {
-            return;
-        }
+        if(this.gl.type === "WebGL2RenderingContext") {
+            const {texture, buffer} = this.textures[textureId];
 
-        const {texture, buffer} = this.textures[textureId];
+            // Check if current frame is changed
+            if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
+                return; // It hasn't changed yet
+            }
 
-        // Check if current frame is changed
-        if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
-            return; // It hasn't changed yet
-        }
+            let mode: GLenum = this.gl.LUMINANCE;
 
-        let mode: GLenum = this.gl.LUMINANCE;
-
-        switch(texture.colorMode) {
-            case ColorMode.R: {
-                if(this.ver === 2) {
+            switch(texture.colorMode) {
+                case ColorMode.R: {
                     mode = this.gl.RED;
+                    break;
                 }
-                break;
-            }
-            case ColorMode.RG: {
-                if(this.ver === 2) {
+                case ColorMode.RG: {
                     mode = this.gl.RG;
+                    break;
                 }
-                break;
+                case ColorMode.RGB: {
+                    mode = this.gl.RGB;
+                    break;
+                }
+                case ColorMode.RGBA: {
+                    mode = this.gl.RGBA;
+                    break;
+                }
+                case ColorMode.LUMINANCE: {
+                    mode = this.gl.LUMINANCE;
+                    break;
+                }
+                case ColorMode.LUMINANCE_ALPHA: {
+                    mode = this.gl.LUMINANCE_ALPHA;
+                    break;
+                }
+                case ColorMode.ALPHA: {
+                    mode = this.gl.ALPHA;
+                    break;
+                }
             }
-            case ColorMode.RGB: {
-                mode = this.gl.RGB;
-                break;
-            }
-            case ColorMode.RGBA: {
-                mode = this.gl.RGBA;
-                break;
-            }
-            case ColorMode.LUMINANCE: {
-                mode = this.gl.LUMINANCE;
-                break;
-            }
-            case ColorMode.LUMINANCE_ALPHA: {
-                mode = this.gl.LUMINANCE_ALPHA;
-                break;
-            }
-            case ColorMode.ALPHA: {
-                mode = this.gl.ALPHA;
-                break;
-            }
-        }
-        const data = texture.getRawData(time);
-        // if(data.length === 0) {
-        //     return;
-        // }
-        
-        let type: GLenum = this.texFormatToGLenum(data);
+            const data = texture.getRawData(time);
+            // if(data.length === 0) {
+            //     return;
+            // }
+            
+            let type: GLenum = this.texFormatToGLenum(data);
 
-        this.gl.bindTexture(this.gl.TEXTURE_3D, buffer);
-        this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, data);
+            this.gl.bindTexture(this.gl.TEXTURE_3D, buffer);
+            this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, data);
+        }
     }
 
     freeTexture(textureId: number): void {
@@ -408,20 +397,25 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.canvas.height = this.height;
 
         // Try to init WebGL
-        this.gl = this.canvas.getContext("webgl2");
-        this.ver = 2;
+        const webgl2Context = this.canvas.getContext("webgl2");
 
-        if(this.gl === null) {
-            this.gl = this.canvas.getContext("webgl");
-            this.ver = 1;
+        if(webgl2Context === null) {
+            const webgl1Context = this.canvas.getContext("webgl");
 
-            if(this.gl === null) {
-                this.ver = 0;
+            if(webgl1Context === null) {
                 throw new Error("OpenGLRenderer: Unable to initialize WebGL. Your browser or machine may not support it.");
+            } else {
+                this.gl = Object.assign<WebGLRenderingContext, {type: "WebGLRenderingContext"}>(webgl1Context, {
+                    type: "WebGLRenderingContext"
+                });
             }
+        } else {
+            this.gl = Object.assign<WebGL2RenderingContext, {type: "WebGL2RenderingContext"}>(webgl2Context, {
+                type: "WebGL2RenderingContext"
+            });
         }
 
-        if(this.ver === 2) {
+        if(this.gl.type === "WebGL2RenderingContext") {
             console.log("OpenGLRenderer: WebGL2 initialized.");
         } else {
             console.log("OpenGLRenderer: WebGL initialized.");
@@ -527,6 +521,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                 mesh.scale.x, mesh.scale.y, mesh.scale.z
             ]);
 
+            mat4.translate(modelViewMatrix, modelViewMatrix, [
+                mesh.pos.x, mesh.pos.y, mesh.pos.z
+            ]);
+
             this.gl.uniformMatrix4fv(modelViewMatrixUniformLocation, false, modelViewMatrix);
 
             const normalsBuffer = this.gl.createBuffer();
@@ -585,13 +583,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             *                              SETUP UNIFORMS                               *
             *****************************************************************************
             */
-            // Get vertex and uniform shaders through function to get their up-to-date uniform values
-            const vertexShader = mesh.material.getVertexShader();
-            const fragmentShader = mesh.material.getFragmentShader();
 
             // To have this done with one "for"
             const uniforms = shader.vertex.uniforms.concat(shader.fragment.uniforms);
-            const params = vertexShader.params.concat(fragmentShader.params);
+            const params = mesh.material.getUniforms();
 
             for(const uniform of uniforms) {
                 const location = this.gl.getUniformLocation(shader.program, uniform.name);
@@ -609,15 +604,22 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                         this.gl.uniform1f(location, value);
                         break;
                     }
+                    case "f1v": {
+                        this.gl.uniform1fv(location, value);
+                        break;
+                    }
+                    case "f2v":
                     case "f2": {
                         this.gl.uniform2fv(location, value);
                         break;
                     }
-                    case "f3": {
+                    case "f3":
+                    case "f3v": {
                         this.gl.uniform3fv(location, value);
                         break;
                     }
-                    case "f4": {
+                    case "f4":
+                    case "f4v": {
                         this.gl.uniform4fv(location, value);
                         break;
                     }
@@ -667,7 +669,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                     }
                     case "texture3D": {
                         // Do that only if WebGL2 is available
-                        if(this.ver === 2) {
+                        if(this.gl.type === "WebGL2RenderingContext") {
                             // TODO: The same texture may be used for different uniforms
                             this.gl.activeTexture(this.gl.TEXTURE0 + textureCount);
 
@@ -715,26 +717,26 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private texFormatToGLenum<T extends TextureOptions = TextureOptions>(data: TextureOptsToArrayType<T>): GLenum {
         if(data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
             return this.gl.UNSIGNED_BYTE;
-        } else if(data instanceof Int8Array && this.ver === 2) {
+        } else if(data instanceof Int8Array && this.gl.type === "WebGL2RenderingContext") {
             return this.gl.BYTE;
         } else if(data instanceof Uint16Array) {
-            if(this.ver === 2) {
+            if(this.gl.type === "WebGL2RenderingContext") {
                 return this.gl.UNSIGNED_SHORT;
             }
         } else if(data instanceof Int16Array) {
-            if(this.ver === 2) {
+            if(this.gl.type === "WebGL2RenderingContext") {
                 return this.gl.SHORT;
             }
         } else if(data instanceof Uint32Array) {
-            if(this.ver === 2) {
+            if(this.gl.type === "WebGL2RenderingContext") {
                 return this.gl.UNSIGNED_INT;
             }
         } else if(data instanceof Int32Array) {
-            if(this.ver === 2) {
+            if(this.gl.type === "WebGL2RenderingContext") {
                 return this.gl.INT;
             }
         } else if(data instanceof Float32Array) {
-            if(this.ver === 2) {
+            if(this.gl.type === "WebGL2RenderingContext") {
                 return this.gl.FLOAT;
             }
         }

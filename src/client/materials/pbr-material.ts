@@ -1,3 +1,4 @@
+import { IKey } from "../../core/contracts/base/key";
 import BaseMaterial from "../base-material";
 import ClientEngine from "../client-engine";
 import IPBRMaterialProps from "../contracts/materials/pbr-material";
@@ -34,37 +35,66 @@ export default class PBRMaterial extends BaseMaterial {
         return "u3PBR";
     }
 
+    getUniforms(): IKey[] {
+        return [
+            {
+                name: "albedoSampler",
+                value: this.albedoTexture,
+                type: "texture2D"
+            },
+            {
+                name: "normalsSampler",
+                value: this.normalsTexture,
+                type: "texture2D"
+            },
+            {
+                name: "occlusionSampler",
+                value: this.occlusionTexture,
+                type: "texture2D"
+            },
+            {
+                name: "heightSampler",
+                value: this.heightTexture,
+                type: "texture2D"
+            },
+            {
+                name: "metallicSampler",
+                value: this.metallicTexture,
+                type: "texture2D"
+            },
+            {
+                name: "emissiveSampler",
+                value: this.emissiveTexture,
+                type: "texture2D"
+            }
+        ];
+    }
+
     getFragmentShader(): IShader {
         return {
             params: [
                 {
                     name: "albedoSampler",
-                    value: this.albedoTexture,
                     type: "texture2D"
                 },
                 {
                     name: "normalsSampler",
-                    value: this.normalsTexture,
                     type: "texture2D"
                 },
                 {
                     name: "occlusionSampler",
-                    value: this.occlusionTexture,
                     type: "texture2D"
                 },
                 {
                     name: "heightSampler",
-                    value: this.heightTexture,
                     type: "texture2D"
                 },
                 {
                     name: "metallicSampler",
-                    value: this.metallicTexture,
                     type: "texture2D"
                 },
                 {
                     name: "emissiveSampler",
-                    value: this.emissiveTexture,
                     type: "texture2D"
                 }
             ],

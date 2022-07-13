@@ -15,7 +15,7 @@ import Texture3D from "./texture/texture3d";
 
 export default class ClientEngine<T extends Record<string, unknown[]> & ClientWorldEvents = ClientWorldEvents> extends Engine<T> {
     protected graphicsModule: BaseGraphicsModule<ClientGraphicsModuleEvents> | null;
-    protected world: ClientWorld;
+    protected _world: ClientWorld;
     private requestedTextures: Array<RequestedTexture>;
     protected context: BaseModuleContext<WorldModuleEvents & ClientWorldEvents>;
     protected textures: Array<TextureStorage>;
@@ -24,10 +24,10 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
     constructor(world: ClientWorld) {
         super(world);
 
-        this.world.on("start", () => this.emit("start"));
-        this.world.on("clientmapobject", (object) => this.emit("clientmapobject", object));
-        this.world.on("clientmapobject", (object) =>  this.context.emitter.emit("clientmapobject", object));
-        this.world.on("framestart", () => this.tick());
+        this._world.on("start", () => this.emit("start"));
+        this._world.on("clientmapobject", (object) => this.emit("clientmapobject", object));
+        this._world.on("clientmapobject", (object) =>  this.context.emitter.emit("clientmapobject", object));
+        this._world.on("framestart", () => this.tick());
         this.graphicsModule = null;
         this.textures = [];
         this.requestedTextures = [];
@@ -64,7 +64,7 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
     }
 
     runRenderLoop() {
-        this.world.runTickLoop();
+        this._world.runTickLoop();
     }
 
     registerTexture2D<T extends TextureOptions = TextureOptions>(texture: Texture2D<T>) {
@@ -114,7 +114,7 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
     }
 
     tick() {
-        const time = this.world.getTime() / 1000;
+        const time = this._world.getTime() / 1000;
         const timedelta = time - this.prevTime;
 
         // Update all textures

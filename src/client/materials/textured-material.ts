@@ -4,6 +4,7 @@ import { IShader } from "../contracts/shader";
 import texturedVertexShaderSource from "../shaders/textured/vertex.glsl";
 import texturedFragmentShaderSource from "../shaders/textured/fragment.glsl";
 import ClientEngine from "../client-engine";
+import { IKey } from "../../core/contracts/base/key";
 
 export default class TexturedMaterial extends BaseMaterial {
     public texture: Texture2D;
@@ -18,6 +19,16 @@ export default class TexturedMaterial extends BaseMaterial {
         return "u3Textured";
     }
 
+    getUniforms(): IKey[] {
+        return [
+            {
+                name: "textureSampler",
+                value: this.texture,
+                type: "texture2D"
+            }
+        ]
+    }
+
     getVertexShader(): IShader {
         return {
             params: [],
@@ -29,11 +40,12 @@ export default class TexturedMaterial extends BaseMaterial {
 
     getFragmentShader(): IShader {
         return {
-            params: [{
-                name: "textureSampler",
-                value: this.texture,
-                type: "texture2D"
-            }],
+            params: [
+                {
+                    name: "textureSampler",
+                    type: "texture2D"
+                }
+            ],
             name: "u3Textured",
             type: "fragment",
             source: texturedFragmentShaderSource
