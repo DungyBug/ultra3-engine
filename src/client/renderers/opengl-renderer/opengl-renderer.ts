@@ -15,6 +15,7 @@ import ViewableEntity from "../../entities/base/viewable";
 import ClientMapObject from "../../map/client-object";
 import Texture2D from "../../texture/texture2d";
 import Texture3D from "../../texture/texture3d";
+import IOpenGLRendererOptions from "./contracts/opengl-renderer-opts";
 import TypedWebGLRenderingContext from "./contracts/typed-webgl-context";
 import { mat4 } from "./gl-matrix/index";
 
@@ -28,19 +29,24 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private gl: TypedWebGLRenderingContext;
     private shaders: Record<string, ICompiledShaders>;
     private clientMapObjects: Array<ClientMapObject>;
+    private vertexBuffer: WebGLBuffer;
+    private normalsBuffer: WebGLBuffer;
+    private uvBuffer: WebGLBuffer;
     private textures: Array<{
         texture: Texture2D | Texture3D;
         buffer: WebGLTexture;
     }>;
 
-    constructor() {
+    constructor(opts: IOpenGLRendererOptions = {}) {
         super();
-        this.width = window.screen.width;
-        this.height = window.screen.height;
+        this.width = opts.width || window.screen.width;
+        this.height = opts.height || window.screen.height;
         this.fov = 90;
         this.cameraPosition = {x: 0, y: 0, z: 0};
         this.cameraRotation = {x: 0, y: 0, z: 0};
-        this.canvas = document.createElement("canvas");
+        this.canvas = opts.canvas || document.createElement("canvas");
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
         this.textures = [];
         this.shaders = {};
         this.clientMapObjects = [];
@@ -428,9 +434,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.depthFunc(this.gl.LEQUAL);
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
-        // Load sample texture
-
         document.body.append(this.canvas);
+
+        this.vertexBuffer = this.gl.createBuffer();
+        this.normalsBuffer = this.gl.createBuffer();
+        this.uvBuffer = this.gl.createBuffer();
 
         this.context.emitter.on("frameend", this.render.bind(this));
         this.context.emitter.on("clientmapobject", this.handleClientMapObject.bind(this));
@@ -527,8 +535,6 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
             this.gl.uniformMatrix4fv(modelViewMatrixUniformLocation, false, modelViewMatrix);
 
-            const normalsBuffer = this.gl.createBuffer();
-
             if(u3NormalAttributeLocation > -1) {
                 // Generate normals array
                 const normalsArray = new Float32Array(mesh.indices.length * 3);
@@ -540,14 +546,13 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                     normalsArray[i * 3 + 2] = normal.z;
                 }
 
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, normalsBuffer);
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, normalsArray, this.gl.STATIC_DRAW);
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsBuffer);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, normalsArray, this.gl.DYNAMIC_DRAW);
                 this.gl.vertexAttribPointer(u3NormalAttributeLocation, 3, this.gl.FLOAT, true, 0, 0);
                 this.gl.enableVertexAttribArray(u3NormalAttributeLocation);
             }
 
             // Generate uv array
-            const uvBuffer = this.gl.createBuffer();
 
             if(u3UvAttributeLocation > -1) {
                 const uvArray = new Float32Array(mesh.indices.length * 2);
@@ -559,15 +564,14 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                     uvArray[i * 2 + 1] = uv.y;
                 }
 
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, uvBuffer);
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, uvArray, this.gl.STATIC_DRAW);
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.uvBuffer);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, uvArray, this.gl.DYNAMIC_DRAW);
                 this.gl.vertexAttribPointer(u3UvAttributeLocation, 2, this.gl.FLOAT, true, 0, 0);
                 this.gl.enableVertexAttribArray(u3UvAttributeLocation);
             }
 
             // Generate vertices buffer
-            const vertexBuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexBuffer);
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 
             // Get vertices array
             const verticesArray: Float32Array = new Float32Array(mesh.indices.length * 3);
@@ -689,15 +693,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             }
 
             // Set vertices and draw mesh
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, verticesArray, this.gl.STATIC_DRAW);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, verticesArray, this.gl.DYNAMIC_DRAW);
             this.gl.vertexAttribPointer(positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
             this.gl.enableVertexAttribArray(positionAttributeLocation);
             this.gl.drawArrays(this.gl.TRIANGLES, 0, mesh.indices.length);
-
-            // Free buffers
-            this.gl.deleteBuffer(vertexBuffer);
-            this.gl.deleteBuffer(normalsBuffer);
-            this.gl.deleteBuffer(uvBuffer);
         }
     }
 

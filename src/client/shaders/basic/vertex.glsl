@@ -1,4 +1,4 @@
-#version 300
+#version 100
 precision highp float;
 attribute vec3 position;
 uniform mat4 projectionMatrix;
