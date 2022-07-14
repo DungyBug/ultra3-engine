@@ -20,11 +20,21 @@ export default class DiffuseMaterial extends BaseMaterial {
     }
 
     getUniforms(): IKey[] {
-        const lights: Array<LightEntity> = [];
+        const pointLights: Array<LightEntity> = [];
+        const spotLights: Array<LightEntity> = [];
 
         for(const entity of this.engine.world.entities) {
             if(entity instanceof LightEntity) {
-                lights.push(entity);
+                switch(entity.type) {
+                    case "point": {
+                        pointLights.push(entity);
+                        break;
+                    }
+                    case "spot": {
+                        spotLights.push(entity);
+                        break;
+                    }
+                }
             }
         }
 
@@ -35,19 +45,44 @@ export default class DiffuseMaterial extends BaseMaterial {
                 type: "texture2D"
             },
             {
-                name: "lights",
+                name: "pointLightPositions",
                 type: "f3v",
-                value: lights.reduce((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), [])
+                value: new Float32Array(pointLights.reduce((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
             },
             {
-                name: "lightColors",
+                name: "pointLightColors",
                 type: "f4v",
-                value: lights.reduce((array, light) => array.concat(light.color.concat([light.itensity])), [])
+                value: new Float32Array(pointLights.reduce((array, light) => array.concat(light.color.concat([light.itensity])), []))
             },
             {
-                name: "lightsCount",
+                name: "pointLightsCount",
                 type: "i1",
-                value: lights.length
+                value: pointLights.length
+            },
+            {
+                name: "spotLightPositions",
+                type: "f3v",
+                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
+            },
+            {
+                name: "spotLightColors",
+                type: "f4v",
+                value: new Float32Array(spotLights.reduce((array, light) => array.concat(light.color.concat([light.itensity])), []))
+            },
+            {
+                name: "spotLightAngles",
+                type: "f2v",
+                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.outerAngle, light.innerAngle]), []))
+            },
+            {
+                name: "spotLightDirections",
+                type: "f3v",
+                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.direction.x, light.direction.y, light.direction.z]), []))
+            },
+            {
+                name: "spotLightsCount",
+                type: "i1",
+                value: spotLights.length
             }
         ]
     }
@@ -69,15 +104,35 @@ export default class DiffuseMaterial extends BaseMaterial {
                     type: "texture2D"
                 },
                 {
-                    name: "lights",
+                    name: "pointLightPositions",
                     type: "f3v"
                 },
                 {
-                    name: "lightColors",
+                    name: "pointLightColors",
                     type: "f4v"
                 },
                 {
-                    name: "lightsCount",
+                    name: "pointLightsCount",
+                    type: "i1"
+                },
+                {
+                    name: "spotLightPositions",
+                    type: "f3v"
+                },
+                {
+                    name: "spotLightColors",
+                    type: "f4v"
+                },
+                {
+                    name: "spotLightAngles",
+                    type: "f2v"
+                },
+                {
+                    name: "spotLightDirections",
+                    type: "f3v"
+                },
+                {
+                    name: "spotLightsCount",
                     type: "i1"
                 }
             ],

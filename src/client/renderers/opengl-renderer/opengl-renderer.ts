@@ -521,16 +521,16 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             this.gl.uniformMatrix4fv(worldViewMatrixUniformLocation, false, modelWorldViewMatrix);
 
             const modelViewMatrix = mat4.create();
+            mat4.translate(modelViewMatrix, modelViewMatrix, [
+                mesh.pos.x, mesh.pos.y, mesh.pos.z
+            ]);
+
             mat4.rotateX(modelViewMatrix, modelViewMatrix, mesh.rotation.x);
             mat4.rotateY(modelViewMatrix, modelViewMatrix, mesh.rotation.y);
             mat4.rotateZ(modelViewMatrix, modelViewMatrix, mesh.rotation.z);
 
             mat4.scale(modelViewMatrix, modelViewMatrix, [
                 mesh.scale.x, mesh.scale.y, mesh.scale.z
-            ]);
-
-            mat4.translate(modelViewMatrix, modelViewMatrix, [
-                mesh.pos.x, mesh.pos.y, mesh.pos.z
             ]);
 
             this.gl.uniformMatrix4fv(modelViewMatrixUniformLocation, false, modelViewMatrix);

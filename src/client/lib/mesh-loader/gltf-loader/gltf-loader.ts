@@ -1835,6 +1835,7 @@ class GLTFLoader implements IMeshLoader {
                                 new LightEntity(
                                     {
                                         classname: `light_${light.type}`,
+                                        type: "point",
                                         pos: {
                                             x: pos[0],
                                             y: pos[1],
