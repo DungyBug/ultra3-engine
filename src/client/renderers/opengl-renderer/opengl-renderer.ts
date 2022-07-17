@@ -403,10 +403,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.canvas.height = this.height;
 
         // Try to init WebGL
-        const webgl2Context = this.canvas.getContext("webgl2");
+        const webgl2Context = this.canvas.getContext("webgl2", {antialias : false});
 
         if(webgl2Context === null) {
-            const webgl1Context = this.canvas.getContext("webgl");
+            const webgl1Context = this.canvas.getContext("webgl", {antialias : false});
 
             if(webgl1Context === null) {
                 throw new Error("OpenGLRenderer: Unable to initialize WebGL. Your browser or machine may not support it.");
@@ -693,8 +693,8 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             }
 
             // Set vertices and draw mesh
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, verticesArray, this.gl.DYNAMIC_DRAW);
-            this.gl.vertexAttribPointer(positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, verticesArray, this.gl.STATIC_DRAW);
+            this.gl.vertexAttribPointer(positionAttributeLocation, 3, this.gl.FLOAT, true, 0, 0);
             this.gl.enableVertexAttribArray(positionAttributeLocation);
             this.gl.drawArrays(this.gl.TRIANGLES, 0, mesh.indices.length);
         }
