@@ -1,6 +1,7 @@
 import { IVector } from "../../../core/contracts/base/vector";
 import { BaseModuleEvents } from "../../../core/contracts/module";
 import BaseModuleContext from "../../../core/contracts/module-context";
+import BaseCamera from "../../camera";
 import ColorMode from "../../constants/color-mode";
 import SamplingMode from "../../constants/sampling-mode";
 import IMesh from "../../contracts/mesh";
@@ -22,9 +23,6 @@ import { mat4 } from "./gl-matrix/index";
 export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents> {
     private width: number;
     private height: number;
-    private fov: number;
-    private cameraPosition: IVector;
-    private cameraRotation: IVector;
     private canvas: HTMLCanvasElement;
     private gl: TypedWebGLRenderingContext;
     private shaders: Record<string, ICompiledShaders>;
@@ -32,6 +30,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private vertexBuffer: WebGLBuffer;
     private normalsBuffer: WebGLBuffer;
     private uvBuffer: WebGLBuffer;
+    private camera: BaseCamera;
     private textures: Array<{
         texture: Texture2D | Texture3D;
         buffer: WebGLTexture;
@@ -41,15 +40,17 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         super();
         this.width = opts.width || window.screen.width;
         this.height = opts.height || window.screen.height;
-        this.fov = 90;
-        this.cameraPosition = {x: 0, y: 0, z: 0};
-        this.cameraRotation = {x: 0, y: 0, z: 0};
         this.canvas = opts.canvas || document.createElement("canvas");
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.textures = [];
         this.shaders = {};
+        this.camera = opts.camera || new BaseCamera();
         this.clientMapObjects = [];
+    }
+
+    setActiveCamera(camera: BaseCamera): void {
+        this.camera = camera;
     }
 
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
@@ -398,7 +399,6 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         super.init(parameters);
         this.width = parameters.width;
         this.height = parameters.height;
-        this.fov = parameters.fov;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
 
@@ -451,7 +451,6 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     setParams(parameters: Partial<IGraphicsParameters>) {
         this.width = parameters.width || this.width;
         this.height = parameters.height || this.height;
-        this.fov = parameters.fov || this.fov;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         
@@ -465,14 +464,14 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
         const projectionMatrix = mat4.create();
-        mat4.perspective(projectionMatrix, this.fov, this.width / this.height, 0.1, 100.0);
+        mat4.perspective(projectionMatrix, this.camera.fov, this.width / this.height, 0.1, 100.0);
 
         const cameraViewMatrix = mat4.create();
-        mat4.rotateX(cameraViewMatrix, cameraViewMatrix, this.cameraRotation.x);
-        mat4.rotateY(cameraViewMatrix, cameraViewMatrix, this.cameraRotation.y);
-        mat4.rotateZ(cameraViewMatrix, cameraViewMatrix, this.cameraRotation.z);
+        mat4.rotateX(cameraViewMatrix, cameraViewMatrix, this.camera.rotation.x);
+        mat4.rotateY(cameraViewMatrix, cameraViewMatrix, this.camera.rotation.y);
+        mat4.rotateZ(cameraViewMatrix, cameraViewMatrix, this.camera.rotation.z);
         mat4.translate(cameraViewMatrix, cameraViewMatrix, [
-            this.cameraPosition.x, this.cameraPosition.y, this.cameraPosition.z
+            this.camera.position.x, this.camera.position.y, this.camera.position.z
         ]);
 
         const meshes: Array<IMesh> = [];
@@ -698,14 +697,6 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             this.gl.enableVertexAttribArray(positionAttributeLocation);
             this.gl.drawArrays(this.gl.TRIANGLES, 0, mesh.indices.length);
         }
-    }
-
-    setCameraPosition(pos: IVector): void {
-        this.cameraPosition = pos;
-    }
-
-    setCameraRotation(angle: IVector): void {
-        this.cameraRotation = angle;
     }
 
     /**

@@ -1,6 +1,5 @@
 import { Entity } from "../../../core/entity";
 import { MapObject } from "../../../core/map-object";
-import { IVector } from "../../../core/contracts/base/vector";
 import BaseModule, { BaseModuleEvents } from "../../../core/contracts/module";
 import BaseModuleContext from "../../../core/contracts/module-context";
 import IGraphicsParameters from "./graphics-parameters";
@@ -9,6 +8,7 @@ import Texture3D from "../../texture/texture3d";
 import TextureOptions from "../texture/texture-opts";
 import Texture3DOptions from "../texture/texture3d-opts";
 import { IShader } from "../shader";
+import BaseCamera from "../../camera";
 
 export type BaseGraphicsModuleEvents = {
     newEntity: [Entity];
@@ -21,8 +21,7 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
         this.context = parameters.context;
     }
 
-    abstract setCameraPosition(pos: IVector): void;
-    abstract setCameraRotation(angle: IVector): void;
+    abstract setActiveCamera(camera: BaseCamera): void;
 
     abstract registerShader(name: string, vertex: IShader, fragment: IShader): void;
 

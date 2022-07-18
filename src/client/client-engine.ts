@@ -38,12 +38,11 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         this.graphicsModule.registerShader(name, vertex, fragment);
     }
 
-    setGraphicsModule(module: BaseGraphicsModule<ClientGraphicsModuleEvents>, width: number, height: number, fov: number): void {
+    setGraphicsModule(module: BaseGraphicsModule<ClientGraphicsModuleEvents>, width: number, height: number): void {
         this.graphicsModule = module;
         this.graphicsModule.init({
             width,
             height,
-            fov,
             context: this.context
         });
 

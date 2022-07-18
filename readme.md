@@ -12,14 +12,15 @@ const world = new ClientWorld({}, new Registry());
 const engine = new ClientEngine(world);
 ```
 
-Once we've created fundamental variables, we can create our first entity. But before we create our first entity, we need to set up some graphics module to display our graphics. We will use `OpenGLRenderer` for our purposes:
+Once we've created fundamental variables, we can create our first entity. But before we create our first entity, we need to set up some graphics module to display our graphics and some camera to view our graphics. We will use `OpenGLRenderer` and `BaseCamera` for our purposes:
 
 ```javascript
-const renderer = new OpenGLRenderer();
+const camera = new BaseCamera();
+const renderer = new OpenGLRenderer({camera});
 
 // Setup our engine.
-// <renderer>, <canvas width>, <canvas height>, <camera fov in radians>
-engine.setGraphicsModule(renderer, window.screen.width, window.screen.height, 90 * Math.PI / 180);
+// <renderer>, <canvas width>, <canvas height>
+engine.setGraphicsModule(renderer, window.screen.width, window.screen.height);
 ```
 
 Now we're ready to create our first entity. There are plenty of entity classes in U3, but we need only ViewableEntity.
@@ -92,7 +93,7 @@ Once we've created our entity, we can start rendering. All we need is to call `E
 engine.runRenderLoop();
 
 // Set camera position to view our entity properly
-renderer.setCameraPosition(new Vector(0, 0, -2));
+camera.position.z = -2;
 ```
 
 Great! Now we see rotated plane with some texture.
