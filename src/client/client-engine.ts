@@ -62,6 +62,10 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         }
     }
 
+    getGraphicsModule() {
+        return this.graphicsModule;
+    }
+
     runRenderLoop() {
         this._world.runTickLoop();
     }

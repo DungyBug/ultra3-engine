@@ -22,6 +22,7 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
     }
 
     abstract setActiveCamera(camera: BaseCamera): void;
+    abstract getActiveCamera(): BaseCamera;
 
     abstract registerShader(name: string, vertex: IShader, fragment: IShader): void;
 

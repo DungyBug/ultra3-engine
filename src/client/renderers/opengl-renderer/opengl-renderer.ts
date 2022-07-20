@@ -53,6 +53,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.camera = camera;
     }
 
+    getActiveCamera(): BaseCamera {
+        return this.camera
+    }
+
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
         if(this.shaders.hasOwnProperty(name)) {
             return;
