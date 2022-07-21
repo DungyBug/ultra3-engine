@@ -20,7 +20,7 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
             height: opts.height,
             textureFormat: opts.textureFormat,
             colorMode: ColorMode.RGB,
-            framesPerSecond: 1,
+            framesPerSecond: 0,
             magSamplingMode: opts.magSamplingMode,
             minSamplingMode: opts.minSamplingMode,
             frames: null
@@ -71,6 +71,10 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
 
     load(url: string, frame?: number): Texture2D<TextureOptions> {
         return this;
+    }
+
+    getRawData(time?: number): Uint8Array | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array {
+        return null;
     }
 }
 

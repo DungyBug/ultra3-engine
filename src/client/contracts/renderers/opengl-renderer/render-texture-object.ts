@@ -3,6 +3,7 @@ type IOpenGLRenderTextureObject = {
     framebuffer: WebGLFramebuffer;
     width: number;
     height: number;
+    id: number;
 }
 
 export default IOpenGLRenderTextureObject;

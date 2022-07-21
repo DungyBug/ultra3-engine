@@ -34,9 +34,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private normalsBuffer: WebGLBuffer;
     private uvBuffer: WebGLBuffer;
     private camera: BaseCamera;
+    private texturesCount: number;
     private textures: Array<{
         texture: Texture2D | Texture3D;
         buffer: WebGLTexture;
+        id: number;
     }>;
 
     constructor(opts: IOpenGLRendererOptions = {}) {
@@ -50,6 +52,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.shaders = {};
         this.camera = opts.camera || new BaseCamera();
         this.clientMapObjects = [];
+        this.texturesCount = 0;
     }
 
     createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat): IOpenGLRenderTextureObject {
@@ -59,8 +62,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         const type = this.texFormatToGLenum(format);
 
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, width, height, 0, this.gl.RGBA, type, null);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+        if(this.gl.type === "WebGL2RenderingContext") {
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_COMPARE_MODE, this.gl.NEAREST);
+        }
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
@@ -68,25 +74,36 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         const framebuffer = this.gl.createFramebuffer();
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
 
-        // also create depth buffer for framebuffer
-        const depthBuffer = this.gl.createRenderbuffer();
-        this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, depthBuffer);
-        
-        this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, width, height);
-        this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, depthBuffer);
-
         let attachmentPoint: GLenum;
 
         switch(attachment) {
             case "color": {
+                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, width, height, 0, this.gl.RGBA, type, null);
+
+                // also create depth buffer for framebuffer
+                const depthBuffer = this.gl.createRenderbuffer();
+                this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, depthBuffer);
+                
+                this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, width, height);
+                this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, depthBuffer);
                 attachmentPoint = this.gl.COLOR_ATTACHMENT0;
                 break;
             }
             case "depth": {
+                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.DEPTH_COMPONENT16, width, height, 0, this.gl.DEPTH_COMPONENT, this.gl.UNSIGNED_SHORT, null);
                 attachmentPoint = this.gl.DEPTH_ATTACHMENT;
                 break;
             }
             case "stencil": {
+                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.STENCIL_INDEX8, width, height, 0, this.gl.RGBA, this.gl.FLOAT, null);
+
+                // also create depth buffer for framebuffer
+                const depthBuffer = this.gl.createRenderbuffer();
+                this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, depthBuffer);
+                
+                this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, width, height);
+                this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, depthBuffer);
+
                 attachmentPoint = this.gl.STENCIL_ATTACHMENT;
                 break;
             }
@@ -100,29 +117,56 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         this.textures.push({
             texture: renderTexture,
-            buffer
+            buffer,
+            id: this.texturesCount
         });
+        this.texturesCount++;
+
+        // Unbind all
+        this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+        this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, null);
 
         return {
             width,
             height,
             texture: buffer,
-            framebuffer
+            framebuffer,
+            id: this.texturesCount - 1
         };
     }
 
     renderToRenderTexture(object: IOpenGLRenderTextureObject): void {
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebuffer);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, object.texture);
 
+        this.gl.bindTexture(this.gl.TEXTURE_2D, object.texture);
         this.gl.viewport(0, 0, object.width, object.height);
 
+        // remove texture for a while to avoid accessing texture in shaders to which we're going render to
+        let oldTexture;
+
+        for(let i = 0; i < this.textures.length; i++) {
+            if(this.textures[i].id === object.id) {
+                oldTexture = this.textures[i];
+                this.textures.splice(i, 1);
+                break;
+            }
+        }
+
         this.renderScene(false, object.width, object.height);
+        this.textures.push(oldTexture);
     }
 
     freeRenderTexture(object: IOpenGLRenderTextureObject): void {
         this.gl.deleteFramebuffer(object.framebuffer);
         this.gl.deleteTexture(object.texture);
+
+        for(let i = 0; i < this.textures.length; i++) {
+            if(this.textures[i].id === object.id) {
+                this.textures.splice(i, 1);
+                break;
+            }
+        }
     }
 
     setActiveCamera(camera: BaseCamera): void {
@@ -263,14 +307,23 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         this.textures.push({
             texture,
-            buffer
+            buffer,
+            id: this.texturesCount
         });
+        this.texturesCount++;
 
-        return this.textures.length - 1;
+        return this.texturesCount - 1;
     }
 
     updateTexture2D(textureId: number, time: number, timedelta: number) {
-        const {texture, buffer} = this.textures[textureId];
+        let id = 0;
+        for(let i = 0; i < this.textures.length; i++) {
+            if(this.textures[i].id === textureId) {
+                id = i;
+                break;
+            }
+        }
+        const {texture, buffer} = this.textures[id];
 
         // Check if current frame is changed
         if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
@@ -313,12 +366,9 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                 break;
             }
         }
+        
         const data = texture.getRawData(time);
 
-        // if(data.length === 0) {
-        //     return;
-        // }
-        
         let type: GLenum = this.arrayTypeToGLenum(data);
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
@@ -408,10 +458,12 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     
             this.textures.push({
                 texture,
-                buffer
+                buffer,
+                id: this.texturesCount
             });
+            this.texturesCount++;
     
-            return this.textures.length - 1;
+            return this.texturesCount - 1;
         } else {
             console.warn("OpenGLRenderer: attempt to create unsupported texture3D.");
             return -1;
@@ -420,7 +472,14 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
     updateTexture3D(textureId: number, time: number, timedelta: number) {
         if(this.gl.type === "WebGL2RenderingContext") {
-            const {texture, buffer} = this.textures[textureId];
+            let id = 0;
+            for(let i = 0; i < this.textures.length; i++) {
+                if(this.textures[i].id === textureId) {
+                    id = i;
+                    break;
+                }
+            }
+            const {texture, buffer} = this.textures[id];
 
             // Check if current frame is changed
             if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
@@ -459,11 +518,9 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                     break;
                 }
             }
-            const data = texture.getRawData(time);
-            // if(data.length === 0) {
-            //     return;
-            // }
             
+            const data = texture.getRawData(time);
+
             let type: GLenum = this.arrayTypeToGLenum(data);
 
             this.gl.bindTexture(this.gl.TEXTURE_3D, buffer);
