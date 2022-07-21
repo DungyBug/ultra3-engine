@@ -9,6 +9,8 @@ import TextureOptions from "../texture/texture-opts";
 import Texture3DOptions from "../texture/texture3d-opts";
 import { IShader } from "../shader";
 import BaseCamera from "../../camera";
+import TextureFormat from "../../constants/texture-format";
+import RenderTexture from "../../texture/render-texture";
 
 export type BaseGraphicsModuleEvents = {
     newEntity: [Entity];
@@ -16,13 +18,17 @@ export type BaseGraphicsModuleEvents = {
     newObject: [MapObject];
 } & BaseModuleEvents;
 
-export default abstract class BaseGraphicsModule<T extends Record<string, any[]> = {}> extends BaseModule<T & BaseGraphicsModuleEvents> {
+export default abstract class BaseGraphicsModule<T extends Record<string, any[]> = {}, U extends Record<string, unknown> = Record<string, unknown>> extends BaseModule<T & BaseGraphicsModuleEvents> {
     init(parameters: IGraphicsParameters & {context: BaseModuleContext<T & BaseModuleEvents>}): void {
         this.context = parameters.context;
     }
 
     abstract setActiveCamera(camera: BaseCamera): void;
     abstract getActiveCamera(): BaseCamera;
+
+    abstract createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat): U;
+    abstract renderToRenderTexture(object: U): void;
+    abstract freeRenderTexture(object: U): void;
 
     abstract registerShader(name: string, vertex: IShader, fragment: IShader): void;
 

@@ -4,23 +4,26 @@ import BaseModuleContext from "../../../core/contracts/module-context";
 import BaseCamera from "../../camera";
 import ColorMode from "../../constants/color-mode";
 import SamplingMode from "../../constants/sampling-mode";
+import TextureFormat from "../../constants/texture-format";
 import IMesh from "../../contracts/mesh";
 import ClientGraphicsModuleEvents from "../../contracts/modules/client-graphics-module-events";
 import BaseGraphicsModule, { BaseGraphicsModuleEvents } from "../../contracts/modules/graphics-module";
 import IGraphicsParameters from "../../contracts/modules/graphics-parameters";
 import ICompiledShaders from "../../contracts/renderers/opengl-renderer/compiled-shader";
+import IOpenGLRenderTextureObject from "../../contracts/renderers/opengl-renderer/render-texture-object";
 import { IShader } from "../../contracts/shader";
 import TextureOptions, { TextureOptsToArrayType } from "../../contracts/texture/texture-opts";
 import Texture3DOptions from "../../contracts/texture/texture3d-opts";
 import ViewableEntity from "../../entities/base/viewable";
 import ClientMapObject from "../../map/client-object";
+import RenderTexture from "../../texture/render-texture";
 import Texture2D from "../../texture/texture2d";
 import Texture3D from "../../texture/texture3d";
 import IOpenGLRendererOptions from "./contracts/opengl-renderer-opts";
 import TypedWebGLRenderingContext from "./contracts/typed-webgl-context";
 import { mat4 } from "./gl-matrix/index";
 
-export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents> {
+export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents, IOpenGLRenderTextureObject> {
     private width: number;
     private height: number;
     private canvas: HTMLCanvasElement;
@@ -47,6 +50,79 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.shaders = {};
         this.camera = opts.camera || new BaseCamera();
         this.clientMapObjects = [];
+    }
+
+    createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat): IOpenGLRenderTextureObject {
+        // create texture for framebuffer
+        const buffer = this.gl.createTexture();
+        this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
+
+        const type = this.texFormatToGLenum(format);
+
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, width, height, 0, this.gl.RGBA, type, null);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+
+        // create framebuffer
+        const framebuffer = this.gl.createFramebuffer();
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
+
+        // also create depth buffer for framebuffer
+        const depthBuffer = this.gl.createRenderbuffer();
+        this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, depthBuffer);
+        
+        this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, width, height);
+        this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, depthBuffer);
+
+        let attachmentPoint: GLenum;
+
+        switch(attachment) {
+            case "color": {
+                attachmentPoint = this.gl.COLOR_ATTACHMENT0;
+                break;
+            }
+            case "depth": {
+                attachmentPoint = this.gl.DEPTH_ATTACHMENT;
+                break;
+            }
+            case "stencil": {
+                attachmentPoint = this.gl.STENCIL_ATTACHMENT;
+                break;
+            }
+            default: {
+                attachmentPoint = this.gl.NONE;
+                break;
+            }
+        }
+
+        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, attachmentPoint, this.gl.TEXTURE_2D, buffer, 0);
+
+        this.textures.push({
+            texture: renderTexture,
+            buffer
+        });
+
+        return {
+            width,
+            height,
+            texture: buffer,
+            framebuffer
+        };
+    }
+
+    renderToRenderTexture(object: IOpenGLRenderTextureObject): void {
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebuffer);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, object.texture);
+
+        this.gl.viewport(0, 0, object.width, object.height);
+
+        this.renderScene(false, object.width, object.height);
+    }
+
+    freeRenderTexture(object: IOpenGLRenderTextureObject): void {
+        this.gl.deleteFramebuffer(object.framebuffer);
+        this.gl.deleteTexture(object.texture);
     }
 
     setActiveCamera(camera: BaseCamera): void {
@@ -143,7 +219,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         const data = texture.getFrame(0);
 
-        let type: GLenum = this.texFormatToGLenum(data);
+        let type: GLenum = this.arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
@@ -243,7 +319,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         //     return;
         // }
         
-        let type: GLenum = this.texFormatToGLenum(data);
+        let type: GLenum = this.arrayTypeToGLenum(data);
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
@@ -289,7 +365,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     
             const data = texture.getFrame(0);
     
-            let type: GLenum = this.texFormatToGLenum(data);
+            let type: GLenum = this.arrayTypeToGLenum(data);
     
             this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, data);
             this.gl.texParameteri(this.gl.TEXTURE_3D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
@@ -388,7 +464,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             //     return;
             // }
             
-            let type: GLenum = this.texFormatToGLenum(data);
+            let type: GLenum = this.arrayTypeToGLenum(data);
 
             this.gl.bindTexture(this.gl.TEXTURE_3D, buffer);
             this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, data);
@@ -396,6 +472,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     freeTexture(textureId: number): void {
+        this.gl.deleteTexture(this.textures[textureId].buffer);
         this.textures.splice(textureId, 1);
     }
 
@@ -462,13 +539,22 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     render() {
+        this.gl.viewport(0, 0, this.width, this.height);
+        this.renderScene(true, this.width, this.height);
+    }
+
+    private renderScene(directDraw: boolean, width: number, height: number) {
+        if(directDraw) {
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+        }
+
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         this.gl.clearDepth(1.0);
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
         const projectionMatrix = mat4.create();
-        mat4.perspective(projectionMatrix, this.camera.fov, this.width / this.height, 0.1, 100.0);
+        mat4.perspective(projectionMatrix, this.camera.fov, width / height, 0.1, 100.0);
 
         const cameraViewMatrix = mat4.create();
         mat4.rotateX(cameraViewMatrix, cameraViewMatrix, this.camera.rotation.x);
@@ -708,7 +794,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
      * @param data - array
      * @returns GLenum
      */
-    private texFormatToGLenum<T extends TextureOptions = TextureOptions>(data: TextureOptsToArrayType<T>): GLenum {
+    private arrayTypeToGLenum<T extends TextureOptions = TextureOptions>(data: TextureOptsToArrayType<T>): GLenum {
         if(data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
             return this.gl.UNSIGNED_BYTE;
         } else if(data instanceof Int8Array && this.gl.type === "WebGL2RenderingContext") {
@@ -734,5 +820,55 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                 return this.gl.FLOAT;
             }
         }
+    }
+
+    /**
+     * Returns GLenum constant depending on texture format ( TextureFormat.UNSIGNED_BYTE -> GL_UNSIGNED_BYTE, etc. )
+     * @param format - texture format
+     * @returns GLenum
+     */
+    private texFormatToGLenum(format: TextureFormat): GLenum {
+        switch(format) {
+            case TextureFormat.TEXTUREFORMAT_BYTE: {
+                if(this.gl.type === "WebGL2RenderingContext") {
+                    return this.gl.BYTE;
+                }
+                return this.gl.UNSIGNED_BYTE
+                break;
+            }
+            case TextureFormat.TEXTUREFORMAT_FLOAT: {
+                return this.gl.FLOAT;
+                break;
+            }
+            case TextureFormat.TEXTUREFORMAT_HALF_FLOAT: {
+                if(this.gl.type === "WebGL2RenderingContext") {
+                    return this.gl.HALF_FLOAT;
+                }
+                return this.gl.NONE;
+                break;
+            }
+            case TextureFormat.TEXTUREFORMAT_INT: {
+                return this.gl.INT;
+                break;
+            }
+            case TextureFormat.TEXTUREFORMAT_SHORT: {
+                return this.gl.SHORT;
+                break;
+            }
+            case TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE: {
+                return this.gl.UNSIGNED_BYTE;
+                break;
+            }
+            case TextureFormat.TEXTUREFORMAT_UNSIGNED_INT: {
+                return this.gl.UNSIGNED_INT;
+                break;
+            }
+            case TextureFormat.TEXTUREFORMAT_UNSIGNED_SHORT: {
+                return this.gl.UNSIGNED_SHORT;
+                break;
+            }
+        }
+
+        return this.gl.NONE;
     }
 }

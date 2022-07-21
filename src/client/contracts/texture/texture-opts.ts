@@ -92,5 +92,24 @@ type ArrayTypeToTextureOpts<T extends TypedArray, U extends "Float16" | "Uint16"
                             ? IFloat32TextureOptions
                             : never;
 
+type TextureFormatToTextureOpts<T extends TextureFormat> =
+    T extends TextureFormat.TEXTUREFORMAT_BYTE
+    ? IInt8TextureOptions
+    : T extends TextureFormat.TEXTUREFORMAT_FLOAT
+        ? IFloat32TextureOptions
+        : T extends TextureFormat.TEXTUREFORMAT_HALF_FLOAT
+            ? IFloat16TextureOptions
+            : T extends TextureFormat.TEXTUREFORMAT_INT
+                ? IInt32TextureOptions
+                : T extends TextureFormat.TEXTUREFORMAT_SHORT
+                    ? IInt16TextureOptions
+                    : T extends TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE
+                        ? IUint8TextureOptions
+                        : T extends TextureFormat.TEXTUREFORMAT_UNSIGNED_INT
+                            ? IUint32TextureOptions
+                            : T extends TextureFormat.TEXTUREFORMAT_UNSIGNED_SHORT
+                                ? IUint16TextureOptions
+                                : never;
+
 export default TextureOptions;
-export { TextureOptsToArrayType, ArrayTypeToTextureOpts, IUint8TextureOptions, IUint16TextureOptions, IUint32TextureOptions, IInt8TextureOptions, IInt16TextureOptions, IInt32TextureOptions, IFloat32TextureOptions, IFloat16TextureOptions };
+export { TextureOptsToArrayType, TextureFormatToTextureOpts, ArrayTypeToTextureOpts, IUint8TextureOptions, IUint16TextureOptions, IUint32TextureOptions, IInt8TextureOptions, IInt16TextureOptions, IInt32TextureOptions, IFloat32TextureOptions, IFloat16TextureOptions };
