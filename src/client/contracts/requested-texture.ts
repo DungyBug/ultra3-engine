@@ -1,6 +1,6 @@
-import { Texture2DStorage, Texture3DStorage } from "./texture-storage";
+import { Texture2DStorage, Texture3DStorage, TextureCubemapStorage } from "./texture-storage";
 
 // Used in ClientEngine
-type RequestedTexture = Texture2DStorage | Texture3DStorage;
+type RequestedTexture = Texture2DStorage | Texture3DStorage | TextureCubemapStorage;
 
 export default RequestedTexture;

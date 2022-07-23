@@ -11,6 +11,7 @@ import { IShader } from "../shader";
 import BaseCamera from "../../camera";
 import TextureFormat from "../../constants/texture-format";
 import RenderTexture from "../../texture/render-texture";
+import TextureCubemap from "../../texture/texture-cubemap";
 
 export type BaseGraphicsModuleEvents = {
     newEntity: [Entity];
@@ -61,6 +62,21 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
      * @param timedelta - time delta between this and last frame ( in seconds )
      */
     abstract updateTexture3D(textureId: number, time: number, timedelta: number): void;
+
+    /**
+     * Get texture ready for further using
+     * @param texture - texture to register
+     * @returns id of texture ( that id is used in operations with that texture to identify texture ); -1 means that *texture can't be created*
+     */
+     abstract createTextureCubemap<T extends TextureOptions = TextureOptions>(texture: TextureCubemap<T>): number;
+
+     /**
+      * Updates current texture buffer ( needed for animation )
+      * @param textureId - texture id for which to update buffer
+      * @param time - time in seconds
+      * @param timedelta - time delta between this and last frame ( in seconds )
+      */
+     abstract updateTextureCubemap(textureId: number, time: number, timedelta: number): void;
 
     /**
      * Free texture from memory

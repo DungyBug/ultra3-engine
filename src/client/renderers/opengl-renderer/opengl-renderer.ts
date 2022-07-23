@@ -17,6 +17,7 @@ import Texture3DOptions from "../../contracts/texture/texture3d-opts";
 import ViewableEntity from "../../entities/base/viewable";
 import ClientMapObject from "../../map/client-object";
 import RenderTexture from "../../texture/render-texture";
+import TextureCubemap from "../../texture/texture-cubemap";
 import Texture2D from "../../texture/texture2d";
 import Texture3D from "../../texture/texture3d";
 import IOpenGLRendererOptions from "./contracts/opengl-renderer-opts";
@@ -36,7 +37,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private camera: BaseCamera;
     private texturesCount: number;
     private textures: Array<{
-        texture: Texture2D | Texture3D;
+        texture: Texture2D | Texture3D | TextureCubemap;
         buffer: WebGLTexture;
         id: number;
     }>;
@@ -528,6 +529,211 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         }
     }
 
+    createTextureCubemap<T extends TextureOptions = TextureOptions>(texture: TextureCubemap<T>): number {
+        const buffer = this.gl.createTexture();
+        this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, buffer);
+        let mode: GLenum = this.gl.LUMINANCE;
+
+        switch(texture.colorMode) {
+            case ColorMode.R: {
+                if(this.gl.type === "WebGL2RenderingContext") {
+                    mode = this.gl.RED;
+                }
+                break;
+            }
+            case ColorMode.RG: {
+                if(this.gl.type === "WebGL2RenderingContext") {
+                    mode = this.gl.RG;
+                }
+                break;
+            }
+            case ColorMode.RGB: {
+                mode = this.gl.RGB;
+                break;
+            }
+            case ColorMode.RGBA: {
+                mode = this.gl.RGBA;
+                break;
+            }
+            case ColorMode.LUMINANCE: {
+                mode = this.gl.LUMINANCE;
+                break;
+            }
+            case ColorMode.LUMINANCE_ALPHA: {
+                mode = this.gl.LUMINANCE_ALPHA;
+                break;
+            }
+            case ColorMode.ALPHA: {
+                mode = this.gl.ALPHA;
+                break;
+            }
+        }
+
+        let data = texture.getFrame(0, "+x");
+        let type: GLenum = this.arrayTypeToGLenum(data);
+
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getFrame(0, "-x");
+        type = this.arrayTypeToGLenum(data);
+
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getFrame(0, "+y");
+        type = this.arrayTypeToGLenum(data);
+
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getFrame(0, "-y");
+        type = this.arrayTypeToGLenum(data);
+
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getFrame(0, "+z");
+        type = this.arrayTypeToGLenum(data);
+
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getFrame(0, "-z");
+        type = this.arrayTypeToGLenum(data);
+
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+
+        let minSamplingMode: GLenum;
+        let magSamplingMode: GLenum;
+
+        switch(texture.minSamplingMode) {
+            case SamplingMode.NEAREST: {
+                minSamplingMode = this.gl.NEAREST_MIPMAP_NEAREST;
+                break;
+            }
+            case SamplingMode.BILINEAR: {
+                minSamplingMode = this.gl.LINEAR_MIPMAP_NEAREST;
+                break;
+            }
+            case SamplingMode.BICUBIC: // TODO: Add bicubic implementation support
+            case SamplingMode.TRILINEAR: {
+                minSamplingMode = this.gl.LINEAR_MIPMAP_LINEAR;
+                break;
+            }
+        }
+
+        switch(texture.magSamplingMode) {
+            case SamplingMode.NEAREST: {
+                magSamplingMode = this.gl.NEAREST;
+                break;
+            }
+            case SamplingMode.BICUBIC:
+            case SamplingMode.TRILINEAR:
+            case SamplingMode.BILINEAR: {
+                magSamplingMode = this.gl.LINEAR;
+                break;
+            }
+        }
+    
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MIN_FILTER, minSamplingMode);
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MAG_FILTER, magSamplingMode);
+        this.gl.generateMipmap(this.gl.TEXTURE_CUBE_MAP);
+
+        this.textures.push({
+            texture,
+            buffer,
+            id: this.texturesCount
+        });
+        this.texturesCount++;
+
+        return this.texturesCount - 1;
+    }
+
+    updateTextureCubemap(textureId: number, time: number, timedelta: number) {
+        let id = 0;
+        for(let i = 0; i < this.textures.length; i++) {
+            if(this.textures[i].id === textureId) {
+                id = i;
+                break;
+            }
+        }
+        const {texture, buffer} = this.textures[id];
+
+        // Check if current frame is changed
+        if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
+            return; // It hasn't changed yet
+        }
+
+        let mode: GLenum = this.gl.LUMINANCE;
+
+        switch(texture.colorMode) {
+            case ColorMode.R: {
+                if(this.gl.type === "WebGL2RenderingContext") {
+                    mode = this.gl.RED;
+                }
+                break;
+            }
+            case ColorMode.RG: {
+                if(this.gl.type === "WebGL2RenderingContext") {
+                    mode = this.gl.RG;
+                }
+                break;
+            }
+            case ColorMode.RGB: {
+                mode = this.gl.RGB;
+                break;
+            }
+            case ColorMode.RGBA: {
+                mode = this.gl.RGBA;
+                break;
+            }
+            case ColorMode.LUMINANCE: {
+                mode = this.gl.LUMINANCE;
+                break;
+            }
+            case ColorMode.LUMINANCE_ALPHA: {
+                mode = this.gl.LUMINANCE_ALPHA;
+                break;
+            }
+            case ColorMode.ALPHA: {
+                mode = this.gl.ALPHA;
+                break;
+            }
+        }
+        this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, buffer);
+        
+        let data = texture.getRawData(time, "+x");
+        let type: GLenum = this.arrayTypeToGLenum(data);
+
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getRawData(time, "-x");
+        type = this.arrayTypeToGLenum(data);
+        
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getRawData(time, "+y");
+        type = this.arrayTypeToGLenum(data);
+        
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getRawData(time, "-y");
+        type = this.arrayTypeToGLenum(data);
+        
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getRawData(time, "+z");
+        type = this.arrayTypeToGLenum(data);
+        
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+
+        data = texture.getRawData(time, "-z");
+        type = this.arrayTypeToGLenum(data);
+        
+        this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
+        this.gl.generateMipmap(this.gl.TEXTURE_CUBE_MAP);
+    }
+
     freeTexture(textureId: number): void {
         this.gl.deleteTexture(this.textures[textureId].buffer);
         this.textures.splice(textureId, 1);
@@ -809,6 +1015,22 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                         for(const texture of this.textures) {
                             if(texture.texture === value) {
                                 this.gl.bindTexture(this.gl.TEXTURE_2D, texture.buffer);
+                                break;
+                            }
+                        }
+
+                        this.gl.uniform1i(location, textureCount);
+                        textureCount++;
+                        break;
+                    }
+                    case "textureCubemap": {
+                        // TODO: The same texture may be used for different uniforms
+                        this.gl.activeTexture(this.gl.TEXTURE0 + textureCount);
+
+                        // Find texture
+                        for(const texture of this.textures) {
+                            if(texture.texture === value) {
+                                this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.buffer);
                                 break;
                             }
                         }

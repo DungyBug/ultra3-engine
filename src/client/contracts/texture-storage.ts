@@ -1,9 +1,10 @@
+import TextureCubemap from "../texture/texture-cubemap";
 import Texture2D from "../texture/texture2d";
 import Texture3D from "../texture/texture3d";
 
 interface IdentifiedTextureStorage {
     id: number;
-    type: "2d" | "3d";
+    type: "2d" | "3d" | "cubemap";
 }
 
 export interface Texture2DStorage {
@@ -16,6 +17,11 @@ export interface Texture3DStorage {
     texture: Texture3D;
 }
 
-type TextureStorage = (Texture2DStorage | Texture3DStorage) & IdentifiedTextureStorage;
+export interface TextureCubemapStorage {
+    type: "cubemap";
+    texture: TextureCubemap;
+}
+
+type TextureStorage = (Texture2DStorage | Texture3DStorage | TextureCubemapStorage) & IdentifiedTextureStorage;
 
 export default TextureStorage;

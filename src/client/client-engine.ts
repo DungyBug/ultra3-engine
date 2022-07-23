@@ -10,6 +10,7 @@ import { IShader } from "./contracts/shader";
 import TextureStorage from "./contracts/texture-storage";
 import TextureOptions from "./contracts/texture/texture-opts";
 import Texture3DOptions from "./contracts/texture/texture3d-opts";
+import TextureCubemap from "./texture/texture-cubemap";
 import Texture2D from "./texture/texture2d";
 import Texture3D from "./texture/texture3d";
 
@@ -55,6 +56,10 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
                     }
                     case "3d": {
                         this.registerTexture3D(texture.texture);
+                        break;
+                    }
+                    case "cubemap": {
+                        this.registerTextureCubemap(texture.texture);
                         break;
                     }
                 }
@@ -108,7 +113,26 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         }
     }
 
-    freeTexture(texture: Texture2D | Texture3D) {
+    registerTextureCubemap<T extends TextureOptions = TextureOptions>(texture: TextureCubemap<T>) {
+        if(this.graphicsModule !== null) {
+            const id = this.graphicsModule.createTextureCubemap<T>(texture);
+
+            if(id !== -1) {
+                this.textures.push({
+                    id,
+                    type: "cubemap",
+                    texture
+                });
+            }
+        } else {
+            this.requestedTextures.push({
+                type: "cubemap",
+                texture
+            });
+        }
+    }
+
+    freeTexture(texture: Texture2D | Texture3D | TextureCubemap) {
         for(let i = 0; i < this.textures.length; i++) {
             if(this.textures[i].texture === texture) {
                 this.textures.splice(i, 1);
