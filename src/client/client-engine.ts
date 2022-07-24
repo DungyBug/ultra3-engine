@@ -156,6 +156,10 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
                         this.graphicsModule.updateTexture3D(texture.id, time, timedelta);
                         break;
                     }
+                    case "cubemap": {
+                        this.graphicsModule.updateTextureCubemap(texture.id, time, timedelta);
+                        break;
+                    }
                 }
             }
         }

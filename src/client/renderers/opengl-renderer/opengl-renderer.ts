@@ -1,6 +1,6 @@
-import { IVector } from "../../../core/contracts/base/vector";
 import { BaseModuleEvents } from "../../../core/contracts/module";
 import BaseModuleContext from "../../../core/contracts/module-context";
+import { Entity } from "../../../core/entity";
 import BaseCamera from "../../camera";
 import ColorMode from "../../constants/color-mode";
 import SamplingMode from "../../constants/sampling-mode";
@@ -10,12 +10,14 @@ import ClientGraphicsModuleEvents from "../../contracts/modules/client-graphics-
 import BaseGraphicsModule, { BaseGraphicsModuleEvents } from "../../contracts/modules/graphics-module";
 import IGraphicsParameters from "../../contracts/modules/graphics-parameters";
 import ICompiledShaders from "../../contracts/renderers/opengl-renderer/compiled-shader";
+import IOpenGLRenderTextureCubemapObject from "../../contracts/renderers/opengl-renderer/cubemap-render-texture-object";
 import IOpenGLRenderTextureObject from "../../contracts/renderers/opengl-renderer/render-texture-object";
 import { IShader } from "../../contracts/shader";
 import TextureOptions, { TextureOptsToArrayType } from "../../contracts/texture/texture-opts";
 import Texture3DOptions from "../../contracts/texture/texture3d-opts";
 import ViewableEntity from "../../entities/base/viewable";
 import ClientMapObject from "../../map/client-object";
+import RenderTextureCubemap from "../../texture/cubemap-render-texture";
 import RenderTexture from "../../texture/render-texture";
 import TextureCubemap from "../../texture/texture-cubemap";
 import Texture2D from "../../texture/texture2d";
@@ -24,7 +26,7 @@ import IOpenGLRendererOptions from "./contracts/opengl-renderer-opts";
 import TypedWebGLRenderingContext from "./contracts/typed-webgl-context";
 import { mat4 } from "./gl-matrix/index";
 
-export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents, IOpenGLRenderTextureObject> {
+export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents, IOpenGLRenderTextureObject, IOpenGLRenderTextureCubemapObject> {
     private width: number;
     private height: number;
     private canvas: HTMLCanvasElement;
@@ -54,6 +56,14 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.camera = opts.camera || new BaseCamera();
         this.clientMapObjects = [];
         this.texturesCount = 0;
+    }
+
+    setActiveCamera(camera: BaseCamera): void {
+        this.camera = camera;
+    }
+
+    getActiveCamera(): BaseCamera {
+        return this.camera
     }
 
     createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat): IOpenGLRenderTextureObject {
@@ -137,7 +147,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         };
     }
 
-    renderToRenderTexture(object: IOpenGLRenderTextureObject): void {
+    renderToRenderTexture(object: IOpenGLRenderTextureObject, entities: Array<Entity>, mapObjects: Array<ClientMapObject>): void {
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebuffer);
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, object.texture);
@@ -154,7 +164,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             }
         }
 
-        this.renderScene(false, object.width, object.height);
+        this.renderScene(false, object.width, object.height, entities, mapObjects);
         this.textures.push(oldTexture);
     }
 
@@ -170,12 +180,160 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         }
     }
 
-    setActiveCamera(camera: BaseCamera): void {
-        this.camera = camera;
+    createRenderTextureCubemap(renderTextureCubemap: RenderTextureCubemap<TextureFormat>, attachment: "color" | "depth" | "stencil", size: number, format: TextureFormat): IOpenGLRenderTextureCubemapObject {
+        const buffer = this.gl.createTexture();
+        this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, buffer);
+
+        const type = this.texFormatToGLenum(format);
+
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+        if(this.gl.type === "WebGL2RenderingContext") {
+            this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_COMPARE_MODE, this.gl.NEAREST);
+        }
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+
+        // create framebuffers
+        const framebuffers = [
+            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X},
+            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_X},
+            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_Y},
+            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y},
+            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z},
+            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z}
+        ];
+
+        for(const framebuffer of framebuffers) {
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer.framebuffer);
+            let attachmentPoint: GLenum;
+
+            switch(attachment) {
+                case "color": {
+                    this.gl.texImage2D(framebuffer.target, 0, this.gl.RGBA, size, size, 0, this.gl.RGBA, type, null);
+
+                    // also create depth buffer for framebuffer
+                    const depthBuffer = this.gl.createRenderbuffer();
+                    this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, depthBuffer);
+                    
+                    this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, size, size);
+                    this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, depthBuffer);
+                    attachmentPoint = this.gl.COLOR_ATTACHMENT0;
+                    break;
+                }
+                case "depth": {
+                    this.gl.texImage2D(framebuffer.target, 0, this.gl.DEPTH_COMPONENT16, size, size, 0, this.gl.DEPTH_COMPONENT, this.gl.UNSIGNED_SHORT, null);
+                    attachmentPoint = this.gl.DEPTH_ATTACHMENT;
+                    break;
+                }
+                case "stencil": {
+                    this.gl.texImage2D(framebuffer.target, 0, this.gl.STENCIL_INDEX8, size, size, 0, this.gl.RGBA, this.gl.FLOAT, null);
+
+                    // also create depth buffer for framebuffer
+                    const depthBuffer = this.gl.createRenderbuffer();
+                    this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, depthBuffer);
+                    
+                    this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, size, size);
+                    this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, depthBuffer);
+
+                    attachmentPoint = this.gl.STENCIL_ATTACHMENT;
+                    break;
+                }
+                default: {
+                    attachmentPoint = this.gl.NONE;
+                    break;
+                }
+            }
+
+            this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, attachmentPoint, framebuffer.target, buffer, 0);
+        }
+
+        this.textures.push({
+            texture: renderTextureCubemap,
+            buffer,
+            id: this.texturesCount
+        });
+        this.texturesCount++;
+
+        // Unbind all
+        this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, null);
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+        this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, null);
+
+        return {
+            size,
+            texture: buffer,
+            framebufferPositiveX: framebuffers[0].framebuffer,
+            framebufferNegativeX: framebuffers[1].framebuffer,
+            framebufferPositiveY: framebuffers[2].framebuffer,
+            framebufferNegativeY: framebuffers[3].framebuffer,
+            framebufferPositiveZ: framebuffers[4].framebuffer,
+            framebufferNegativeZ: framebuffers[5].framebuffer,
+            id: this.texturesCount - 1
+        }
     }
 
-    getActiveCamera(): BaseCamera {
-        return this.camera
+    renderToRenderTextureCubemap(object: IOpenGLRenderTextureCubemapObject, coordinate: "+x" | "+y" | "+z" | "-x" | "-y" | "-z", entities: Array<Entity>, mapObjects: Array<ClientMapObject>): void {
+        // remove texture for a while to avoid accessing texture in shaders to which we're going render to
+
+        switch(coordinate) {
+            case "+x": {
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebufferPositiveX);
+                break;
+            }
+            case "+y": {
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebufferPositiveY);
+                break;
+            }
+            case "+z": {
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebufferPositiveZ);
+                break;
+            }
+            case "-x": {
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebufferNegativeX);
+                break;
+            }
+            case "-y": {
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebufferNegativeY);
+                break;
+            }
+            case "-z": {
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebufferNegativeZ);
+                break;
+            }
+        }
+        this.gl.viewport(0, 0, object.size, object.size);
+
+        let oldTexture;
+
+        for(let i = 0; i < this.textures.length; i++) {
+            if(this.textures[i].id === object.id) {
+                oldTexture = this.textures[i];
+                this.textures.splice(i, 1);
+                break;
+            }
+        }
+
+        this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, object.texture);
+        this.renderScene(false, object.size, object.size, entities, mapObjects);
+        this.textures.push(oldTexture);
+    }
+
+    freeRenderTextureCubemap(object: IOpenGLRenderTextureCubemapObject): void {
+        this.gl.deleteFramebuffer(object.framebufferPositiveX);
+        this.gl.deleteFramebuffer(object.framebufferPositiveY);
+        this.gl.deleteFramebuffer(object.framebufferPositiveZ);
+        this.gl.deleteFramebuffer(object.framebufferNegativeX);
+        this.gl.deleteFramebuffer(object.framebufferNegativeY);
+        this.gl.deleteFramebuffer(object.framebufferNegativeZ);
+        this.gl.deleteTexture(object.texture);
+
+        for(let i = 0; i < this.textures.length; i++) {
+            if(this.textures[i].id === object.id) {
+                this.textures.splice(i, 1);
+                break;
+            }
+        }
     }
 
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
@@ -803,10 +961,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
     render() {
         this.gl.viewport(0, 0, this.width, this.height);
-        this.renderScene(true, this.width, this.height);
+        this.renderScene(true, this.width, this.height, this.context.world.entities, this.clientMapObjects);
     }
 
-    private renderScene(directDraw: boolean, width: number, height: number) {
+    private renderScene(directDraw: boolean, width: number, height: number, entities: Array<Entity>, mapObjects: Array<ClientMapObject>) {
         if(directDraw) {
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
@@ -829,13 +987,13 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         const meshes: Array<IMesh> = [];
 
-        for(const entity of this.context.world.entities) {
+        for(const entity of entities) {
             if(entity instanceof ViewableEntity) {
                 meshes.push(entity.model);
             }
         }
 
-        for(const object of this.clientMapObjects) {
+        for(const object of mapObjects) {
             meshes.push(object.mesh);
         }
 
@@ -1018,25 +1176,22 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                                 break;
                             }
                         }
-
                         this.gl.uniform1i(location, textureCount);
                         textureCount++;
                         break;
                     }
                     case "textureCubemap": {
-                        // TODO: The same texture may be used for different uniforms
-                        this.gl.activeTexture(this.gl.TEXTURE0 + textureCount);
-
                         // Find texture
                         for(const texture of this.textures) {
                             if(texture.texture === value) {
+                                // TODO: The same texture may be used for different uniforms
+                                this.gl.activeTexture(this.gl.TEXTURE0 + textureCount);
                                 this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.buffer);
+                                this.gl.uniform1i(location, textureCount);
+                                textureCount++;
                                 break;
                             }
                         }
-
-                        this.gl.uniform1i(location, textureCount);
-                        textureCount++;
                         break;
                     }
                     case "texture3D": {

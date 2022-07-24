@@ -1,3 +1,4 @@
+import { Entity } from "../../core/entity";
 import BaseCamera from "../camera";
 import ClientEngine from "../client-engine";
 import ColorMode from "../constants/color-mode";
@@ -5,6 +6,7 @@ import TextureFormat from "../constants/texture-format";
 import BaseGraphicsModule from "../contracts/modules/graphics-module";
 import IRenderTextureOpts from "../contracts/texture/render-texture-opts";
 import TextureOptions from "../contracts/texture/texture-opts";
+import ClientMapObject from "../map/client-object";
 import Texture2D from "./texture2d";
 
 class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
@@ -13,6 +15,8 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
     protected camera: BaseCamera;
     protected attachment: "color" | "depth" | "stencil";
     protected textureFormat: TextureFormat;
+    public entities: Array<Entity>;
+    public mapObjects: Array<ClientMapObject>
 
     constructor(opts: IRenderTextureOpts<T>, engine: ClientEngine, register: boolean = true) {
         super({
@@ -32,10 +36,20 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
         this.height = opts.height;
         this.textureFormat = opts.textureFormat;
         this.camera = opts.camera || this.graphicsModule.getActiveCamera();
+        this.entities = [];
+        this.mapObjects = [];
 
         if(register) {
             this.register();
         }
+    }
+
+    pushEntityToRenderList(entity: Entity) {
+        this.entities.push(entity);
+    }
+
+    pushMapObjectToRenderList(mapObject: ClientMapObject) {
+        this.mapObjects.push(mapObject);
     }
 
     setActiveCamera(camera: BaseCamera) {
@@ -58,7 +72,7 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
     render() {
         const activeCamera = this.graphicsModule.getActiveCamera();
         this.graphicsModule.setActiveCamera(this.camera);
-        this.graphicsModule.renderToRenderTexture(this.renderTextureObject);
+        this.graphicsModule.renderToRenderTexture(this.renderTextureObject, this.entities, this.mapObjects);
 
         // restore active camera
         this.graphicsModule.setActiveCamera(activeCamera);

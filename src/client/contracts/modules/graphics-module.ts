@@ -12,6 +12,8 @@ import BaseCamera from "../../camera";
 import TextureFormat from "../../constants/texture-format";
 import RenderTexture from "../../texture/render-texture";
 import TextureCubemap from "../../texture/texture-cubemap";
+import RenderTextureCubemap from "../../texture/cubemap-render-texture";
+import ClientMapObject from "../../map/client-object";
 
 export type BaseGraphicsModuleEvents = {
     newEntity: [Entity];
@@ -19,7 +21,7 @@ export type BaseGraphicsModuleEvents = {
     newObject: [MapObject];
 } & BaseModuleEvents;
 
-export default abstract class BaseGraphicsModule<T extends Record<string, any[]> = {}, U extends Record<string, unknown> = Record<string, unknown>> extends BaseModule<T & BaseGraphicsModuleEvents> {
+export default abstract class BaseGraphicsModule<T extends Record<string, any[]> = {}, U extends Record<string, unknown> = Record<string, unknown>, V extends Record<string, unknown> = Record<string, unknown>> extends BaseModule<T & BaseGraphicsModuleEvents> {
     init(parameters: IGraphicsParameters & {context: BaseModuleContext<T & BaseModuleEvents>}): void {
         this.context = parameters.context;
     }
@@ -28,8 +30,12 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
     abstract getActiveCamera(): BaseCamera;
 
     abstract createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat): U;
-    abstract renderToRenderTexture(object: U): void;
+    abstract renderToRenderTexture(object: U, entities: Array<Entity>, mapObjects: Array<ClientMapObject>): void;
     abstract freeRenderTexture(object: U): void;
+
+    abstract createRenderTextureCubemap(renderTextureCubemap: RenderTextureCubemap, attachment: "color" | "depth" | "stencil", size: number, format: TextureFormat): V;
+    abstract renderToRenderTextureCubemap(object: V, coordinate: "+x" | "+y" | "+z" | "-x" | "-y" | "-z", entities: Array<Entity>, mapObjects: Array<ClientMapObject>): void;
+    abstract freeRenderTextureCubemap(object: V): void;
 
     abstract registerShader(name: string, vertex: IShader, fragment: IShader): void;
 
