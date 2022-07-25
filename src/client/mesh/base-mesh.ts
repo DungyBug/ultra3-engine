@@ -1,4 +1,5 @@
 import { IVector } from "../../core/contracts/base/vector";
+import IVector2D from "../../core/contracts/base/vector2d";
 import DrawMode from "../constants/draw-mode";
 import IBaseMesh from "../contracts/base-mesh";
 import IBaseMeshOptions from "../contracts/mesh/base-mesh-opts";

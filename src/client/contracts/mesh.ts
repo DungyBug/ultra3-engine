@@ -8,9 +8,12 @@ interface IMesh extends IBaseMesh {
     verticesMode: VerticesMode;
 
     get vertices(): Array<IVector>;
+    get verticesFlatArray(): Float32Array;
     get indices(): Array<number>;
     get normals(): Array<IVector>;
-    get uvs(): Array<IVector2D>;
+    get normalsFlatArray(): Float32Array;
+    get uvs(): Array<IVector>;
+    get uvsFlatArray(): Float32Array;
 
     get material(): IMaterial;
 }

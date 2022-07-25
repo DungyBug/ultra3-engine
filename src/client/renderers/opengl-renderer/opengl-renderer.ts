@@ -1046,18 +1046,8 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             this.gl.uniformMatrix4fv(modelViewMatrixUniformLocation, false, modelViewMatrix);
 
             if(u3NormalAttributeLocation > -1) {
-                // Generate normals array
-                const normalsArray = new Float32Array(mesh.indices.length * 3);
-                for(let i = 0; i < mesh.indices.length; i++) {
-                    let normal = mesh.normals[mesh.indices[i]];
-
-                    normalsArray[i * 3] = normal.x;
-                    normalsArray[i * 3 + 1] = normal.y;
-                    normalsArray[i * 3 + 2] = normal.z;
-                }
-
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalsBuffer);
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, normalsArray, this.gl.DYNAMIC_DRAW);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, mesh.normalsFlatArray, this.gl.DYNAMIC_DRAW);
                 this.gl.vertexAttribPointer(u3NormalAttributeLocation, 3, this.gl.FLOAT, true, 0, 0);
                 this.gl.enableVertexAttribArray(u3NormalAttributeLocation);
             }
@@ -1065,32 +1055,14 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             // Generate uv array
 
             if(u3UvAttributeLocation > -1) {
-                const uvArray = new Float32Array(mesh.indices.length * 2);
-
-                for(let i = 0; i < mesh.indices.length; i++) {
-                    let uv = mesh.uvs[mesh.indices[i]];
-
-                    uvArray[i * 2] = uv.x;
-                    uvArray[i * 2 + 1] = uv.y;
-                }
-
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.uvBuffer);
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, uvArray, this.gl.DYNAMIC_DRAW);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, mesh.uvsFlatArray, this.gl.DYNAMIC_DRAW);
                 this.gl.vertexAttribPointer(u3UvAttributeLocation, 2, this.gl.FLOAT, true, 0, 0);
                 this.gl.enableVertexAttribArray(u3UvAttributeLocation);
             }
 
             // Generate vertices buffer
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
-
-            // Get vertices array
-            const verticesArray: Float32Array = new Float32Array(mesh.indices.length * 3);
-
-            for(let i = 0; i < mesh.indices.length; i++) {
-                verticesArray[i * 3] = mesh.vertices[mesh.indices[i]].x;
-                verticesArray[i * 3 + 1] = mesh.vertices[mesh.indices[i]].y;
-                verticesArray[i * 3 + 2] = mesh.vertices[mesh.indices[i]].z;
-            }
 
             /**
             *****************************************************************************
@@ -1216,7 +1188,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             }
 
             // Set vertices and draw mesh
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, verticesArray, this.gl.STATIC_DRAW);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, mesh.verticesFlatArray, this.gl.STATIC_DRAW);
             this.gl.vertexAttribPointer(positionAttributeLocation, 3, this.gl.FLOAT, true, 0, 0);
             this.gl.enableVertexAttribArray(positionAttributeLocation);
             this.gl.drawArrays(this.gl.TRIANGLES, 0, mesh.indices.length);

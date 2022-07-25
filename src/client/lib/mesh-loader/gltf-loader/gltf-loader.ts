@@ -32,6 +32,8 @@ import LightEntity from "../../../entities/light";
 import { World } from "../../../../core/world";
 import DrawMode from "../../../constants/draw-mode";
 import ClientEngine from "../../../client-engine";
+import Mesh from "../../../mesh/mesh";
+import BaseMaterial from "../../../base-material";
 
 class GLTFLoader implements IMeshLoader {
     private binaries: Array<IGLTFBinary>;
@@ -905,7 +907,7 @@ class GLTFLoader implements IMeshLoader {
                          ***************************************************
                          */
 
-                        let material: IMaterial;
+                        let material: BaseMaterial;
 
                         const GLTFMaterial =
                             storage.materials[
@@ -1796,18 +1798,22 @@ class GLTFLoader implements IMeshLoader {
                             });
                         }
 
-                        mesh = {
+                        if(uvs.length === 0) {
+                            uvs = points.map<IVector2D>(v => ({x: v.x, y: v.y}));
+                        }
+
+                        mesh = new Mesh({
                             verticesMode: verticesMode,
                             vertices: points,
                             indices: indices,
                             normals: normals,
                             drawMode: DrawMode.DYNAMIC,
-                            uvs: uvs,
+                            uvs: uvs.map<IVector>(v => ({x: v.x, y: v.y, z: 0})),
                             pos: { x: 0, y: 0, z: 0 },
                             scale: { x: 1, y: 1, z: 1 },
                             rotation: { x: 0, y: 0, z: 0 },
                             material: material,
-                        };
+                        });
 
                         meshes.push(mesh);
                     }
