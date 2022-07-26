@@ -10,6 +10,7 @@ import { IShader } from "./contracts/shader";
 import TextureStorage from "./contracts/texture-storage";
 import TextureOptions from "./contracts/texture/texture-opts";
 import Texture3DOptions from "./contracts/texture/texture3d-opts";
+import Mesh from "./mesh/mesh";
 import TextureCubemap from "./texture/texture-cubemap";
 import Texture2D from "./texture/texture2d";
 import Texture3D from "./texture/texture3d";
@@ -37,6 +38,20 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
 
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
         this.graphicsModule.registerShader(name, vertex, fragment);
+    }
+
+    registerMesh(mesh: Mesh): number {
+        const result = this.context.emitter.emit("meshRegistered", mesh);
+
+        if(result.length > 0) {
+            return result[0];
+        }
+
+        return -1;
+    }
+
+    freeMesh(mesh: Mesh): void {
+        this.context.emitter.emit("meshFreeRequest", mesh);
     }
 
     setGraphicsModule(module: BaseGraphicsModule<ClientGraphicsModuleEvents>, width: number, height: number): void {
