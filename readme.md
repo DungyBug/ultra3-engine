@@ -50,7 +50,7 @@ const ent = new ViewableEntity({
             new Vector(1.0, 0.0)
         ],
         material: null // we will define material later...
-    })
+    }, engine)
 }, world);
 ```
 
@@ -83,7 +83,7 @@ const ent = new ViewableEntity({
     model: new Mesh({
         ...
         material: texturedMaterial
-    })
+    }, engine)
 }, world);
 ```
 
