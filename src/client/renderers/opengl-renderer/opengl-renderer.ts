@@ -66,18 +66,18 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         return this.camera
     }
 
-    createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat): IOpenGLRenderTextureObject {
+    createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat, minSamplingMode: SamplingMode, magSamplingMode: SamplingMode): IOpenGLRenderTextureObject {
         // create texture for framebuffer
         const buffer = this.gl.createTexture();
         this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
 
         const type = this.texFormatToGLenum(format);
 
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-        if(this.gl.type === "WebGL2RenderingContext") {
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_COMPARE_MODE, this.gl.NEAREST);
-        }
+        const textureMinFilter = this.samplingModeToGLenum(minSamplingMode, false);
+        const textureMagFilter = this.samplingModeToGLenum(magSamplingMode, false);
+
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, textureMinFilter);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, textureMagFilter);
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
@@ -180,17 +180,17 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         }
     }
 
-    createRenderTextureCubemap(renderTextureCubemap: RenderTextureCubemap<TextureFormat>, attachment: "color" | "depth" | "stencil", size: number, format: TextureFormat): IOpenGLRenderTextureCubemapObject {
+    createRenderTextureCubemap(renderTextureCubemap: RenderTextureCubemap<TextureFormat>, attachment: "color" | "depth" | "stencil", size: number, format: TextureFormat, minSamplingMode: SamplingMode, magSamplingMode: SamplingMode): IOpenGLRenderTextureCubemapObject {
         const buffer = this.gl.createTexture();
         this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, buffer);
 
         const type = this.texFormatToGLenum(format);
 
-        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-        if(this.gl.type === "WebGL2RenderingContext") {
-            this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_COMPARE_MODE, this.gl.NEAREST);
-        }
+        const textureMinFilter = this.samplingModeToGLenum(minSamplingMode, false);
+        const textureMagFilter = this.samplingModeToGLenum(magSamplingMode, false);
+
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MIN_FILTER, textureMinFilter);
+        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MAG_FILTER, textureMagFilter);
         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
@@ -1276,5 +1276,43 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         }
 
         return this.gl.NONE;
+    }
+
+    /**
+     * Returns GLenum constant according to sampling mode
+     * @param sampling - texture sampling
+     * @param mipmap - return constant with mipmap definition or not (LINEAR -> LINEAR_MIPMAP_LINEAR)
+     * @returns GLenum
+     */
+    samplingModeToGLenum(sampling: SamplingMode, mipmap: boolean = false): GLenum {
+        switch(sampling) {
+            case SamplingMode.BILINEAR: {
+                if(mipmap) {
+                    return this.gl.LINEAR_MIPMAP_NEAREST;
+                }
+                return this.gl.LINEAR;
+                break;
+            }
+            case SamplingMode.BICUBIC:
+            case SamplingMode.TRILINEAR: {
+                if(mipmap) {
+                    return this.gl.LINEAR_MIPMAP_LINEAR;
+                }
+                return this.gl.LINEAR;
+                break;
+            }
+            case SamplingMode.NEAREST: {
+                if(mipmap) {
+                    return this.gl.NEAREST_MIPMAP_NEAREST;
+                }
+                return this.gl.NEAREST;
+                break;
+            }
+
+            default: {
+                return this.gl.NONE;
+                break;
+            }
+        }
     }
 }

@@ -66,7 +66,7 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
         }
 
         this.registered = true;
-        this.renderTextureObject = this.graphicsModule.createRenderTexture(this, this.attachment, this.width, this.height, this.textureFormat);
+        this.renderTextureObject = this.graphicsModule.createRenderTexture(this, this.attachment, this.width, this.height, this.textureFormat, this.minSamplingMode, this.magSamplingMode);
     }
 
     render() {

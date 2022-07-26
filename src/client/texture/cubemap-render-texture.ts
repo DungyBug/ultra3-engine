@@ -79,7 +79,7 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
         }
 
         this.registered = true;
-        this.renderTextureObject = this.graphicsModule.createRenderTextureCubemap(this, this.attachment, this.width, this.textureFormat);
+        this.renderTextureObject = this.graphicsModule.createRenderTextureCubemap(this, this.attachment, this.width, this.textureFormat, this.minSamplingMode, this.magSamplingMode);
     }
 
     render() {
