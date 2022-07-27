@@ -1,5 +1,4 @@
 import { IVector } from "../contracts/base/vector";
-import { VectorMath } from "../vector-math";
 
 class Vector implements IVector {
     x: number;
@@ -22,12 +21,12 @@ class Vector implements IVector {
         this.z = v.z;
     }
 
-    length() {
-        return VectorMath.getLength(this);
+    magnitude() {
+        return Math.hypot(this.x, this.y, this.z);
     }
 
-    squaredLength() {
-        return VectorMath.getSquaredLength(this);
+    squaredMagnitude() {
+        return this.x * this.x + this.y * this.y + this.z * this.z;
     }
 
     add(a: IVector) {
@@ -66,10 +65,6 @@ class Vector implements IVector {
         this.x /= len;
         this.y /= len;
         this.z /= len;
-    }
-
-    magnitude(): number {
-        return Math.hypot(this.x, this.y, this.z);
     }
 
     dot(a: IVector): number {

@@ -7,7 +7,7 @@ import { IVector } from "./contracts/base/vector";
 import { IWorld } from "./contracts/world";
 import { HealthyEntity } from "./entities/healthy";
 import { Entity } from "./entity";
-import { VectorMath } from "./vector-math";
+import Vector from "./lib/vector";
 
 /**
  * Damages entities in radius of world <world>
@@ -20,7 +20,7 @@ import { VectorMath } from "./vector-math";
 export function damageEntitiesInRadius(world: IWorld, radius: number, pos: IVector, damage: number, attacker: Entity = null) {
     for(let i = 0; i < world.entities.length; i++) {
         // Get length between entity position and explosion position
-        let length = VectorMath.getSquaredLength(VectorMath.subtract(world.entities[i].pos, pos));
+        let length = Vector.magnitude(Vector.sub(world.entities[i].pos, pos));
 
         // Check if entity is too far from explosion to take damage
         if(length > radius ** 2) {
@@ -28,12 +28,13 @@ export function damageEntitiesInRadius(world: IWorld, radius: number, pos: IVect
         }
 
         // Check if entity extends HealthyEntity ( has "health" property and "damage" method )
-        if(world.entities[i] instanceof HealthyEntity) {
+        const entity = world.entities[i];
+        if(entity instanceof HealthyEntity) {
             // Get final damage: the further you from explosion - the smaller damage you take
             let outputDamage = damage * ((1 - length / (radius ** 2)) ** 2);
 
             // Damage entity
-            (world.entities[i] as HealthyEntity).damage(outputDamage, attacker);
+            entity.damage(outputDamage, attacker);
         }
     }
 }

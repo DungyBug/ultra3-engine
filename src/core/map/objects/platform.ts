@@ -10,8 +10,8 @@ import {
 import { IBaseTrain } from "../../contracts/map-objects/train";
 import { ITrainStart } from "../../contracts/map-objects/train-start";
 import IPhysicalMesh from "../../contracts/physical-mesh";
+import Vector from "../../lib/vector";
 import { MapObject } from "../../map-object";
-import { VectorMath } from "../../vector-math";
 import { World } from "../../world";
 import { TrainStart } from "./train-start";
 
@@ -102,20 +102,20 @@ export class Platform extends MapObject implements IPlatform {
                     break;
                 }
                 let travelTime =
-                    VectorMath.getLength(
-                        VectorMath.subtract(
+                    Vector.magnitude(
+                        Vector.sub(
                             nextTrain.getPos(),
                             currentTrain.getPos()
                         )
                     ) / speed;
                 let deltaTime = (time - this.prevthink) * 0.001;
 
-                let direction: IVector = VectorMath.subdivide(
-                    VectorMath.subtract(
+                let direction: Vector = Vector.div(
+                    Vector.sub(
                         nextTrain.getPos(),
                         currentTrain.getPos()
                     ),
-                    travelTime // Get already magnituted vector
+                    new Vector(travelTime) // Get already magnituted vector
                 );
 
                 this.props.pos.x += direction.x * deltaTime;

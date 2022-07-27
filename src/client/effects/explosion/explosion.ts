@@ -1,8 +1,8 @@
 import { IExplosionEntityParams } from "./explosion-params";
-import { VectorMath } from "../../../core/vector-math";
 import EffectEntity from "../../entities/effect";
 import SmallExplosionEffect from "./small-explosion";
 import ClientWorld from "../../client-world";
+import Vector from "../../../core/lib/vector";
 
 class ExplosionEffect extends EffectEntity {
     private startTime: number;
@@ -41,15 +41,15 @@ class ExplosionEffect extends EffectEntity {
                     {
                         classname: "effect_small_explosion",
                         model: null,
-                        pos: VectorMath.add(
+                        pos: Vector.add(
                             this.pos,
-                            VectorMath.multiply(
+                            Vector.mul(
                                 {
                                     x: Math.random() * 2 - 1,
                                     y: Math.random() * 2 - 1,
                                     z: Math.random() * 2 - 1,
                                 },
-                                Math.random() * this.radius
+                                new Vector(Math.random() * this.radius)
                             )
                         ),
                     },
