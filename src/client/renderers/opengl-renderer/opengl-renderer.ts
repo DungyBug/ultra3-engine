@@ -32,8 +32,8 @@ import { mat4 } from "./gl-matrix/index";
 
 export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents, IOpenGLRenderTextureObject, IOpenGLRenderTextureCubemapObject> {
     public context: BaseModuleContext<WorldModuleEvents & ClientWorldEvents>
-    private width: number;
-    private height: number;
+    private _width: number;
+    private _height: number;
     private canvas: HTMLCanvasElement;
     private gl: TypedWebGLRenderingContext;
     private shaders: Record<string, ICompiledShaders>;
@@ -49,17 +49,25 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
     constructor(opts: IOpenGLRendererOptions = {}) {
         super();
-        this.width = opts.width || window.screen.width;
-        this.height = opts.height || window.screen.height;
+        this._width = opts.width || window.screen.width;
+        this._height = opts.height || window.screen.height;
         this.canvas = opts.canvas || document.createElement("canvas");
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
+        this.canvas.width = this._width;
+        this.canvas.height = this._height;
         this.textures = [];
         this.shaders = {};
         this.camera = opts.camera || new BaseCamera();
         this.clientMapObjects = [];
         this.texturesCount = 0;
         this.meshes = [];
+    }
+
+    get width() {
+        return this._width;
+    }
+
+    get height() {
+        return this._height;
     }
 
     setActiveCamera(camera: BaseCamera): void {
@@ -993,8 +1001,8 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
     init(parameters: IGraphicsParameters & { context: BaseModuleContext<BaseGraphicsModuleEvents & BaseModuleEvents>; }): void {
         super.init(parameters);
-        this.width = parameters.width;
-        this.height = parameters.height;
+        this._width = parameters.width;
+        this._height = parameters.height;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
 
@@ -1043,8 +1051,8 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     setParams(parameters: Partial<IGraphicsParameters>) {
-        this.width = parameters.width || this.width;
-        this.height = parameters.height || this.height;
+        this._width = parameters.width || this.width;
+        this._height = parameters.height || this.height;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         

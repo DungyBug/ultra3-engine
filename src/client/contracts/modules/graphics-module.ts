@@ -23,6 +23,9 @@ export type BaseGraphicsModuleEvents = {
 } & BaseModuleEvents;
 
 export default abstract class BaseGraphicsModule<T extends Record<string, any[]> = {}, U extends Record<string, unknown> = Record<string, unknown>, V extends Record<string, unknown> = Record<string, unknown>> extends BaseModule<T & BaseGraphicsModuleEvents> {
+    abstract get width(): number;
+    abstract get height(): number;
+    
     init(parameters: IGraphicsParameters & {context: BaseModuleContext<T & BaseModuleEvents>}): void {
         this.context = parameters.context;
     }
