@@ -1075,7 +1075,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
         const projectionMatrix = mat4.create();
-        mat4.perspective(projectionMatrix, this.camera.fov, width / height, 0.1, 100.0);
+        mat4.perspective(projectionMatrix, this.camera.fov, width / height, this.camera.zNear, this.camera.zFar);
 
         const cameraViewMatrix = mat4.create();
         mat4.rotateX(cameraViewMatrix, cameraViewMatrix, this.camera.rotation.x);
