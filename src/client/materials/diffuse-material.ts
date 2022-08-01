@@ -6,6 +6,7 @@ import diffuseFragmentShaderSource from "../shaders/diffuse/fragment.glsl";
 import ClientEngine from "../client-engine";
 import { IKey } from "../../core/contracts/base/key";
 import LightEntity from "../entities/light";
+import Scene from "../scene";
 
 export default class DiffuseMaterial extends BaseMaterial {
     public texture: Texture2D;
@@ -19,11 +20,11 @@ export default class DiffuseMaterial extends BaseMaterial {
         return "u3Diffuse";
     }
 
-    getUniforms(): IKey[] {
+    getUniforms(scene: Scene): IKey[] {
         const pointLights: Array<LightEntity> = [];
         const spotLights: Array<LightEntity> = [];
 
-        for(const entity of this.engine.world.entities) {
+        for(const entity of scene.entities) {
             if(entity instanceof LightEntity) {
                 switch(entity.type) {
                     case "point": {

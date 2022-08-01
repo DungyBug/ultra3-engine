@@ -15,6 +15,7 @@ import TextureCubemap from "../../texture/texture-cubemap";
 import RenderTextureCubemap from "../../texture/cubemap-render-texture";
 import ClientMapObject from "../../map/client-object";
 import SamplingMode from "../../constants/sampling-mode";
+import Scene from "../../scene";
 
 export type BaseGraphicsModuleEvents = {
     newEntity: [Entity];
@@ -34,14 +35,25 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
     abstract getActiveCamera(): BaseCamera;
 
     abstract createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat, minSamplingMode: SamplingMode, magSamplingMode: SamplingMode): U;
-    abstract renderToRenderTexture(object: U, entities: Array<Entity>, mapObjects: Array<ClientMapObject>): void;
+    abstract renderToRenderTexture(object: U, scene: Scene): void;
     abstract freeRenderTexture(object: U): void;
 
     abstract createRenderTextureCubemap(renderTextureCubemap: RenderTextureCubemap, attachment: "color" | "depth" | "stencil", size: number, format: TextureFormat, minSamplingMode: SamplingMode, magSamplingMode: SamplingMode): V;
-    abstract renderToRenderTextureCubemap(object: V, coordinate: "+x" | "+y" | "+z" | "-x" | "-y" | "-z", entities: Array<Entity>, mapObjects: Array<ClientMapObject>): void;
+    abstract renderToRenderTextureCubemap(object: V, coordinate: "+x" | "+y" | "+z" | "-x" | "-y" | "-z", scene: Scene): void;
     abstract freeRenderTextureCubemap(object: V): void;
 
     abstract registerShader(name: string, vertex: IShader, fragment: IShader): void;
+
+    /**
+     * Renders scene to canvas
+     * 
+     * Must NOT be called in render loop and in framestart and frameend events
+     * 
+     * @param scene - scene to render ( no scene means render all in the world )
+     * 
+     *                Note: all entities and mapobjects from the scene should also be contained in the world provided via context
+     */
+    abstract render(scene?: Scene): void;
 
     /**
      * Get texture ready for further using

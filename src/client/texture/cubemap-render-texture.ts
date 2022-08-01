@@ -8,6 +8,7 @@ import BaseCamera from "../camera";
 import Vector from "../../core/lib/vector";
 import ClientMapObject from "../map/client-object";
 import { Entity } from "../../core/entity";
+import Scene from "../scene";
 
 class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends TextureCubemap {
     protected graphicsModule: BaseGraphicsModule;
@@ -15,8 +16,7 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
     protected cameras: [BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera];
     protected attachment: "color" | "depth" | "stencil";
     protected textureFormat: TextureFormat;
-    public entities: Array<Entity>;
-    public mapObjects: Array<ClientMapObject>;
+    public scene: Scene;
     
     constructor(opts: ICubemapRenderTextureOpts<T>, engine: ClientEngine, register: boolean = true) {
         super({
@@ -43,20 +43,11 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
             new BaseCamera({fov: Math.PI / 2, rotation: {x: 0, y: Math.PI, z: Math.PI}}), // +z
             new BaseCamera({fov: Math.PI / 2, rotation: {x: 0, y: 0, z: Math.PI}})  // -z
         ];
-        this.entities = [];
-        this.mapObjects = [];
+        this.scene = new Scene();
 
         if(register) {
             this.register();
         }
-    }
-
-    pushEntityToRenderList(entity: Entity) {
-        this.entities.push(entity);
-    }
-
-    pushMapObjectToRenderList(mapObject: ClientMapObject) {
-        this.mapObjects.push(mapObject);
     }
 
     setActiveCameras(cameras: [BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera]) {
@@ -86,17 +77,17 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
         const activeCamera = this.graphicsModule.getActiveCamera();
 
         this.graphicsModule.setActiveCamera(this.cameras[0]);
-        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "+x", this.entities, this.mapObjects);
+        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "+x", this.scene);
         this.graphicsModule.setActiveCamera(this.cameras[1]);
-        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "-x", this.entities, this.mapObjects);
+        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "-x", this.scene);
         this.graphicsModule.setActiveCamera(this.cameras[2]);
-        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "+y", this.entities, this.mapObjects);
+        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "+y", this.scene);
         this.graphicsModule.setActiveCamera(this.cameras[3]);
-        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "-y", this.entities, this.mapObjects);
+        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "-y", this.scene);
         this.graphicsModule.setActiveCamera(this.cameras[4]);
-        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "+z", this.entities, this.mapObjects);
+        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "+z", this.scene);
         this.graphicsModule.setActiveCamera(this.cameras[5]);
-        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "-z", this.entities, this.mapObjects);
+        this.graphicsModule.renderToRenderTextureCubemap(this.renderTextureObject, "-z", this.scene);
 
         // restore active camera
         this.graphicsModule.setActiveCamera(activeCamera);

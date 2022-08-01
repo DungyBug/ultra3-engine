@@ -21,6 +21,7 @@ import Texture3DOptions from "../../contracts/texture/texture3d-opts";
 import ViewableEntity from "../../entities/base/viewable";
 import ClientMapObject from "../../map/client-object";
 import Mesh from "../../mesh/mesh";
+import Scene from "../../scene";
 import RenderTextureCubemap from "../../texture/cubemap-render-texture";
 import RenderTexture from "../../texture/render-texture";
 import TextureCubemap from "../../texture/texture-cubemap";
@@ -41,6 +42,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private camera: BaseCamera;
     private texturesCount: number;
     private meshes: Array<IRegisteredMesh>;
+    private scene: Scene;
     private textures: Array<{
         texture: Texture2D | Texture3D | TextureCubemap;
         buffer: WebGLTexture;
@@ -60,6 +62,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.clientMapObjects = [];
         this.texturesCount = 0;
         this.meshes = [];
+        this.scene = new Scene();
     }
 
     get width() {
@@ -226,7 +229,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         };
     }
 
-    renderToRenderTexture(object: IOpenGLRenderTextureObject, entities: Array<Entity>, mapObjects: Array<ClientMapObject>): void {
+    renderToRenderTexture(object: IOpenGLRenderTextureObject, scene: Scene): void {
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebuffer);
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, object.texture);
@@ -244,17 +247,17 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         }
         const meshes = [];
 
-        for(const entity of entities) {
+        for(const entity of scene.entities) {
             if(entity instanceof ViewableEntity) {
                 meshes.push(this.meshes[entity.model.id]);
             }
         }
 
-        for(const mapObject of mapObjects) {
+        for(const mapObject of scene.mapobjects) {
             meshes.push(this.meshes[mapObject.mesh.id]);
         }
 
-        this.renderScene(false, object.width, object.height, meshes);
+        this.renderScene(false, object.width, object.height, meshes, scene);
         this.textures.push(oldTexture);
     }
 
@@ -363,7 +366,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         }
     }
 
-    renderToRenderTextureCubemap(object: IOpenGLRenderTextureCubemapObject, coordinate: "+x" | "+y" | "+z" | "-x" | "-y" | "-z", entities: Array<Entity>, mapObjects: Array<ClientMapObject>): void {
+    renderToRenderTextureCubemap(object: IOpenGLRenderTextureCubemapObject, coordinate: "+x" | "+y" | "+z" | "-x" | "-y" | "-z", scene: Scene): void {
         // remove texture for a while to avoid accessing texture in shaders to which we're going render to
 
         switch(coordinate) {
@@ -407,17 +410,17 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, object.texture);
         const meshes = [];
 
-        for(const entity of entities) {
+        for(const entity of scene.entities) {
             if(entity instanceof ViewableEntity) {
                 meshes.push(this.meshes[entity.model.id]);
             }
         }
 
-        for(const mapObject of mapObjects) {
+        for(const mapObject of scene.mapobjects) {
             meshes.push(this.meshes[mapObject.mesh.id]);
         }
 
-        this.renderScene(false, object.size, object.size, meshes);
+        this.renderScene(false, object.size, object.size, meshes, scene);
         this.textures.push(oldTexture);
     }
 
@@ -1043,11 +1046,14 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.context.emitter.on("frameend", this.render.bind(this));
         this.context.emitter.on("clientmapobject", this.handleClientMapObject.bind(this));
         this.context.emitter.on("meshRegistered", (mesh) => this.handleMeshRegisterEvent(mesh));
+        this.context.emitter.on("newEntity", (ent) => this.scene.pushEntity(ent));
+        this.context.emitter.on("entityDelete", (ent) => this.scene.removeEntity(ent));
         this.context.emitter.on("meshFreeRequest", (mesh) => this.handleMeshFreeRequest(mesh));
     }
 
     handleClientMapObject(object: ClientMapObject) {
         this.clientMapObjects.push(object);
+        this.scene.pushMapObject(object);
     }
 
     setParams(parameters: Partial<IGraphicsParameters>) {
@@ -1059,12 +1065,29 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.viewport(0, 0, this.width, this.height);
     }
 
-    render() {
+    render(scene?: Scene) {
         this.gl.viewport(0, 0, this.width, this.height);
-        this.renderScene(true, this.width, this.height, this.meshes);
+
+        if(scene) {
+            const meshes: Array<IRegisteredMesh> = [];
+
+            for(const entity of scene.entities) {
+                if(entity instanceof ViewableEntity) {
+                    meshes.push(this.meshes[entity.model.id]);
+                }
+            }
+
+            for(const mapobject of scene.mapobjects) {
+                meshes.push(this.meshes[mapobject.mesh.id]);
+            }
+
+            this.renderScene(true, this.width, this.height, meshes, scene);
+        } else {
+            this.renderScene(true, this.width, this.height, this.meshes, this.scene);
+        }
     }
 
-    private renderScene(directDraw: boolean, width: number, height: number, meshes: Array<IRegisteredMesh>) {
+    private renderScene(directDraw: boolean, width: number, height: number, meshes: Array<IRegisteredMesh>, scene: Scene) {
         if(directDraw) {
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
@@ -1164,7 +1187,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
             // To have this done with one "for"
             const uniforms = shader.vertex.uniforms.concat(shader.fragment.uniforms);
-            const params = mesh.material.getUniforms();
+            const params = mesh.material.getUniforms(scene);
 
             for(const uniform of uniforms) {
                 const location = this.gl.getUniformLocation(shader.program, uniform.name);

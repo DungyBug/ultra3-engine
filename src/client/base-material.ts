@@ -4,6 +4,7 @@ import basicVertexShaderSource from "./shaders/basic/vertex.glsl";
 import basicFragmentShaderSource from "./shaders/basic/fragment.glsl";
 import ClientEngine from "./client-engine";
 import { IKey } from "../core/contracts/base/key";
+import Scene from "./scene";
 
 export default abstract class BaseMaterial implements IMaterial {
     protected engine: ClientEngine;
@@ -17,7 +18,7 @@ export default abstract class BaseMaterial implements IMaterial {
         return "u3Basic";
     }
     
-    getUniforms(): Array<IKey> {
+    getUniforms(scene: Scene): Array<IKey> {
         return [];
     }
 

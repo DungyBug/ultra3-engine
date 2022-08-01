@@ -47,6 +47,7 @@ export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEven
 
     addEntity(entity: Entity) {
         this._entities.push(entity);
+        this.emit("newEntity", entity);
 
         // Use a special variable to make ids of every entity unique.
         // If we use "this._entities.length", there could be situation,

@@ -11,6 +11,7 @@ import TextureStorage from "./contracts/texture-storage";
 import TextureOptions from "./contracts/texture/texture-opts";
 import Texture3DOptions from "./contracts/texture/texture3d-opts";
 import Mesh from "./mesh/mesh";
+import Scene from "./scene";
 import TextureCubemap from "./texture/texture-cubemap";
 import Texture2D from "./texture/texture2d";
 import Texture3D from "./texture/texture3d";
@@ -88,6 +89,11 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
 
     runRenderLoop() {
         this._world.runTickLoop();
+    }
+
+    render(scene?: Scene) {
+        this.tick();
+        this.graphicsModule.render(scene);
     }
 
     registerTexture2D<T extends TextureOptions = TextureOptions>(texture: Texture2D<T>) {
