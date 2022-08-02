@@ -45,9 +45,22 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
     abstract registerShader(name: string, vertex: IShader, fragment: IShader): void;
 
     /**
+     * Sets main scene as active scene
+     * Note: main scene is a scene that creates in the module itself and keeps in it all entities and mapobjects
+     */
+    abstract resoreActiveScene(): void;
+
+    /**
+     * Sets active scene ( i.e. scene to render )
+     * @param scene - scene to render
+     */
+    abstract setActiveScene(scene: Scene): void;
+    abstract getActiveScene(): Scene;
+
+    /**
      * Renders scene to canvas
      * 
-     * Must NOT be called in render loop and in framestart and frameend events
+     * Should NOT be called in render loop and in framestart and frameend events to render MAIN scene as it does the engine itself
      * 
      * @param scene - scene to render ( no scene means render all in the world )
      * 

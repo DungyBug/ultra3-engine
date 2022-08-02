@@ -8,14 +8,28 @@ import Scene from "./scene";
 
 export default abstract class BaseMaterial implements IMaterial {
     protected engine: ClientEngine;
+    protected registered: boolean;
 
-    constructor(engine: ClientEngine) {
+    constructor(engine: ClientEngine, register: boolean = true) {
         this.engine = engine;
-        this.engine.registerShader(this.name, this.getVertexShader(), this.getFragmentShader());
+
+        this.registered = register;
+        if(register) {
+            this.engine.registerShader(this.name, this.getVertexShader(), this.getFragmentShader());
+        }
     }
 
     get name(): string {
         return "u3Basic";
+    }
+
+    register() {
+        if(this.registered) {
+            return;
+        }
+
+        this.registered = true;
+        this.engine.registerShader(this.name, this.getVertexShader(), this.getFragmentShader());
     }
     
     getUniforms(scene: Scene): Array<IKey> {

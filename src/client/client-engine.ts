@@ -1,6 +1,8 @@
 import BaseModuleContext from "../core/contracts/module-context";
+import WorldEvents from "../core/contracts/world-events";
 import WorldModuleEvents from "../core/contracts/world-module-events";
 import Engine from "../core/engine"
+import { World } from "../core/world";
 import ClientWorld from "./client-world";
 import ClientWorldEvents from "./contracts/client-world-events";
 import ClientGraphicsModuleEvents from "./contracts/modules/client-graphics-module-events";
@@ -31,10 +33,15 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         this._world.on("clientmapobject", (object) => this.emit("clientmapobject", object));
         this._world.on("clientmapobject", (object) =>  this.context.emitter.emit("clientmapobject", object));
         this._world.on("framestart", () => this.tick());
+        this._world.on("frameend", () => this.endtick())
         this.graphicsModule = null;
         this.textures = [];
         this.requestedTextures = [];
         this.prevTime = 0;
+    }
+
+    get world(): ClientWorld {
+        return this._world;
     }
 
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
@@ -186,5 +193,9 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         }
 
         this.prevTime = time;
+    }
+
+    endtick() {
+        this.graphicsModule.render();
     }
 }

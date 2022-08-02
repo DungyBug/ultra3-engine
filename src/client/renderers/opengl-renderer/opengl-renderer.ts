@@ -2,6 +2,7 @@ import { BaseModuleEvents } from "../../../core/contracts/module";
 import BaseModuleContext from "../../../core/contracts/module-context";
 import WorldModuleEvents from "../../../core/contracts/world-module-events";
 import { Entity } from "../../../core/entity";
+import { MapObject } from "../../../core/map-object";
 import BaseCamera from "../../camera";
 import ColorMode from "../../constants/color-mode";
 import SamplingMode from "../../constants/sampling-mode";
@@ -43,6 +44,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private texturesCount: number;
     private meshes: Array<IRegisteredMesh>;
     private scene: Scene;
+    private activeScene: Scene;
     private textures: Array<{
         texture: Texture2D | Texture3D | TextureCubemap;
         buffer: WebGLTexture;
@@ -63,6 +65,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.texturesCount = 0;
         this.meshes = [];
         this.scene = new Scene();
+        this.activeScene = this.scene;
     }
 
     get width() {
@@ -79,6 +82,18 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
     getActiveCamera(): BaseCamera {
         return this.camera
+    }
+
+    resoreActiveScene(): void {
+        this.activeScene = this.scene;
+    }
+
+    setActiveScene(scene: Scene): void {
+        this.activeScene = scene;
+    }
+
+    getActiveScene(): Scene {
+        return this.activeScene;
     }
 
     handleMeshRegisterEvent(mesh: Mesh) {
@@ -1043,7 +1058,6 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         document.body.append(this.canvas);
 
-        this.context.emitter.on("frameend", this.render.bind(this));
         this.context.emitter.on("clientmapobject", this.handleClientMapObject.bind(this));
         this.context.emitter.on("meshRegistered", (mesh) => this.handleMeshRegisterEvent(mesh));
         this.context.emitter.on("newEntity", (ent) => this.scene.pushEntity(ent));
@@ -1065,10 +1079,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.viewport(0, 0, this.width, this.height);
     }
 
-    render(scene?: Scene) {
+    render(scene: Scene = this.activeScene) {
         this.gl.viewport(0, 0, this.width, this.height);
 
-        if(scene) {
+        //if(scene) {
             const meshes: Array<IRegisteredMesh> = [];
 
             for(const entity of scene.entities) {
@@ -1082,9 +1096,9 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             }
 
             this.renderScene(true, this.width, this.height, meshes, scene);
-        } else {
-            this.renderScene(true, this.width, this.height, this.meshes, this.scene);
-        }
+        // } else {
+        //     this.renderScene(true, this.width, this.height, this.meshes, this.scene);
+        // }
     }
 
     private renderScene(directDraw: boolean, width: number, height: number, meshes: Array<IRegisteredMesh>, scene: Scene) {
