@@ -75,7 +75,7 @@ texture.load("/path/to/image.png");
 // const texture = new Texture2D(...).load("<path>")
 
 // Create our material
-const texturedMaterial = new TexturedMaterial(engine, texture);
+const texturedMaterial = new TexturedMaterial(engine, { texture: texture });
 
 // Now our entity is
 const ent = new ViewableEntity({
