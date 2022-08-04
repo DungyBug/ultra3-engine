@@ -5,13 +5,14 @@ import reflectiveFragmentShaderSource from "../shaders/reflective/fragment.glsl"
 import ClientEngine from "../client-engine";
 import { IKey } from "../../core/contracts/base/key";
 import TextureCubemap from "../texture/texture-cubemap";
+import IReflectiveMaterialProps from "../contracts/materials/reflective-material-props";
 
 export default class ReflectiveMaterial extends BaseMaterial {
     public texture: TextureCubemap;
 
-    constructor(engine: ClientEngine, texture: TextureCubemap) {
-        super(engine);
-        this.texture = texture;
+    constructor(engine: ClientEngine, opts: IReflectiveMaterialProps) {
+        super(engine, opts);
+        this.texture = opts.texture;
         engine.registerShader("u3Reflective", this.getVertexShader(), this.getFragmentShader());
     }
 

@@ -5,6 +5,7 @@ import { Entity } from "../../../core/entity";
 import { MapObject } from "../../../core/map-object";
 import BaseCamera from "../../camera";
 import ColorMode from "../../constants/color-mode";
+import CullMode from "../../constants/cull-mode";
 import SamplingMode from "../../constants/sampling-mode";
 import TextureFormat from "../../constants/texture-format";
 import ClientWorldEvents from "../../contracts/client-world-events";
@@ -1082,23 +1083,19 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     render(scene: Scene = this.activeScene) {
         this.gl.viewport(0, 0, this.width, this.height);
 
-        //if(scene) {
-            const meshes: Array<IRegisteredMesh> = [];
+        const meshes: Array<IRegisteredMesh> = [];
 
-            for(const entity of scene.entities) {
-                if(entity instanceof ViewableEntity) {
-                    meshes.push(this.meshes[entity.model.id]);
-                }
+        for(const entity of scene.entities) {
+            if(entity instanceof ViewableEntity) {
+                meshes.push(this.meshes[entity.model.id]);
             }
+        }
 
-            for(const mapobject of scene.mapobjects) {
-                meshes.push(this.meshes[mapobject.mesh.id]);
-            }
+        for(const mapobject of scene.mapobjects) {
+            meshes.push(this.meshes[mapobject.mesh.id]);
+        }
 
-            this.renderScene(true, this.width, this.height, meshes, scene);
-        // } else {
-        //     this.renderScene(true, this.width, this.height, this.meshes, this.scene);
-        // }
+        this.renderScene(true, this.width, this.height, meshes, scene);
     }
 
     private renderScene(directDraw: boolean, width: number, height: number, meshes: Array<IRegisteredMesh>, scene: Scene) {
@@ -1124,6 +1121,13 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         for(const registeredMesh of meshes) {
             const mesh = registeredMesh.mesh;
+            if(mesh.material.cullMode > 0) {
+                this.gl.enable(this.gl.CULL_FACE);
+                this.gl.cullFace(this.cullFaceModeToGLenum(mesh.material.cullMode));
+            } else {
+                this.gl.disable(this.gl.CULL_FACE);
+            }
+
             let textureCount = 0;
 
             const shader = this.shaders[mesh.material.name];
@@ -1442,6 +1446,15 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                 return this.gl.NONE;
                 break;
             }
+        }
+    }
+
+    cullFaceModeToGLenum(mode: CullMode): GLenum {
+        switch(mode) {
+            case CullMode.BACK: return this.gl.BACK;
+            case CullMode.FRONT: return this.gl.FRONT;
+            case CullMode.FRONT_AND_BACK: return this.gl.FRONT_AND_BACK;
+            default: return this.gl.NONE;
         }
     }
 }

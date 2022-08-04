@@ -4,13 +4,14 @@ import coloredVertexShaderSource from "../shaders/colored/vertex.glsl";
 import coloredFragmentShaderSource from "../shaders/colored/fragment.glsl";
 import ClientEngine from "../client-engine";
 import { IKey } from "../../core/contracts/base/key";
+import IColoredMaterialProps from "../contracts/materials/colored-material-opts";
 
 export default class ColoredMaterial extends BaseMaterial {
     public color: [number, number, number];
 
-    constructor(engine: ClientEngine, color: [number, number, number]) {
-        super(engine);
-        this.color = color;
+    constructor(engine: ClientEngine, opts: IColoredMaterialProps = {}) {
+        super(engine, opts);
+        this.color = opts.color || [1, 1, 1];
         engine.registerShader("u3Colored", this.getVertexShader(), this.getFragmentShader());
     }
 

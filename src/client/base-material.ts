@@ -5,13 +5,17 @@ import basicFragmentShaderSource from "./shaders/basic/fragment.glsl";
 import ClientEngine from "./client-engine";
 import { IKey } from "../core/contracts/base/key";
 import Scene from "./scene";
+import CullMode from "./constants/cull-mode";
+import IBaseMaterialProps from "./contracts/materials/base-material-props";
 
 export default abstract class BaseMaterial implements IMaterial {
+    public cullMode: CullMode;
     protected engine: ClientEngine;
     protected registered: boolean;
 
-    constructor(engine: ClientEngine, register: boolean = true) {
+    constructor(engine: ClientEngine, opts: IBaseMaterialProps = {}, register: boolean = true) {
         this.engine = engine;
+        this.cullMode = opts.cullMode || CullMode.NONE;
 
         this.registered = register;
         if(register) {

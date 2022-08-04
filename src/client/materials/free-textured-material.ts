@@ -12,15 +12,16 @@ import freeTexturedFragmentShaderSource from "../shaders/free-textured/fragment.
 import ClientEngine from "../client-engine";
 import { IKey } from "../../core/contracts/base/key";
 import BaseGraphicsModule from "../contracts/modules/graphics-module";
+import ITexturedMaterialProps from "../contracts/materials/textured-material-props";
 
 export default class FreeTexturedMaterial extends BaseMaterial {
     public texture: Texture2D;
     protected engine: ClientEngine;
     protected module: BaseGraphicsModule;
 
-    constructor(engine: ClientEngine, texture: Texture2D) {
-        super(engine);
-        this.texture = texture;
+    constructor(engine: ClientEngine, opts: ITexturedMaterialProps) {
+        super(engine, opts);
+        this.texture = opts.texture;
         this.engine = engine;
         this.module = this.engine.getGraphicsModule();
         this.engine.registerShader("u3FreeTextured", this.getVertexShader(), this.getFragmentShader());

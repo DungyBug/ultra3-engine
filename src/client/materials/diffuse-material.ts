@@ -7,13 +7,14 @@ import ClientEngine from "../client-engine";
 import { IKey } from "../../core/contracts/base/key";
 import LightEntity from "../entities/light";
 import Scene from "../scene";
+import ITexturedMaterialProps from "../contracts/materials/textured-material-props";
 
 export default class DiffuseMaterial extends BaseMaterial {
     public texture: Texture2D;
 
-    constructor(engine: ClientEngine, texture: Texture2D) {
-        super(engine);
-        this.texture = texture;
+    constructor(engine: ClientEngine, opts: ITexturedMaterialProps) {
+        super(engine, opts);
+        this.texture = opts.texture;
     }
 
     get name(): string {

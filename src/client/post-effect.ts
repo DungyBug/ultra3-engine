@@ -11,6 +11,7 @@ import TextureFormat from "./constants/texture-format";
 import SamplingMode from "./constants/sampling-mode";
 import BaseCamera from "./camera";
 import Vector from "../core/lib/vector";
+import CullMode from "./constants/cull-mode";
 
 class PostEffect extends BaseMaterial {
     readonly renderTexture: RenderTexture;
@@ -21,7 +22,7 @@ class PostEffect extends BaseMaterial {
     protected readonly _params: Array<IKeyType>;
 
     constructor(opts: IPostEffectOpts, engine: ClientEngine) {
-        super(engine, false);
+        super(engine, {cullMode: CullMode.NONE}, false);
         const graphicsModule = engine.getGraphicsModule();
         this._name = opts.name;
         this._vertexShader = opts.vertexShader;

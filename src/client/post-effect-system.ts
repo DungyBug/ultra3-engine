@@ -25,8 +25,8 @@ class PostEffectSystem {
                 scale: new Vector(1, 1, 0),
                 vertices: [
                     new Vector(-1, 1, 0),
-                    new Vector(1, 1, 0),
                     new Vector(1, -1, 0),
+                    new Vector(1, 1, 0),
                     new Vector(-1, 1, 0),
                     new Vector(-1, -1, 0),
                     new Vector(1, -1, 0)
@@ -35,14 +35,14 @@ class PostEffectSystem {
                 normals: [new Vector(0, 0, 1),new Vector(0, 0, 1),new Vector(0, 0, 1), new Vector(0, 0, 1),new Vector(0, 0, 1),new Vector(0, 0, 1)],
                 uvs: [
                     new Vector(1.0, 0.0),
-                    new Vector(0.0, 0.0),
                     new Vector(0.0, 1.0),
+                    new Vector(0.0, 0.0),
                     new Vector(1.0, 0.0),
                     new Vector(1.0, 1.0),
                     new Vector(0.0, 1.0)
                 ],
 
-                material: new FreeTexturedMaterial(this.engine, null)
+                material: new FreeTexturedMaterial(this.engine, {texture: null})
             }, this.engine)
         }, this.engine.world);
 

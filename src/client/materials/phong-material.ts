@@ -7,17 +7,18 @@ import ClientEngine from "../client-engine";
 import { IKey } from "../../core/contracts/base/key";
 import LightEntity from "../entities/light";
 import Scene from "../scene";
+import IPhongMaterialProps from "../contracts/materials/phong-material-props";
 
 export default class PhongMaterial extends BaseMaterial {
     public texture: Texture2D;
     public shininess: number;
     public distribution: number;
 
-    constructor(engine: ClientEngine, texture: Texture2D, shininess: number = 256, distribution: number = 0.2) {
-        super(engine);
-        this.texture = texture;
-        this.shininess = shininess;
-        this.distribution = distribution;
+    constructor(engine: ClientEngine, opts: IPhongMaterialProps) {
+        super(engine, opts);
+        this.texture = opts.texture;
+        this.shininess = opts.shininess || 256;
+        this.distribution = opts.distribution || 0.2;
     }
 
     get name(): string {
