@@ -33,7 +33,7 @@ class PostEffect extends BaseMaterial {
             width: opts.width || graphicsModule.width,
             height: opts.height || graphicsModule.height,
             magSamplingMode: SamplingMode.NEAREST,
-            minSamplingMode: SamplingMode.NEAREST,
+            minSamplingMode: opts.samplingMode || SamplingMode.BILINEAR,
             attachment: "color",
             camera: new BaseCamera({
                 position: new Vector(0, 0, -1),
