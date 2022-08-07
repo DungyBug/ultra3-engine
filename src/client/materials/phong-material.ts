@@ -28,7 +28,7 @@ export default class PhongMaterial extends BaseMaterial {
     getUniforms(scene: Scene): IKey[] {
         const pointLights: Array<LightEntity> = [];
         const spotLights: Array<LightEntity> = [];
-        const camera = this.engine.getGraphicsModule().getActiveCamera();
+        const cameraPosition = this.engine.getGraphicsModule().getActiveCamera().getPosition();
 
         for(const entity of scene.entities) {
             if(entity instanceof LightEntity) {
@@ -94,7 +94,7 @@ export default class PhongMaterial extends BaseMaterial {
             {
                 name: "cameraPosition",
                 type: "f3",
-                value: new Float32Array([camera.position.x, camera.position.y, camera.position.z])
+                value: new Float32Array([cameraPosition.x, cameraPosition.y, cameraPosition.z])
             },
             {
                 name: "shininess",

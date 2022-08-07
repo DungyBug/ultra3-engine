@@ -9,9 +9,10 @@ import RenderTexture from "./texture/render-texture";
 import IPostEffectOpts from "./contracts/post-effect-opts";
 import TextureFormat from "./constants/texture-format";
 import SamplingMode from "./constants/sampling-mode";
-import BaseCamera from "./camera";
+import BaseCamera from "./cameras/base-camera";
 import Vector from "../core/lib/vector";
 import CullMode from "./constants/cull-mode";
+import PerspectiveCamera from "./cameras/perspective-camera";
 
 class PostEffect extends BaseMaterial {
     readonly renderTexture: RenderTexture;
@@ -36,7 +37,7 @@ class PostEffect extends BaseMaterial {
             magSamplingMode: SamplingMode.NEAREST,
             minSamplingMode: opts.samplingMode || SamplingMode.BILINEAR,
             attachment: "color",
-            camera: new BaseCamera({
+            camera: new PerspectiveCamera({
                 position: new Vector(0, 0, -1),
                 fov: Math.PI / 2
             })

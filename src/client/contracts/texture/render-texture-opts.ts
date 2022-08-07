@@ -1,4 +1,5 @@
-import BaseCamera from "../../camera";
+import OrthogonalCamera from "../../cameras/orthogonal-camera";
+import PerspectiveCamera from "../../cameras/perspective-camera";
 import SamplingMode from "../../constants/sampling-mode";
 import TextureFormat from "../../constants/texture-format";
 
@@ -9,7 +10,7 @@ interface IRenderTextureOpts<T extends TextureFormat> {
     magSamplingMode: SamplingMode;
     minSamplingMode: SamplingMode;
     attachment: "color" | "depth" | "stencil";
-    camera?: BaseCamera;
+    camera?: PerspectiveCamera | OrthogonalCamera;
 }
 
 export default IRenderTextureOpts;

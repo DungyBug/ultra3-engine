@@ -8,14 +8,14 @@ import Texture3D from "../../texture/texture3d";
 import TextureOptions from "../texture/texture-opts";
 import Texture3DOptions from "../texture/texture3d-opts";
 import { IShader } from "../shader";
-import BaseCamera from "../../camera";
 import TextureFormat from "../../constants/texture-format";
 import RenderTexture from "../../texture/render-texture";
 import TextureCubemap from "../../texture/texture-cubemap";
 import RenderTextureCubemap from "../../texture/cubemap-render-texture";
-import ClientMapObject from "../../map/client-object";
 import SamplingMode from "../../constants/sampling-mode";
 import Scene from "../../scene";
+import PerspectiveCamera from "../../cameras/perspective-camera";
+import OrthogonalCamera from "../../cameras/orthogonal-camera";
 
 export type BaseGraphicsModuleEvents = {
     newEntity: [Entity];
@@ -31,8 +31,8 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
         this.context = parameters.context;
     }
 
-    abstract setActiveCamera(camera: BaseCamera): void;
-    abstract getActiveCamera(): BaseCamera;
+    abstract setActiveCamera(camera: PerspectiveCamera | OrthogonalCamera): void;
+    abstract getActiveCamera(): PerspectiveCamera | OrthogonalCamera;
 
     abstract createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat, minSamplingMode: SamplingMode, magSamplingMode: SamplingMode): U;
     abstract renderToRenderTexture(object: U, scene: Scene): void;

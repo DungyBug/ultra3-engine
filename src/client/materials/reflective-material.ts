@@ -21,7 +21,7 @@ export default class ReflectiveMaterial extends BaseMaterial {
     }
 
     getUniforms(): IKey[] {
-        const camera = this.engine.getGraphicsModule().getActiveCamera();
+        const cameraPosition = this.engine.getGraphicsModule().getActiveCamera().getPosition();
 
         return [
             {
@@ -31,7 +31,7 @@ export default class ReflectiveMaterial extends BaseMaterial {
             },
             {
                 name: "cameraPosition",
-                value: new Float32Array([camera.position.x, camera.position.y, camera.position.z]),
+                value: new Float32Array([cameraPosition.x, cameraPosition.y, cameraPosition.z]),
                 type: "f3"
             }
         ]

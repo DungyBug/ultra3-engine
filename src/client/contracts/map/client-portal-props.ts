@@ -1,6 +1,6 @@
 import { IMapObjectProps } from "../../../core/contracts/map-object";
 import Vector from "../../../core/lib/vector";
-import BaseCamera from "../../camera";
+import BaseCamera from "../../cameras/base-camera";
 import IMesh from "../mesh";
 
 export default interface IClientPortalProps extends IMapObjectProps {

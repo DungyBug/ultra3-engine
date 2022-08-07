@@ -1,15 +1,13 @@
 import { BaseModuleEvents } from "../../../core/contracts/module";
 import BaseModuleContext from "../../../core/contracts/module-context";
 import WorldModuleEvents from "../../../core/contracts/world-module-events";
-import { Entity } from "../../../core/entity";
-import { MapObject } from "../../../core/map-object";
-import BaseCamera from "../../camera";
+import OrthogonalCamera from "../../cameras/orthogonal-camera";
+import PerspectiveCamera from "../../cameras/perspective-camera";
 import ColorMode from "../../constants/color-mode";
 import CullMode from "../../constants/cull-mode";
 import SamplingMode from "../../constants/sampling-mode";
 import TextureFormat from "../../constants/texture-format";
 import ClientWorldEvents from "../../contracts/client-world-events";
-import IMesh from "../../contracts/mesh";
 import IRegisteredMesh from "../../contracts/mesh/registered-mesh";
 import ClientGraphicsModuleEvents from "../../contracts/modules/client-graphics-module-events";
 import BaseGraphicsModule, { BaseGraphicsModuleEvents } from "../../contracts/modules/graphics-module";
@@ -41,7 +39,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     private gl: TypedWebGLRenderingContext;
     private shaders: Record<string, ICompiledShaders>;
     private clientMapObjects: Array<ClientMapObject>;
-    private camera: BaseCamera;
+    private camera: PerspectiveCamera | OrthogonalCamera;
     private texturesCount: number;
     private meshes: Array<IRegisteredMesh>;
     private scene: Scene;
@@ -61,7 +59,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.canvas.height = this._height;
         this.textures = [];
         this.shaders = {};
-        this.camera = opts.camera || new BaseCamera();
+        this.camera = opts.camera || new PerspectiveCamera();
         this.clientMapObjects = [];
         this.texturesCount = 0;
         this.meshes = [];
@@ -77,12 +75,12 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         return this._height;
     }
 
-    setActiveCamera(camera: BaseCamera): void {
+    setActiveCamera(camera: PerspectiveCamera | OrthogonalCamera): void {
         this.camera = camera;
     }
 
-    getActiveCamera(): BaseCamera {
-        return this.camera
+    getActiveCamera(): PerspectiveCamera | OrthogonalCamera {
+        return this.camera;
     }
 
     resoreActiveScene(): void {
@@ -1109,14 +1107,31 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
         const projectionMatrix = mat4.create();
-        mat4.perspective(projectionMatrix, this.camera.fov, width / height, this.camera.zNear, this.camera.zFar);
+        const aspectRatio = width / height;
+
+        switch(this.camera.type) {
+            case "perspective": {
+                mat4.perspective(projectionMatrix, this.camera.fov, aspectRatio, this.camera.zNear, this.camera.zFar);
+                break;
+            }
+            case "orthogonal": {
+                console.log(this.camera.scale);
+                mat4.ortho(projectionMatrix, -aspectRatio * this.camera.scale, aspectRatio * this.camera.scale, -this.camera.scale, this.camera.scale, this.camera.zNear, this.camera.zFar);
+                break;
+            }
+        }
 
         const cameraViewMatrix = mat4.create();
-        mat4.rotateX(cameraViewMatrix, cameraViewMatrix, this.camera.rotation.x);
-        mat4.rotateY(cameraViewMatrix, cameraViewMatrix, this.camera.rotation.y);
-        mat4.rotateZ(cameraViewMatrix, cameraViewMatrix, this.camera.rotation.z);
+        const cameraRotation = this.camera.getRotation();
+
+        mat4.rotateX(cameraViewMatrix, cameraViewMatrix, cameraRotation.x);
+        mat4.rotateY(cameraViewMatrix, cameraViewMatrix, cameraRotation.y);
+        mat4.rotateZ(cameraViewMatrix, cameraViewMatrix, cameraRotation.z);
+
+        const cameraPosition = this.camera.getPosition();
+
         mat4.translate(cameraViewMatrix, cameraViewMatrix, [
-            this.camera.position.x, this.camera.position.y, this.camera.position.z
+            cameraPosition.x, cameraPosition.y, cameraPosition.z
         ]);
 
         for(const registeredMesh of meshes) {

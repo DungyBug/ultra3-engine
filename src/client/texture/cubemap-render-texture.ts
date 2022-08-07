@@ -4,16 +4,15 @@ import TextureCubemap from "./texture-cubemap";
 import ClientEngine from "../client-engine";
 import ColorMode from "../constants/color-mode";
 import BaseGraphicsModule from "../contracts/modules/graphics-module";
-import BaseCamera from "../camera";
 import Vector from "../../core/lib/vector";
-import ClientMapObject from "../map/client-object";
-import { Entity } from "../../core/entity";
 import Scene from "../scene";
+import OrthogonalCamera from "../cameras/orthogonal-camera";
+import PerspectiveCamera from "../cameras/perspective-camera";
 
 class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends TextureCubemap {
     protected graphicsModule: BaseGraphicsModule;
     protected renderTextureObject: Record<string, unknown>;
-    protected cameras: [BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera];
+    protected cameras: [PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera] | [OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera];
     protected attachment: "color" | "depth" | "stencil";
     protected textureFormat: TextureFormat;
     public scene: Scene;
@@ -36,12 +35,12 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
         this.height = opts.size;
         this.textureFormat = opts.textureFormat;
         this.cameras = opts.cameras || [
-            new BaseCamera({fov: Math.PI / 2, rotation: {x: 0, y: -Math.PI / 2, z: Math.PI}}), // +x
-            new BaseCamera({fov: Math.PI / 2, rotation: {x: 0, y: Math.PI / 2, z: Math.PI}}), // -x
-            new BaseCamera({fov: Math.PI / 2, rotation: {x: Math.PI / 2, y: 0, z: Math.PI}}), // +y
-            new BaseCamera({fov: Math.PI / 2, rotation: {x: Math.PI / 2, y: 0, z: 0}}), // -y
-            new BaseCamera({fov: Math.PI / 2, rotation: {x: 0, y: Math.PI, z: Math.PI}}), // +z
-            new BaseCamera({fov: Math.PI / 2, rotation: {x: 0, y: 0, z: Math.PI}})  // -z
+            new PerspectiveCamera({fov: Math.PI / 2, rotation: {x: 0, y: -Math.PI / 2, z: Math.PI}}), // +x
+            new PerspectiveCamera({fov: Math.PI / 2, rotation: {x: 0, y: Math.PI / 2, z: Math.PI}}), // -x
+            new PerspectiveCamera({fov: Math.PI / 2, rotation: {x: Math.PI / 2, y: 0, z: Math.PI}}), // +y
+            new PerspectiveCamera({fov: Math.PI / 2, rotation: {x: Math.PI / 2, y: 0, z: 0}}), // -y
+            new PerspectiveCamera({fov: Math.PI / 2, rotation: {x: 0, y: Math.PI, z: Math.PI}}), // +z
+            new PerspectiveCamera({fov: Math.PI / 2, rotation: {x: 0, y: 0, z: Math.PI}})  // -z
         ];
         this.scene = new Scene();
 
@@ -50,11 +49,11 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
         }
     }
 
-    setActiveCameras(cameras: [BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera]) {
+    setActiveCameras(cameras: [PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera] | [OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera]) {
         this.cameras = cameras;
     }
 
-    getActiveCameras(): [BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera, BaseCamera] {
+    getActiveCameras(): [PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera, PerspectiveCamera] | [OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera, OrthogonalCamera] {
         return this.cameras;
     }
 

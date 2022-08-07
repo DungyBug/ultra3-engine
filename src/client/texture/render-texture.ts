@@ -1,19 +1,19 @@
-import { Entity } from "../../core/entity";
-import BaseCamera from "../camera";
+import BaseCamera from "../cameras/base-camera";
+import OrthogonalCamera from "../cameras/orthogonal-camera";
+import PerspectiveCamera from "../cameras/perspective-camera";
 import ClientEngine from "../client-engine";
 import ColorMode from "../constants/color-mode";
 import TextureFormat from "../constants/texture-format";
 import BaseGraphicsModule from "../contracts/modules/graphics-module";
 import IRenderTextureOpts from "../contracts/texture/render-texture-opts";
 import TextureOptions from "../contracts/texture/texture-opts";
-import ClientMapObject from "../map/client-object";
 import Scene from "../scene";
 import Texture2D from "./texture2d";
 
 class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
     protected graphicsModule: BaseGraphicsModule;
     protected renderTextureObject: Record<string, unknown>;
-    protected camera: BaseCamera;
+    protected camera: PerspectiveCamera | OrthogonalCamera;
     protected attachment: "color" | "depth" | "stencil";
     protected textureFormat: TextureFormat;
     public scene: Scene;
@@ -43,11 +43,11 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
         }
     }
 
-    setActiveCamera(camera: BaseCamera) {
+    setActiveCamera(camera: PerspectiveCamera | OrthogonalCamera) {
         this.camera = camera;
     }
 
-    getActiveCamera(): BaseCamera {
+    getActiveCamera(): PerspectiveCamera | OrthogonalCamera {
         return this.camera;
     }
 

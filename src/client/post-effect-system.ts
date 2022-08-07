@@ -1,5 +1,7 @@
 import Vector from "../core/lib/vector";
-import BaseCamera from "./camera";
+import BaseCamera from "./cameras/base-camera";
+import OrthogonalCamera from "./cameras/orthogonal-camera";
+import PerspectiveCamera from "./cameras/perspective-camera";
 import ClientEngine from "./client-engine";
 import ViewableEntity from "./entities/base/viewable";
 import FreeTexturedMaterial from "./materials/free-textured-material";
@@ -12,7 +14,7 @@ class PostEffectSystem {
     private readonly postEffects: Array<PostEffect>;
     private readonly tempEntity: ViewableEntity;
     private readonly scene: Scene;
-    private readonly camera: BaseCamera;
+    private readonly camera: PerspectiveCamera;
 
     constructor(engine: ClientEngine) {
         this.engine = engine;
@@ -51,7 +53,7 @@ class PostEffectSystem {
         });
 
         this.engine.getGraphicsModule().setActiveScene(this.scene);
-        this.camera = new BaseCamera({position: new Vector(0, 0, -1), fov: Math.PI / 2});
+        this.camera = new PerspectiveCamera({position: new Vector(0, 0, -1), fov: Math.PI / 2});
         this.postEffects = [];
     }
 
@@ -67,7 +69,7 @@ class PostEffectSystem {
         }
     }
 
-    render(scene: Scene, camera: BaseCamera) {
+    render(scene: Scene, camera: PerspectiveCamera | OrthogonalCamera) {
         if(this.postEffects.length === 0) {
             return;
         }
