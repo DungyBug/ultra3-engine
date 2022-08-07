@@ -12,10 +12,10 @@ const world = new ClientWorld({}, new Registry());
 const engine = new ClientEngine(world);
 ```
 
-Once we've created fundamental variables, we can create our first entity. But before we create our first entity, we need to set up some graphics module to display our graphics and some camera to view our graphics. We will use `OpenGLRenderer` and `BaseCamera` for our purposes:
+Once we've created fundamental variables, we can create our first entity. But before we create our first entity, we need to set up some graphics module to display our graphics and some camera to view our graphics. We will use `OpenGLRenderer` and `PerspectiveCamera` for our purposes:
 
 ```javascript
-const camera = new BaseCamera();
+const camera = new PerspectiveCamera();
 const renderer = new OpenGLRenderer({camera});
 
 // Setup our engine.
