@@ -6,6 +6,7 @@ interface IBaseMesh {
     scale: IVector;
     rotation: IVector;
     drawMode: DrawMode;
+    visible: boolean;
 }
 
 export default IBaseMesh;

@@ -11,6 +11,7 @@ class BaseMesh extends EventEmitter<BaseMeshEvents> implements IBaseMesh {
     scale: IVector;
     rotation: IVector;
     drawMode: DrawMode;
+    visible: boolean;
 
     constructor(options: IBaseMeshOptions) {
         super();
@@ -19,6 +20,7 @@ class BaseMesh extends EventEmitter<BaseMeshEvents> implements IBaseMesh {
         this.rotation = options.rotation || {x: 0, y: 0, z: 0};
         this._vertices = options.vertices || [];
         this.drawMode = options.drawMode || DrawMode.DYNAMIC;
+        this.visible = options.visible || true;
     }
 }
 

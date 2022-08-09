@@ -10,4 +10,5 @@ export default interface IMeshOptions extends IBaseMeshOptions {
     indices?: Array<number>;
     material?: BaseMaterial;
     verticesMode?: VerticesMode;
+    visible?: boolean;
 }

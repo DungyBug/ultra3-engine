@@ -12,6 +12,7 @@ class Mesh extends BaseMesh implements IMesh {
     public material: BaseMaterial;
     public verticesMode: VerticesMode;
     public id: number;
+    public visible: boolean;
     protected _vertices: Array<IVector>;
     protected _indices: Array<number>;
     protected _normals: Array<IVector>;
@@ -32,6 +33,7 @@ class Mesh extends BaseMesh implements IMesh {
         this.material = params.material;
         this.verticesMode = params.verticesMode || VerticesMode.TRIANGLES;
         this.id = -1;
+        this.visible = params.visible === undefined ? true : params.visible;
         this._engine = engine;
         this._verticesUpdated = false;
         this._normalsUpdated = false;

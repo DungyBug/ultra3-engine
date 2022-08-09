@@ -1136,6 +1136,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         for(const registeredMesh of meshes) {
             const mesh = registeredMesh.mesh;
+
+            if(!mesh.visible) {
+                continue;
+            }
+
             if(mesh.material.cullMode > 0) {
                 this.gl.enable(this.gl.CULL_FACE);
                 this.gl.cullFace(this.cullFaceModeToGLenum(mesh.material.cullMode));
