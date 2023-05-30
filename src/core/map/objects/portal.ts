@@ -2,13 +2,13 @@ import { IPortal, IPortalState } from "../../contracts/map-objects/portal";
 import { MapObject } from "../../map-object";
 
 class Portal extends MapObject implements IPortal {
-    protected _connection: IPortal = null;
+    protected _connection: IPortal | null = null;
 
     connectTo(portal: IPortal) {
         this._connection = portal;
     }
 
-    get connection(): IPortal {
+    get connection(): IPortal | null {
         return this._connection;
     }
 

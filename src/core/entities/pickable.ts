@@ -5,7 +5,7 @@ import { PhysicalEntity } from "./base/physical";
 import { IEntity } from "../contracts/entity";
 
 export class PickableEntity extends PhysicalEntity implements IPickableEntity {
-    protected owner: IEntity;
+    protected owner: IEntity | null;
     protected picked: boolean;
 
     constructor(params: IPhysicalEntityParams, world: World) {
@@ -34,7 +34,7 @@ export class PickableEntity extends PhysicalEntity implements IPickableEntity {
 
         return {
             ...parentState,
-            owner: this.owner.id || -1,
+            owner: this.owner?.id ?? -1,
             picked: this.picked
         }
     }

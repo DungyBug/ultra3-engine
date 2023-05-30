@@ -20,7 +20,7 @@ export interface IHealthyEntity extends IEntity {
     health: number;
     dead: boolean;
 
-    damage(damage: number, attacker: IEntity): void;
+    damage(damage: number, attacker: IEntity | null): void;
 
     getEntityState(): IHealthyEntityState;
     setEntityState(state: IHealthyEntityState): void;

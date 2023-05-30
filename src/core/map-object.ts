@@ -10,19 +10,17 @@ import IPhysicalMesh from "./contracts/physical-mesh";
 
 export class MapObject extends EventEmitter<Record<string, [IMapEvent]>> implements IMapObject {
     id: number;
-    protected shape: IPhysicalMesh; // IShape
+    protected shape: IPhysicalMesh | null; // IShape
     protected props: IMapObjectProps;
-    protected state: number;
+    protected state: number = 0;
     protected world: World;
-    protected targets: Array<IMapObject>;
+    protected targets: Array<IMapObject> = [];
 
-    constructor(shape: IPhysicalMesh, props: IMapObjectProps, world: World) {
+    constructor(shape: IPhysicalMesh | null, props: IMapObjectProps, world: World) {
         super();
         this.shape = shape;
         this.props = props;
         this.world = world;
-        this.state = 0;
-        this.targets = [];
         this.id = world.addObject(this);
     }
 
@@ -65,7 +63,11 @@ export class MapObject extends EventEmitter<Record<string, [IMapEvent]>> impleme
         // Set targets
         this.targets = [];
         for (const targetId of state.targets) {
-            this.targets.push(this.world.getObject(targetId));
+            const target = this.world.getObject(targetId);
+
+            if(target !== null) {
+                this.targets.push(target);
+            }
         }
 
         this.state = state.state;

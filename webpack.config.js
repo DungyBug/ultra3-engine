@@ -17,8 +17,11 @@ module.exports = {
         ]
     },
     devServer: {
+        static: {
+          directory: path.join(__dirname, './'),
+        },
+        port: 9000,
         open: true,
-        host: '192.168.0.21'
     },
     resolve: {
         extensions: ['.ts', '.js'],

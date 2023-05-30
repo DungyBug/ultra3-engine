@@ -5,8 +5,6 @@ import BaseCamera from "./base-camera";
 class PerspectiveCamera extends BaseCamera implements IPerspectiveCamera {
     public type: "perspective";
     public fov: number;
-    public position: Vector;
-    public rotation: Vector;
     public zNear: number;
     public zFar: number;
 
@@ -14,6 +12,9 @@ class PerspectiveCamera extends BaseCamera implements IPerspectiveCamera {
         super(props);
         this.type = "perspective";
         this.fov = props.fov || Math.PI / 2;
+
+        this.zNear = 0.1;
+        this.zFar = 100;
     }
 }
 

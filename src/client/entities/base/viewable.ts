@@ -8,7 +8,7 @@ import {
 import IMesh from "../../contracts/mesh";
 
 class ViewableEntity extends Entity implements IViewableEntity {
-    model: IMesh;
+    model: IMesh | null;
 
     constructor(params: IViewableEntityParams, world: ClientWorld) {
         super(params, world);
@@ -17,7 +17,10 @@ class ViewableEntity extends Entity implements IViewableEntity {
 
     setEntityState(state: IEntityState): void {
         super.setEntityState(state);
-        this.model.pos = state.pos;
+
+        if(this.model !== null) {
+            this.model.pos = state.pos;
+        }
     }
 }
 

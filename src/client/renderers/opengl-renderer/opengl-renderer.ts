@@ -32,11 +32,11 @@ import TypedWebGLRenderingContext from "./contracts/typed-webgl-context";
 import { mat4 } from "./gl-matrix/index";
 
 export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsModuleEvents, IOpenGLRenderTextureObject, IOpenGLRenderTextureCubemapObject> {
-    public context: BaseModuleContext<WorldModuleEvents & ClientWorldEvents>
+    public context: BaseModuleContext<WorldModuleEvents & ClientWorldEvents> | null = null;
     private _width: number;
     private _height: number;
     private canvas: HTMLCanvasElement;
-    private gl: TypedWebGLRenderingContext;
+    private gl: TypedWebGLRenderingContext | null = null;
     private shaders: Record<string, ICompiledShaders>;
     private clientMapObjects: Array<ClientMapObject>;
     private camera: PerspectiveCamera | OrthogonalCamera;
@@ -96,9 +96,13 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     handleMeshRegisterEvent(mesh: Mesh) {
-        const verticesBuffer = this.gl.createBuffer();
-        const normalsBuffer = this.gl.createBuffer();
-        const uvsBuffer = this.gl.createBuffer();
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
+        const verticesBuffer = this._createGLBuffer();
+        const normalsBuffer = this._createGLBuffer();
+        const uvsBuffer = this._createGLBuffer();
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, verticesBuffer);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, mesh.verticesFlatArray, this.gl.STATIC_DRAW);
@@ -122,7 +126,15 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     handleMeshFreeRequest(mesh: Mesh) {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         const registeredMesh = this.meshes[mesh.id];
+
+        if(registeredMesh === undefined) {
+            throw new Error("OpenGLRenderer: attempt to free unregistered mesh.");
+        }
 
         this.gl.deleteBuffer(registeredMesh.verticesBuffer);
         this.gl.deleteBuffer(registeredMesh.normalsBuffer);
@@ -130,22 +142,30 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         this.meshes.splice(mesh.id, 1);
 
-        for(let i = mesh.id; i < this.meshes.length; i++) {
-            this.meshes[i].mesh.id--;
+        for(const mesh of this.meshes) {
+            mesh.mesh.id--;
         }
     }
 
     handleMeshUpdate(mesh: Mesh) {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         const registeredMesh = this.meshes[mesh.id];
+
+        if(registeredMesh === undefined) {
+            throw new Error("OpenGLRenderer: attempt to free unregistered mesh.");
+        }
 
         // Recreate all buffers
         this.gl.deleteBuffer(registeredMesh.verticesBuffer);
         this.gl.deleteBuffer(registeredMesh.normalsBuffer);
         this.gl.deleteBuffer(registeredMesh.uvsBuffer);
 
-        const verticesBuffer = this.gl.createBuffer();
-        const normalsBuffer = this.gl.createBuffer();
-        const uvsBuffer = this.gl.createBuffer();
+        const verticesBuffer = this._createGLBuffer();
+        const normalsBuffer = this._createGLBuffer();
+        const uvsBuffer = this._createGLBuffer();
 
         // Update data
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, verticesBuffer);
@@ -163,14 +183,19 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     createRenderTexture(renderTexture: RenderTexture, attachment: "color" | "depth" | "stencil", width: number, height: number, format: TextureFormat, minSamplingMode: SamplingMode, magSamplingMode: SamplingMode): IOpenGLRenderTextureObject {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         // create texture for framebuffer
-        const buffer = this.gl.createTexture();
+        const buffer = this._createGLTexture();
+
         this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
 
-        const type = this.texFormatToGLenum(format);
+        const type = this._texFormatToGLenum(format);
 
-        const textureMinFilter = this.samplingModeToGLenum(minSamplingMode, false);
-        const textureMagFilter = this.samplingModeToGLenum(magSamplingMode, false);
+        const textureMinFilter = this._samplingModeToGLenum(minSamplingMode, false);
+        const textureMagFilter = this._samplingModeToGLenum(magSamplingMode, false);
 
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, textureMinFilter);
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, textureMagFilter);
@@ -178,7 +203,8 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
         // create framebuffer
-        const framebuffer = this.gl.createFramebuffer();
+        const framebuffer = this._createFramebuffer();
+
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
 
         let attachmentPoint: GLenum;
@@ -244,6 +270,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     renderToRenderTexture(object: IOpenGLRenderTextureObject, scene: Scene): void {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, object.framebuffer);
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, object.texture);
@@ -251,50 +281,77 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         // remove texture for a while to avoid accessing texture in shaders to which we're going render to
         let oldTexture;
+        let currentIndex = 0;
 
-        for(let i = 0; i < this.textures.length; i++) {
-            if(this.textures[i].id === object.id) {
-                oldTexture = this.textures[i];
-                this.textures.splice(i, 1);
+        for(const texture of this.textures) {
+            if(texture.id === object.id) {
+                oldTexture = texture;
+                this.textures.splice(currentIndex, 1);
                 break;
             }
+
+            currentIndex++;
         }
-        const meshes = [];
+
+        const meshes: IRegisteredMesh[] = [];
 
         for(const entity of scene.entities) {
-            if(entity instanceof ViewableEntity) {
-                meshes.push(this.meshes[entity.model.id]);
+            if(entity instanceof ViewableEntity && entity.model) {
+                const mesh = this.meshes[entity.model.id];
+
+                if(mesh) {
+                    meshes.push(mesh);
+                }
             }
         }
 
         for(const mapObject of scene.mapobjects) {
-            meshes.push(this.meshes[mapObject.mesh.id]);
+            const mesh = this.meshes[mapObject.mesh.id];
+
+            if(mesh) {
+                meshes.push(mesh);
+            }
         }
 
-        this.renderScene(false, object.width, object.height, meshes, scene);
-        this.textures.push(oldTexture);
+        this._renderScene(false, object.width, object.height, meshes, scene);
+
+        if(oldTexture) {
+            this.textures.push(oldTexture);
+        }
     }
 
     freeRenderTexture(object: IOpenGLRenderTextureObject): void {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         this.gl.deleteFramebuffer(object.framebuffer);
         this.gl.deleteTexture(object.texture);
 
-        for(let i = 0; i < this.textures.length; i++) {
-            if(this.textures[i].id === object.id) {
-                this.textures.splice(i, 1);
+        let currentIndex = 0;
+
+        for(const texture of this.textures) {
+            if(texture.id === object.id) {
+                this.textures.splice(currentIndex, 1);
                 break;
             }
+
+            currentIndex++;
         }
     }
 
     createRenderTextureCubemap(renderTextureCubemap: RenderTextureCubemap<TextureFormat>, attachment: "color" | "depth" | "stencil", size: number, format: TextureFormat, minSamplingMode: SamplingMode, magSamplingMode: SamplingMode): IOpenGLRenderTextureCubemapObject {
-        const buffer = this.gl.createTexture();
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
+        const buffer = this._createGLTexture();
         this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, buffer);
 
-        const type = this.texFormatToGLenum(format);
+        const type = this._texFormatToGLenum(format);
 
-        const textureMinFilter = this.samplingModeToGLenum(minSamplingMode, false);
-        const textureMagFilter = this.samplingModeToGLenum(magSamplingMode, false);
+        const textureMinFilter = this._samplingModeToGLenum(minSamplingMode, false);
+        const textureMagFilter = this._samplingModeToGLenum(magSamplingMode, false);
 
         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MIN_FILTER, textureMinFilter);
         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MAG_FILTER, textureMagFilter);
@@ -302,13 +359,22 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
         // create framebuffers
-        const framebuffers = [
-            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X},
-            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_X},
-            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_Y},
-            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y},
-            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z},
-            { framebuffer: this.gl.createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z}
+        // unfortunally I had to make an exact type of framebuffers to shut up errors with indexes
+        // ( "noUncheckedIndexedAccess" rule )
+        const framebuffers: [
+            {framebuffer: WebGLFramebuffer, target: GLenum},
+            {framebuffer: WebGLFramebuffer, target: GLenum},
+            {framebuffer: WebGLFramebuffer, target: GLenum},
+            {framebuffer: WebGLFramebuffer, target: GLenum},
+            {framebuffer: WebGLFramebuffer, target: GLenum},
+            {framebuffer: WebGLFramebuffer, target: GLenum}
+        ] = [
+            { framebuffer: this._createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X},
+            { framebuffer: this._createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_X},
+            { framebuffer: this._createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_Y},
+            { framebuffer: this._createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y},
+            { framebuffer: this._createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z},
+            { framebuffer: this._createFramebuffer(), target: this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z}
         ];
 
         for(const framebuffer of framebuffers) {
@@ -381,6 +447,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     renderToRenderTextureCubemap(object: IOpenGLRenderTextureCubemapObject, coordinate: "+x" | "+y" | "+z" | "-x" | "-y" | "-z", scene: Scene): void {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         // remove texture for a while to avoid accessing texture in shaders to which we're going render to
 
         switch(coordinate) {
@@ -412,33 +482,52 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.viewport(0, 0, object.size, object.size);
 
         let oldTexture;
+        let currentIndex = 0;
 
-        for(let i = 0; i < this.textures.length; i++) {
-            if(this.textures[i].id === object.id) {
-                oldTexture = this.textures[i];
-                this.textures.splice(i, 1);
+        for(const texture of this.textures) {
+            if(texture.id === object.id) {
+                oldTexture = texture;
+                this.textures.splice(currentIndex, 1);
                 break;
             }
+
+            currentIndex++;
         }
 
         this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, object.texture);
-        const meshes = [];
+
+        const meshes: IRegisteredMesh[] = [];
 
         for(const entity of scene.entities) {
-            if(entity instanceof ViewableEntity) {
-                meshes.push(this.meshes[entity.model.id]);
+            if(entity instanceof ViewableEntity && entity.model) {
+                const mesh = this.meshes[entity.model.id];
+
+                if(mesh) {
+                    meshes.push(mesh);
+                }
             }
         }
 
         for(const mapObject of scene.mapobjects) {
-            meshes.push(this.meshes[mapObject.mesh.id]);
+            const mesh = this.meshes[mapObject.mesh.id];
+
+            if(mesh) {
+                meshes.push(mesh);
+            }
         }
 
-        this.renderScene(false, object.size, object.size, meshes, scene);
-        this.textures.push(oldTexture);
+        this._renderScene(false, object.size, object.size, meshes, scene);
+
+        if(oldTexture) {
+            this.textures.push(oldTexture);
+        }
     }
 
     freeRenderTextureCubemap(object: IOpenGLRenderTextureCubemapObject): void {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         this.gl.deleteFramebuffer(object.framebufferPositiveX);
         this.gl.deleteFramebuffer(object.framebufferPositiveY);
         this.gl.deleteFramebuffer(object.framebufferPositiveZ);
@@ -447,18 +536,14 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.deleteFramebuffer(object.framebufferNegativeZ);
         this.gl.deleteTexture(object.texture);
 
-        for(let i = 0; i < this.textures.length; i++) {
-            if(this.textures[i].id === object.id) {
-                this.textures.splice(i, 1);
-                break;
-            }
-        }
+        this.textures = this.textures.filter(texture => texture.id != object.id);
     }
 
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
         if(this.shaders.hasOwnProperty(name)) {
             return;
         }
+
         const material = this.compileShader(vertex.source, fragment.source);
 
         this.shaders[name] = {
@@ -475,14 +560,32 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     compileShader(vertexSource: string, fragmentSource: string) {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         const vertexShader = this.gl.createShader(this.gl.VERTEX_SHADER);
         const fragmentShader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
+
+        if(!vertexShader) {
+            throw new Error(`OpenGLRenderer: failed to create vertex shader. GL error description: ${this._getGLErrorDescription()}`);
+        }
+
+        if(!fragmentShader) {
+            throw new Error(`OpenGLRenderer: failed to create fragment shader. GL error description: ${this._getGLErrorDescription()}`);
+        }
+
         this.gl.shaderSource(vertexShader, vertexSource);
         this.gl.shaderSource(fragmentShader, fragmentSource);
         this.gl.compileShader(vertexShader);
         this.gl.compileShader(fragmentShader);
 
         const program = this.gl.createProgram();
+
+        if(!program) {
+            throw new Error(`OpenGLRenderer: failed to create program. GL error description: ${this._getGLErrorDescription()}`);
+        }
+
         this.gl.attachShader(program, vertexShader);
         this.gl.attachShader(program, fragmentShader);
 
@@ -500,7 +603,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     createTexture2D<T extends TextureOptions = TextureOptions>(texture: Texture2D<T>): number {
-        const buffer = this.gl.createTexture();
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
+        const buffer = this._createGLTexture();
         this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
         let mode: GLenum = this.gl.LUMINANCE;
 
@@ -541,7 +648,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
         const data = texture.getFrame(0);
 
-        let type: GLenum = this.arrayTypeToGLenum(data);
+        let type: GLenum = this._arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
@@ -594,14 +701,17 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     updateTexture2D(textureId: number, time: number, timedelta: number) {
-        let id = 0;
-        for(let i = 0; i < this.textures.length; i++) {
-            if(this.textures[i].id === textureId) {
-                id = i;
-                break;
-            }
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
         }
-        const {texture, buffer} = this.textures[id];
+
+        const textureDescriptor = this.textures.find(texture => texture.id === textureId);
+
+        if(!textureDescriptor) {
+            throw new Error("OpenGLRenderer: failed to update non-existing texture2D.");
+        }
+
+        const {texture, buffer} = textureDescriptor;
 
         // Check if current frame is changed
         if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
@@ -647,7 +757,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         
         const data = texture.getRawData(time);
 
-        let type: GLenum = this.arrayTypeToGLenum(data);
+        let type: GLenum = this._arrayTypeToGLenum(data);
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, buffer);
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
@@ -655,8 +765,12 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     createTexture3D<T extends Texture3DOptions = Texture3DOptions>(texture: Texture3D<T>): number {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         if(this.gl.type === "WebGL2RenderingContext") {
-            const buffer = this.gl.createTexture();
+            const buffer = this._createGLTexture();
             this.gl.bindTexture(this.gl.TEXTURE_3D, buffer);
             let mode: GLenum = this.gl.LUMINANCE;
     
@@ -693,7 +807,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     
             const data = texture.getFrame(0);
     
-            let type: GLenum = this.arrayTypeToGLenum(data);
+            let type: GLenum = this._arrayTypeToGLenum(data);
     
             this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, data);
             this.gl.texParameteri(this.gl.TEXTURE_3D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
@@ -749,15 +863,22 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     updateTexture3D(textureId: number, time: number, timedelta: number) {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         if(this.gl.type === "WebGL2RenderingContext") {
-            let id = 0;
-            for(let i = 0; i < this.textures.length; i++) {
-                if(this.textures[i].id === textureId) {
-                    id = i;
-                    break;
-                }
+            const textureDescriptor = this.textures.find(texture => texture.id === textureId);
+
+            if(!textureDescriptor) {
+                throw new Error("OpenGLRenderer: failed to update non-existing texture3D.");
             }
-            const {texture, buffer} = this.textures[id];
+
+            const {texture, buffer} = textureDescriptor;
+
+            if(!(texture instanceof Texture3D)) {
+                throw new Error("OpenGLRenderer: attempt to update texture that is not instance of Texture3D.");
+            }
 
             // Check if current frame is changed
             if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
@@ -799,7 +920,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             
             const data = texture.getRawData(time);
 
-            let type: GLenum = this.arrayTypeToGLenum(data);
+            let type: GLenum = this._arrayTypeToGLenum(data);
 
             this.gl.bindTexture(this.gl.TEXTURE_3D, buffer);
             this.gl.texImage3D(this.gl.TEXTURE_3D, 0, mode, texture.dimensions[0], texture.dimensions[1], texture.dimensions[2], 0, mode, type, data);
@@ -807,7 +928,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     createTextureCubemap<T extends TextureOptions = TextureOptions>(texture: TextureCubemap<T>): number {
-        const buffer = this.gl.createTexture();
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
+        const buffer = this._createGLTexture();
         this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, buffer);
         let mode: GLenum = this.gl.LUMINANCE;
 
@@ -847,32 +972,32 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         }
 
         let data = texture.getFrame(0, "+x");
-        let type: GLenum = this.arrayTypeToGLenum(data);
+        let type: GLenum = this._arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getFrame(0, "-x");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getFrame(0, "+y");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getFrame(0, "-y");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getFrame(0, "+z");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getFrame(0, "-z");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
@@ -927,14 +1052,17 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     updateTextureCubemap(textureId: number, time: number, timedelta: number) {
-        let id = 0;
-        for(let i = 0; i < this.textures.length; i++) {
-            if(this.textures[i].id === textureId) {
-                id = i;
-                break;
-            }
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
         }
-        const {texture, buffer} = this.textures[id];
+
+        const textureDescriptor = this.textures.find(texture => texture.id === textureId);
+
+        if(!textureDescriptor) {
+            throw new Error("OpenGLRenderer: attempt to update non-existing textureCubemap.");
+        }
+
+        const {texture, buffer} = textureDescriptor;
 
         // Check if current frame is changed
         if(Math.floor(time * texture.framesPerSecond) - Math.floor((time - timedelta) * texture.framesPerSecond) === 0) {
@@ -980,44 +1108,57 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, buffer);
         
         let data = texture.getRawData(time, "+x");
-        let type: GLenum = this.arrayTypeToGLenum(data);
+        let type: GLenum = this._arrayTypeToGLenum(data);
 
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getRawData(time, "-x");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
         
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getRawData(time, "+y");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
         
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getRawData(time, "-y");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
         
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getRawData(time, "+z");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
         
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
 
         data = texture.getRawData(time, "-z");
-        type = this.arrayTypeToGLenum(data);
+        type = this._arrayTypeToGLenum(data);
         
         this.gl.texImage2D(this.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, mode, texture.dimensions[0], texture.dimensions[1], 0, mode, type, data);
         this.gl.generateMipmap(this.gl.TEXTURE_CUBE_MAP);
     }
 
     freeTexture(textureId: number): void {
-        this.gl.deleteTexture(this.textures[textureId].buffer);
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
+        const texture = this.textures[textureId];
+
+        if(!texture) {
+            throw new Error("OpenGLRenderer: attempt to free non-existing texture.");
+        }
+
+        this.gl.deleteTexture(texture.buffer);
         this.textures.splice(textureId, 1);
     }
 
     init(parameters: IGraphicsParameters & { context: BaseModuleContext<BaseGraphicsModuleEvents & BaseModuleEvents>; }): void {
         super.init(parameters);
+
+        this.context = parameters.context;
+
         this._width = parameters.width;
         this._height = parameters.height;
         this.canvas.width = this.width;
@@ -1043,9 +1184,9 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         }
 
         if(this.gl.type === "WebGL2RenderingContext") {
-            console.log("OpenGLRenderer: WebGL2 initialized.");
+            console.info("OpenGLRenderer: WebGL2 initialized.");
         } else {
-            console.log("OpenGLRenderer: WebGL initialized.");
+            console.info("OpenGLRenderer: WebGL initialized.");
         }
         
         this.gl.clearColor(0, 0, 0, 1);
@@ -1070,6 +1211,10 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     setParams(parameters: Partial<IGraphicsParameters>) {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         this._width = parameters.width || this.width;
         this._height = parameters.height || this.height;
         this.canvas.width = this.width;
@@ -1079,24 +1224,40 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
     }
 
     render(scene: Scene = this.activeScene) {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         this.gl.viewport(0, 0, this.width, this.height);
 
-        const meshes: Array<IRegisteredMesh> = [];
+        const meshes: IRegisteredMesh[] = [];
 
         for(const entity of scene.entities) {
-            if(entity instanceof ViewableEntity) {
-                meshes.push(this.meshes[entity.model.id]);
+            if(entity instanceof ViewableEntity && entity.model) {
+                const mesh = this.meshes[entity.model.id];
+
+                if(mesh) {
+                    meshes.push(mesh);
+                }
             }
         }
 
         for(const mapobject of scene.mapobjects) {
-            meshes.push(this.meshes[mapobject.mesh.id]);
+            const mesh = this.meshes[mapobject.mesh.id];
+
+            if(mesh) {
+                meshes.push(mesh);
+            }
         }
 
-        this.renderScene(true, this.width, this.height, meshes, scene);
+        this._renderScene(true, this.width, this.height, meshes, scene);
     }
 
-    private renderScene(directDraw: boolean, width: number, height: number, meshes: Array<IRegisteredMesh>, scene: Scene) {
+    private _renderScene(directDraw: boolean, width: number, height: number, meshes: Array<IRegisteredMesh>, scene: Scene) {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+        
         if(directDraw) {
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
@@ -1143,7 +1304,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
 
             if(mesh.material.cullMode > 0) {
                 this.gl.enable(this.gl.CULL_FACE);
-                this.gl.cullFace(this.cullFaceModeToGLenum(mesh.material.cullMode));
+                this.gl.cullFace(this._cullFaceModeToGLenum(mesh.material.cullMode));
             } else {
                 this.gl.disable(this.gl.CULL_FACE);
             }
@@ -1151,6 +1312,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
             let textureCount = 0;
 
             const shader = this.shaders[mesh.material.name];
+
+            if(!shader) {
+                continue;
+            }
+
             this.gl.useProgram(shader.program);
 
             // Setup all attributes and uniforms
@@ -1353,7 +1519,11 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
      * @param data - array
      * @returns GLenum
      */
-    private arrayTypeToGLenum<T extends TextureOptions = TextureOptions>(data: TextureOptsToArrayType<T>): GLenum {
+    private _arrayTypeToGLenum<T extends TextureOptions = TextureOptions>(data: TextureOptsToArrayType<T>): GLenum {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+        
         if(data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
             return this.gl.UNSIGNED_BYTE;
         } else if(data instanceof Int8Array && this.gl.type === "WebGL2RenderingContext") {
@@ -1379,6 +1549,8 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                 return this.gl.FLOAT;
             }
         }
+
+        return this.gl.BYTE;
     }
 
     /**
@@ -1386,49 +1558,45 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
      * @param format - texture format
      * @returns GLenum
      */
-    private texFormatToGLenum(format: TextureFormat): GLenum {
+    private _texFormatToGLenum(format: TextureFormat): GLenum {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         switch(format) {
             case TextureFormat.TEXTUREFORMAT_BYTE: {
                 if(this.gl.type === "WebGL2RenderingContext") {
                     return this.gl.BYTE;
                 }
+
                 return this.gl.UNSIGNED_BYTE
-                break;
             }
             case TextureFormat.TEXTUREFORMAT_FLOAT: {
                 return this.gl.FLOAT;
-                break;
             }
             case TextureFormat.TEXTUREFORMAT_HALF_FLOAT: {
                 if(this.gl.type === "WebGL2RenderingContext") {
                     return this.gl.HALF_FLOAT;
                 }
+
                 return this.gl.NONE;
-                break;
             }
             case TextureFormat.TEXTUREFORMAT_INT: {
                 return this.gl.INT;
-                break;
             }
             case TextureFormat.TEXTUREFORMAT_SHORT: {
                 return this.gl.SHORT;
-                break;
             }
             case TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE: {
                 return this.gl.UNSIGNED_BYTE;
-                break;
             }
             case TextureFormat.TEXTUREFORMAT_UNSIGNED_INT: {
                 return this.gl.UNSIGNED_INT;
-                break;
             }
             case TextureFormat.TEXTUREFORMAT_UNSIGNED_SHORT: {
                 return this.gl.UNSIGNED_SHORT;
-                break;
             }
         }
-
-        return this.gl.NONE;
     }
 
     /**
@@ -1437,14 +1605,17 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
      * @param mipmap - return constant with mipmap definition or not (LINEAR -> LINEAR_MIPMAP_LINEAR)
      * @returns GLenum
      */
-    samplingModeToGLenum(sampling: SamplingMode, mipmap: boolean = false): GLenum {
+    private _samplingModeToGLenum(sampling: SamplingMode, mipmap: boolean = false): GLenum {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         switch(sampling) {
             case SamplingMode.BILINEAR: {
                 if(mipmap) {
                     return this.gl.LINEAR_MIPMAP_NEAREST;
                 }
                 return this.gl.LINEAR;
-                break;
             }
             case SamplingMode.BICUBIC:
             case SamplingMode.TRILINEAR: {
@@ -1452,29 +1623,77 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
                     return this.gl.LINEAR_MIPMAP_LINEAR;
                 }
                 return this.gl.LINEAR;
-                break;
             }
             case SamplingMode.NEAREST: {
                 if(mipmap) {
                     return this.gl.NEAREST_MIPMAP_NEAREST;
                 }
                 return this.gl.NEAREST;
-                break;
             }
 
             default: {
                 return this.gl.NONE;
-                break;
             }
         }
     }
 
-    cullFaceModeToGLenum(mode: CullMode): GLenum {
+    private _cullFaceModeToGLenum(mode: CullMode): GLenum {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
         switch(mode) {
             case CullMode.BACK: return this.gl.BACK;
             case CullMode.FRONT: return this.gl.FRONT;
             case CullMode.FRONT_AND_BACK: return this.gl.FRONT_AND_BACK;
             default: return this.gl.NONE;
         }
+    }
+
+    private _getGLErrorDescription(): string {
+        // TODO: Display GL error description instead of it's numeric descriptor
+        return this.gl?.getError().toString() ?? "";
+    }
+
+    private _createGLBuffer(): WebGLBuffer {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
+        const buffer = this.gl.createBuffer();
+
+        if(buffer === null) {
+            throw new Error(`OpenGLRenderer: failed to call "createBuffer". GL error description: ${this._getGLErrorDescription()}`);
+        }
+
+        return buffer;
+    }
+
+    private _createGLTexture(): WebGLTexture {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
+        const texture = this.gl.createTexture();
+
+        if(texture === null) {
+            throw new Error(`OpenGLRenderer: failed to call "createTexture". GL error description: ${this._getGLErrorDescription()}`);
+        }
+
+        return texture;
+    }
+    
+    private _createFramebuffer(): WebGLFramebuffer {
+        if(this.gl === null) {
+            throw new Error("OpenGLRenderer: GL is not initialized!");
+        }
+
+        const framebuffer = this.gl.createFramebuffer();
+
+        if(framebuffer === null) {
+            throw new Error(`OpenGLRenderer: failed to call "createFramebuffer". GL error description: ${this._getGLErrorDescription()}`);
+        }
+
+        return framebuffer;
     }
 }

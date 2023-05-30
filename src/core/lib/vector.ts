@@ -111,6 +111,16 @@ class Vector implements IVector {
     static magnitude(a: IVector): number {
         return Math.hypot(a.x, a.y, a.z);
     }
+
+    /**
+     * Creates new vector with all x, y and z equal 0.
+     * Creating new vector istead of using just static constant is preffered as you may use
+     * vectors by link and you don't want your vector to change suddenly.
+     * @returns zero vector
+     */
+    static zero(): Vector {
+        return new Vector(0, 0, 0);
+    }
 }
 
 export default Vector;

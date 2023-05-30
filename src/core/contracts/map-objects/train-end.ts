@@ -3,7 +3,7 @@ import { IBaseTrain } from "./train";
 
 export interface ITrainEnd extends IBaseTrain {
     readonly end: true;
-    prev(): IBaseTrain;
+    prev(): IBaseTrain | null;
     getNodesList(): Array<IBaseTrain>;
 }
 

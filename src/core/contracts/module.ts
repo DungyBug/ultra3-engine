@@ -7,7 +7,7 @@ export type BaseModuleEvents = {
 };
 
 export default abstract class BaseModule<T extends Record<string, any[]> = {}> {
-    protected context: BaseModuleContext<T & BaseModuleEvents>;
+    protected context: BaseModuleContext<T & BaseModuleEvents> | null = null;
 
     // TODO: Add type to extenders
     constructor(extenders: Array<any> = []) {}

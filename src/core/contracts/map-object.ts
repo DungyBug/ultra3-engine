@@ -21,7 +21,7 @@ export interface IMapObject {
     emit(event: string, e: IMapEvent): void;
     on(event: string, callback: (e: IMapEvent) => void): void;
     getProps(): IMapObjectProps;
-    getShape(): IPhysicalMesh;
+    getShape(): IPhysicalMesh | null;
     getState(): number;
     setMapObjectState(state: IMapObjectState): void;
     getMapObjectState(): IMapObjectState;

@@ -10,9 +10,9 @@ import { Entity } from "./entity";
 import { Registry } from "./registry";
 import { MapObject } from "./map-object";
 import { EventEmitter } from "./services/event-emitter";
-import WorldEvents from "./contracts/world-events";
+import WorldEvents from "./contracts/world-events";  
 
-export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEvents> extends EventEmitter<T> implements IWorld {
+export class World<T extends {[key: string]: unknown[]} & WorldEvents = WorldEvents> extends EventEmitter<T> implements IWorld {
     protected _entities: Array<Entity> = [];
     protected _objects: Array<IMapObject> = [];
     protected _time: number = 0; // Global world time
@@ -28,8 +28,7 @@ export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEven
      */
     constructor(worldProps: IWorldProps, private registry: Registry) {
         super();
-        this.thinkPeriod = worldProps.thinkPeriod || null;
-
+        this.thinkPeriod = worldProps.thinkPeriod || 0;
         this.runTick = this.runTick.bind(this);
     }
 
@@ -57,9 +56,9 @@ export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEven
     }
 
     getEntity(id: number): Entity | null {
-        for (let i = 0; i < this._entities.length; i++) {
-            if (this._entities[i].id === id) {
-                return this._entities[i];
+        for (const entity of this._entities) {
+            if (entity.id === id) {
+                return entity;
             }
         }
 
@@ -74,9 +73,9 @@ export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEven
     }
 
     getObject(id: number): IMapObject | null {
-        for (let i = 0; i < this._objects.length; i++) {
-            if (this._objects[i].id === id) {
-                return this._objects[i];
+        for (const object of this._objects) {
+            if (object.id === id) {
+                return object;
             }
         }
 
@@ -134,18 +133,18 @@ export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEven
      * Deletes all entities that marked as "deleted" ( "delete" method called )
      */
     deletePendingEntities() {
-        for (let i = 0; i < this._entities.length; i++) {
-            if (this._entities[i].deleted) {
-                this.emit("entityDelete", this._entities[i]);
+        this._entities.forEach((entity, i) => {
+            if (entity.deleted) {
+                this.emit("entityDelete", entity);
                 this._entities.splice(i, 1);
             }
-        }
+        });
 
         // Delete all links to deleted entities
-        for (let i = 0; i < this._entities.length; i++) {
-            for (let j = 0; j < this._entities[i].links.length; j++) {
-                if(this._entities[i].links[j].deleted) {
-                    this._entities[i].unlink(this._entities[i].links[j]);
+        for (const entity of this._entities) {
+            for (const link of entity.links) {
+                if(link.deleted) {
+                    entity.unlink(link);
                 }
             }
         }
@@ -158,12 +157,12 @@ export class World<T extends Record<string, unknown[]> & WorldEvents = WorldEven
 
         this.deletePendingEntities();
 
-        for (let i = 0; i < this._entities.length; i++) {
-            this._entities[i].think();
+        for (const entity of this._entities) {
+            entity.think();
         }
 
-        for (let i = 0; i < this._objects.length; i++) {
-            this._objects[i].think();
+        for (const object of this._objects) {
+            object.think();
         }
 
         this.emit("frameend");

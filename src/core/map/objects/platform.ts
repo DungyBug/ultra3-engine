@@ -16,8 +16,8 @@ import { World } from "../../world";
 import { TrainStart } from "./train-start";
 
 export class Platform extends MapObject implements IPlatform {
-    protected nextthink: number;
-    protected prevthink: number;
+    protected nextthink: number = 0;
+    protected prevthink: number = 0;
     protected currentPathPos: number; // Current position on path ( coefficient ) and current train node
     protected train: ITrainStart;
     /**
@@ -44,12 +44,12 @@ export class Platform extends MapObject implements IPlatform {
         this.train = train;
     }
 
-    startMoving(by: IEntity) {
+    startMoving(by: IEntity | null) {
         this.state = PlatformState.moving;
         this.prevthink = this.world.getTime();
     }
 
-    stopMoving(by: IEntity) {
+    stopMoving(by: IEntity | null) {
         this.state = PlatformState.idling;
     }
 
@@ -79,12 +79,21 @@ export class Platform extends MapObject implements IPlatform {
                     // Check for path end
                     // Move forward
 
-                    currentTrain = nodes[trainIndex];
-                    nextTrain = nodes[trainIndex + 1];
+                    // shut up error this way
+                    const currentNode = nodes[trainIndex];
+                    const nextNode = nodes[trainIndex + 1] ?? currentNode;
+
+                    if(!currentNode || !nextNode) {
+                        return;
+                    }
+
+                    currentTrain = currentNode;
+                    nextTrain = nextNode;
+
                     speed =
                         this.speeds[
                             Math.min(trainIndex, this.speeds.length - 1)
-                        ]; // Get speed for current train or take last available speed
+                        ] ?? 0; // Get speed for current train or take last available speed
                 } else if (
                     trainIndex >= 0 &&
                     this.direction === PlatformDirection.backward
@@ -92,15 +101,24 @@ export class Platform extends MapObject implements IPlatform {
                     // Check for path end
                     // Move backward
 
-                    currentTrain = nodes[trainIndex];
-                    nextTrain = nodes[trainIndex - 1];
+                    // shut up error this way
+                    const currentNode = nodes[trainIndex];
+                    const nextNode = nodes[trainIndex + 1] ?? currentNode;
+
+                    if(!currentNode || !nextNode) {
+                        return;
+                    }
+
+                    currentTrain = currentNode;
+                    nextTrain = nextNode;
                     speed =
                         this.speeds[
                             Math.min(trainIndex, this.speeds.length - 1)
-                        ]; // Get speed for current train or take last available speed
+                        ] ?? 0; // Get speed for current train or take last available speed
                 } else {
                     break;
                 }
+
                 let travelTime =
                     Vector.magnitude(
                         Vector.sub(
@@ -108,6 +126,7 @@ export class Platform extends MapObject implements IPlatform {
                             currentTrain.getPos()
                         )
                     ) / speed;
+
                 let deltaTime = (time - this.prevthink) * 0.001;
 
                 let direction: Vector = Vector.div(
@@ -127,7 +146,7 @@ export class Platform extends MapObject implements IPlatform {
                     Math.floor(this.currentPathPos + travelTime * deltaTime)
                 ) {
                     if (this.currentPathPos <= 0) {
-                        // Check if we come to start point
+                        // Check if we'd come to start point
                         this.currentPathPos = 0;
                         this.stopMoving(null);
 
@@ -135,7 +154,7 @@ export class Platform extends MapObject implements IPlatform {
                     }
 
                     if (this.currentPathPos >= nodes.length) {
-                        // Check if we come to end point
+                        // Check if we'd come to end point
                         this.currentPathPos = nodes.length;
                         this.stopMoving(null);
 
@@ -160,7 +179,7 @@ export class Platform extends MapObject implements IPlatform {
         if (train instanceof TrainStart) {
             this.train = train;
         } else {
-            this.train = null;
+            throw new Error("Train is not instance of TrainStart. Make sure that provided trainID refers to an existing TrainStart object and this TrainStart object hasn't been deleted.");
         }
 
         this.prevthink = state.prevthink;
@@ -178,7 +197,7 @@ export class Platform extends MapObject implements IPlatform {
             ...parentState,
             props: {
                 ...parentState.props,
-                speed: this.speeds[0],
+                speed: this.speeds[0] ?? 0,
                 train: this.train.id,
             },
             prevthink: this.prevthink,

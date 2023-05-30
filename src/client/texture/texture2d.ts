@@ -1,6 +1,7 @@
 import ClientEngine from "../client-engine";
 import ColorMode from "../constants/color-mode";
 import SamplingMode from "../constants/sampling-mode";
+import TextureFormat from "../constants/texture-format";
 import TypedArray from "../contracts/common/typed-array";
 import TextureOptions, { TextureOptsToArrayType } from "../contracts/texture/texture-opts";
 import ITexture2D from "../contracts/texture/texture2d";
@@ -54,6 +55,10 @@ class Texture2D<T extends TextureOptions = TextureOptions> implements ITexture2D
         image.onload = () => {
             const tempcanvas = document.createElement("canvas");
             const tmpctx = tempcanvas.getContext("2d");
+
+            if(tmpctx === null) {
+                throw new Error("It seems that your browser don't support 2d canvas context.");
+            }
             
             tempcanvas.width = image.width;
             tempcanvas.height = image.height;
@@ -82,7 +87,7 @@ class Texture2D<T extends TextureOptions = TextureOptions> implements ITexture2D
 
     free() {
         this.engine.freeTexture(this);
-        delete this.frames;
+        this.frames.length = 0;
     }
 
     getRawData(time: number = 0): TextureOptsToArrayType<T> {
@@ -95,6 +100,24 @@ class Texture2D<T extends TextureOptions = TextureOptions> implements ITexture2D
 
     get dimensions(): [number, number] {
         return [this.width, this.height];
+    }
+
+    /**
+     * Creates new black 1x1 unregistered texture.
+     * @param engine 
+     * @returns black texture
+     */
+    static blackTexture(engine: ClientEngine) {
+        return new Texture2D({
+            width: 1,
+            height: 1,
+            frames: [new Uint8Array([0, 0, 0])],
+            textureFormat: TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
+            colorMode: ColorMode.RGB,
+            framesPerSecond: 0,
+            magSamplingMode: SamplingMode.NEAREST,
+            minSamplingMode: SamplingMode.NEAREST
+        }, engine, false);
     }
 }
 

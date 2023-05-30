@@ -52,7 +52,14 @@ class PostEffectSystem {
             entities: [this.tempEntity]
         });
 
-        this.engine.getGraphicsModule().setActiveScene(this.scene);
+        const graphicsModule = this.engine.getGraphicsModule();
+
+        if(graphicsModule === null) {
+            // TODO: Queue all actions till graphics module is available
+            throw new Error("Unable to init PostEffectSystem while graphics module is not set. Set graphics module first and then init PostEffectSystem.");
+        }
+
+        graphicsModule.setActiveScene(this.scene);
         this.camera = new PerspectiveCamera({position: new Vector(0, 0, -1), fov: Math.PI / 2});
         this.postEffects = [];
     }
@@ -75,24 +82,31 @@ class PostEffectSystem {
         }
 
         const graphicsModule = this.engine.getGraphicsModule();
+
+        if(graphicsModule === null) {
+            throw new Error("Unable to render scene while graphics module is not set.");
+        }
+
         graphicsModule.setActiveCamera(camera);
 
         const tempEntityMesh = <Mesh>this.tempEntity.model;
 
-        // First post effect renders main scene
-        this.postEffects[0].renderTexture.scene = scene;
-        this.postEffects[0].renderTexture.render();
-        this.postEffects[0].renderTexture.setActiveCamera(graphicsModule.getActiveCamera());
-        tempEntityMesh.material = this.postEffects[0];
-        tempEntityMesh.scale.x = this.postEffects[0].renderTexture.width / this.postEffects[0].renderTexture.height;
-
-        // Other post effects renders aux scene
-        for(let i = 1; i < this.postEffects.length; i++) {
-            this.postEffects[i].renderTexture.scene = this.scene;
-            this.postEffects[i].renderTexture.render();
-            tempEntityMesh.material = this.postEffects[i];
-            tempEntityMesh.scale.x = this.postEffects[i].renderTexture.width / this.postEffects[i].renderTexture.height;
-        }
+        this.postEffects.forEach((postEffect, i) => {
+            if(i === 0) {
+                // First post effect renders main scene
+                postEffect.renderTexture.scene = scene;
+                postEffect.renderTexture.render();
+                postEffect.renderTexture.setActiveCamera(graphicsModule.getActiveCamera());
+                tempEntityMesh.material = postEffect;
+                tempEntityMesh.scale.x = postEffect.renderTexture.width / postEffect.renderTexture.height;
+            } else {
+                // Other post effects renders aux scene
+                postEffect.renderTexture.scene = this.scene;
+                postEffect.renderTexture.render();
+                tempEntityMesh.material = postEffect;
+                tempEntityMesh.scale.x = postEffect.renderTexture.width / postEffect.renderTexture.height;
+            }
+        });
 
         graphicsModule.setActiveCamera(this.camera);
     }

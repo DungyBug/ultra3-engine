@@ -33,13 +33,13 @@ export class MovableEntity extends PhysicalEntity implements IMovableEntity {
 
         let forces: Array<IForce> = [];
 
-        for(let i = 0; i < this.forces.length; i++) {
+        for(const force of this.forces) {
             forces.push({
-                force: this.forces[i].force,
+                force: force.force,
                 direction: {
-                    x: this.forces[i].direction.x,
-                    y: this.forces[i].direction.y,
-                    z: this.forces[i].direction.z
+                    x: force.direction.x,
+                    y: force.direction.y,
+                    z: force.direction.z
                 }
             });
         }
@@ -56,13 +56,13 @@ export class MovableEntity extends PhysicalEntity implements IMovableEntity {
         this.forces = [];
 
         // To prevent variable linking
-        for(let i = 0; i < state.forces.length; i++) {
+        for(const force of this.forces) {
             this.forces.push({
-                force: state.forces[i].force,
+                force: force.force,
                 direction: {
-                    x: state.forces[i].direction.x,
-                    y: state.forces[i].direction.y,
-                    z: state.forces[i].direction.z
+                    x: force.direction.x,
+                    y: force.direction.y,
+                    z: force.direction.z
                 }
             });
         }

@@ -6,13 +6,17 @@ import WorldModuleEvents from "./contracts/world-module-events";
 import { EventEmitter } from "./services/event-emitter";
 import { World } from "./world";
 
-export default class Engine<T extends Record<string, unknown[]> & WorldEvents> extends EventEmitter<T> {
-    protected _world: World;
-    protected modules: Array<BaseModule>;
-    protected physicsModule: BasePhysicsModule;
-    protected context: BaseModuleContext<WorldModuleEvents>;
+export default class Engine<
+    T extends {[k: string]: unknown[]} & WorldEvents,
+    WORLD extends World = World,
+    EVENTS extends WorldModuleEvents = WorldModuleEvents
+> extends EventEmitter<T> {
+    protected _world: WORLD;
+    protected modules: Array<BaseModule> = [];
+    protected physicsModule: BasePhysicsModule | null = null;
+    protected context: BaseModuleContext<EVENTS, WORLD>;
 
-    constructor(world: World) {
+    constructor(world: WORLD) {
         super();
         this._world = world;
 

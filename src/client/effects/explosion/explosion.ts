@@ -6,7 +6,7 @@ import Vector from "../../../core/lib/vector";
 
 class ExplosionEffect extends EffectEntity {
     private startTime: number;
-    private explosions: Array<SmallExplosionEffect>;
+    private explosions: Array<SmallExplosionEffect> = [];
     subExplosionsCount: number;
     duration: number;
     timeBetweenExplosions: number;
@@ -15,6 +15,8 @@ class ExplosionEffect extends EffectEntity {
 
     constructor(params: IExplosionEntityParams, world: ClientWorld) {
         super(params, world);
+
+        this.world = world;
 
         this.subExplosionsCount = params.subExplosionsCount;
         this.duration = params.duration;

@@ -13,10 +13,10 @@ import { World } from "../../world";
 
 export class Door extends MapObject implements IDoor {
     protected nextthink: number;
-    protected prevthink: number;
+    protected prevthink: number = 0;
     protected direction: IVector;
     protected delay: number;
-    protected speed: number;
+    protected speed: number = 0;
     protected distance: number;
     protected openOn: Array<string>; // Names of events
     protected closeOn: Array<string>; // Names of events
@@ -35,7 +35,7 @@ export class Door extends MapObject implements IDoor {
         this.state = DoorState.idling;
     }
 
-    open(by: IEntity) {
+    open(by: IEntity | null) {
         let time = this.world.getTime();
 
         this.prevthink = time;
@@ -44,7 +44,7 @@ export class Door extends MapObject implements IDoor {
         this.nextthink = time + Math.round(this.distance / this.speed);
     }
 
-    close(by: IEntity) {
+    close(by: IEntity | null) {
         let time = this.world.getTime();
 
         this.prevthink = time;
@@ -148,9 +148,9 @@ export class Door extends MapObject implements IDoor {
 
         if (this.openOn.includes(event)) {
             // Check for opening event
-            this.open(e.activators[0]);
+            this.open(e.activators[0] ?? null);
         } else if (this.closeOn.includes(event)) {
-            this.close(e.activators[0]);
+            this.close(e.activators[0] ?? null);
         }
 
         return [true];

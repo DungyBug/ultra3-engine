@@ -4,13 +4,11 @@ import {
     IPlayerParams,
     IPlayerState,
 } from "../contracts/entities/player";
-import { ClassPattern } from "../contracts/ent_types";
 import { World } from "../world";
 import { HealthyEntity } from "./healthy";
 
 export class Player extends HealthyEntity implements IPlayer {
     protected inventory: Array<IPickableEntity> = [];
-    readonly classname: ClassPattern<"player">;
 
     constructor(params: IPlayerParams, world: World) {
         super(params, world);
@@ -35,8 +33,8 @@ export class Player extends HealthyEntity implements IPlayer {
         let parentState = super.getEntityState();
         let inventory: Array<number> = [];
 
-        for (let i = 0; i < this.inventory.length; i++) {
-            inventory.push(this.inventory[i].id);
+        for (const item of this.inventory) {
+            inventory.push(item.id);
         }
 
         return {
@@ -50,10 +48,12 @@ export class Player extends HealthyEntity implements IPlayer {
 
         this.inventory = [];
 
-        for (let i = 0; i < state.inventory.length; i++) {
-            let entity = this.world.getEntity(
-                state.inventory[i]
-            ) as IPickableEntity;
+        for (const item of state.inventory) {
+            const entity = this.world.getEntity(item) as IPickableEntity | null;
+
+            if(entity === null) {
+                continue;
+            }
 
             if (
                 typeof entity.pick !== "function" ||

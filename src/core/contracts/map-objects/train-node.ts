@@ -3,8 +3,8 @@ import { IBaseTrain } from "./train";
 
 export interface ITrainNode extends IBaseTrain {
     readonly end: false;
-    prev(): IBaseTrain;
-    next(): IBaseTrain;
+    prev(): IBaseTrain | null;
+    next(): IBaseTrain | null;
 }
 
 export interface ITrainNodeState extends IMapObjectState {

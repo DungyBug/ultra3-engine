@@ -12,8 +12,8 @@ import { TrainEnd } from "./train-end";
 import { TrainNode } from "./train-node";
 
 export class TrainStart extends BaseTrain implements ITrainStart {
-    readonly end: true;
-    protected _next: ITrainNode | ITrainEnd;
+    readonly end: true = true;
+    protected _next: ITrainNode | ITrainEnd | null = null;
 
     constructor(props: IMapObjectProps, world: World) {
         super(
@@ -34,10 +34,30 @@ export class TrainStart extends BaseTrain implements ITrainStart {
     }
 
     getNodesList() {
+        if(this._next === null) {
+            throw new Error("Next train is not specified.");
+        }
+
         let nodes: Array<IBaseTrain> = [this._next];
 
-        while (nodes[nodes.length - 1].end === false) {
-            nodes.push((nodes[nodes.length - 1] as ITrainNode).next());
+        while (true) {
+            const lastNode = nodes[nodes.length - 1];
+
+            if(lastNode === undefined) {
+                break;
+            }
+
+            if(lastNode.end) {
+                break;
+            }
+
+            const nextNode = (nodes[nodes.length - 1] as ITrainNode).next();
+
+            if(nextNode === null) {
+                break;
+            }
+
+            nodes.push(nextNode);
         }
 
         return nodes;
@@ -52,7 +72,7 @@ export class TrainStart extends BaseTrain implements ITrainStart {
 
         return {
             ...parentState,
-            next: this._next.id,
+            next: this._next?.id ?? -1,
         };
     }
 

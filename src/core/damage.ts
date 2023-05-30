@@ -17,10 +17,10 @@ import Vector from "./lib/vector";
  * @param damage - damage in center of damage sphere
  * @param attacker - initiator ( player, bot, etc. )
  */
-export function damageEntitiesInRadius(world: IWorld, radius: number, pos: IVector, damage: number, attacker: Entity = null) {
-    for(let i = 0; i < world.entities.length; i++) {
+export function damageEntitiesInRadius(world: IWorld, radius: number, pos: IVector, damage: number, attacker: Entity | null = null) {
+    for(const entity of world.entities) {
         // Get length between entity position and explosion position
-        let length = Vector.magnitude(Vector.sub(world.entities[i].pos, pos));
+        let length = Vector.magnitude(Vector.sub(entity.pos, pos));
 
         // Check if entity is too far from explosion to take damage
         if(length > radius ** 2) {
@@ -28,7 +28,6 @@ export function damageEntitiesInRadius(world: IWorld, radius: number, pos: IVect
         }
 
         // Check if entity extends HealthyEntity ( has "health" property and "damage" method )
-        const entity = world.entities[i];
         if(entity instanceof HealthyEntity) {
             // Get final damage: the further you from explosion - the smaller damage you take
             let outputDamage = damage * ((1 - length / (radius ** 2)) ** 2);

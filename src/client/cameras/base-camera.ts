@@ -6,7 +6,7 @@ class BaseCamera implements IBaseCamera {
     public type: "perspective" | "orthogonal";
     public position: Vector;
     public rotation: Vector;
-    public scale: number;
+    public scale: number = 1;
     public zNear: number;
     public zFar: number;
 

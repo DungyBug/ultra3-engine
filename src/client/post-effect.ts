@@ -32,8 +32,8 @@ class PostEffect extends BaseMaterial {
         this.emitter = new EventEmitter();
         this.renderTexture = new RenderTexture({
             textureFormat: opts.textureFormat || TextureFormat.TEXTUREFORMAT_UNSIGNED_BYTE,
-            width: opts.width || graphicsModule.width,
-            height: opts.height || graphicsModule.height,
+            width: opts.width ?? graphicsModule?.width ?? 0,
+            height: opts.height ?? graphicsModule?.height ?? 0,
             magSamplingMode: SamplingMode.NEAREST,
             minSamplingMode: opts.samplingMode || SamplingMode.BILINEAR,
             attachment: "color",

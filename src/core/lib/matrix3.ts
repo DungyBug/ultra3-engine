@@ -14,6 +14,7 @@ class Matrix3 {
 
         for(let i = 0; i < 3; i++) {
             for(let j = 0; j < 3; j++) {
+                // @ts-ignore
                 out[i][j] = a.m[i][j] + b.m[i][j];
             }
         }
@@ -26,6 +27,7 @@ class Matrix3 {
 
         for(let i = 0; i < 3; i++) {
             for(let j = 0; j < 3; j++) {
+                // @ts-ignore
                 out[i][j] = a.m[i][j] - b.m[i][j];
             }
         }
@@ -38,6 +40,7 @@ class Matrix3 {
 
         for(let r = 0; r < 3; r++) {
             for(let c = 0; c < 3; c++) {
+                // @ts-ignore
                 out[r][c] = a.m[r][0] * b.m[0][c] + a.m[r][1] * b.m[1][c] + a.m[r][2] * b.m[2][c];
             }
         }
@@ -88,6 +91,7 @@ class Matrix3 {
     add(mat: Matrix3) {
         for(let i = 0; i < 3; i++) {
             for(let j = 0; j < 3; j++) {
+                // @ts-ignore
                 this.m[i][j] += mat.m[i][j];
             }
         }
@@ -96,6 +100,7 @@ class Matrix3 {
     subtract(mat: Matrix3) {
         for(let i = 0; i < 3; i++) {
             for(let j = 0; j < 3; j++) {
+                // @ts-ignore
                 this.m[i][j] -= mat.m[i][j];
             }
         }
@@ -105,6 +110,7 @@ class Matrix3 {
         const out: Matrix3x3 = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
         for(let r = 0; r < 3; r++) {
             for(let c = 0; c < 3; c++) {
+                // @ts-ignore
                 out[r][c] = this.m[r][0] * mat.m[0][c] + this.m[r][1] * mat.m[1][c] + this.m[r][2] * mat.m[2][c];
             }
         }
@@ -116,6 +122,7 @@ class Matrix3 {
         const out: Matrix3x3 = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
         for(let r = 0; r < 3; r++) {
             for(let c = 0; c < 3; c++) {
+                // @ts-ignore
                 out[r][c] = this.m[c][r];
             }
         }

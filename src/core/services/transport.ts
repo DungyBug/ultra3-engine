@@ -60,6 +60,8 @@ class Transport {
             to,
             message,
         });
+
+        return undefined as T extends true ? Promise<string> : void;
     }
 
     onMessage(
@@ -71,7 +73,7 @@ class Transport {
         this.transporter.on("message", callback);
     }
 
-    handleError(error: string) {
+    handleError(error: string | Error) {
         console.error("Transport: ", error);
     }
 }

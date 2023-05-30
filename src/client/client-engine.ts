@@ -18,20 +18,22 @@ import TextureCubemap from "./texture/texture-cubemap";
 import Texture2D from "./texture/texture2d";
 import Texture3D from "./texture/texture3d";
 
-export default class ClientEngine<T extends Record<string, unknown[]> & ClientWorldEvents = ClientWorldEvents> extends Engine<T> {
+export default class ClientEngine<
+    T extends Record<string, unknown[]> & ClientWorldEvents = ClientWorldEvents,
+    WORLD extends ClientWorld = ClientWorld,
+    EVENTS extends WorldModuleEvents & ClientWorldEvents = WorldModuleEvents & ClientWorldEvents
+> extends Engine<T, WORLD, EVENTS> {
     protected graphicsModule: BaseGraphicsModule<ClientGraphicsModuleEvents> | null;
-    protected _world: ClientWorld;
     private requestedTextures: Array<RequestedTexture>;
-    protected context: BaseModuleContext<WorldModuleEvents & ClientWorldEvents>;
     protected textures: Array<TextureStorage>;
     protected prevTime: number;
 
-    constructor(world: ClientWorld) {
+    constructor(world: WORLD) {
         super(world);
 
         this._world.on("start", () => this.emit("start"));
         this._world.on("clientmapobject", (object) => this.emit("clientmapobject", object));
-        this._world.on("clientmapobject", (object) =>  this.context.emitter.emit("clientmapobject", object));
+        this._world.on("clientmapobject", (object) => this.context.emitter.emit("clientmapobject", object));
         this._world.on("framestart", () => this.tick());
         this._world.on("frameend", () => this.endtick())
         this.graphicsModule = null;
@@ -40,11 +42,16 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
         this.prevTime = 0;
     }
 
-    get world(): ClientWorld {
+    get world() {
         return this._world;
     }
 
     registerShader(name: string, vertex: IShader, fragment: IShader): void {
+        if(this.graphicsModule === null) {
+            // TODO: Queue shaders
+            throw new Error("Attempt to register a shader with graphics module unset.");
+        }
+
         this.graphicsModule.registerShader(name, vertex, fragment);
     }
 
@@ -100,7 +107,10 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
 
     render(scene?: Scene) {
         this.tick();
-        this.graphicsModule.render(scene);
+
+        if(this.graphicsModule !== null) {
+            this.graphicsModule.render(scene);
+        }
     }
 
     registerTexture2D<T extends TextureOptions = TextureOptions>(texture: Texture2D<T>) {
@@ -123,7 +133,7 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
     }
 
     registerTexture3D<T extends Texture3DOptions = Texture3DOptions>(texture: Texture3D<T>) {
-        if(this.graphicsModule === null) {
+        if(this.graphicsModule !== null) {
             const id = this.graphicsModule.createTexture3D<T>(texture);
 
             if(id !== -1) {
@@ -161,11 +171,11 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
     }
 
     freeTexture(texture: Texture2D | Texture3D | TextureCubemap) {
-        for(let i = 0; i < this.textures.length; i++) {
-            if(this.textures[i].texture === texture) {
+        this.textures.forEach((textureItem, i) => {
+            if(textureItem.texture === texture) {
                 this.textures.splice(i, 1);
             }
-        }
+        });
     }
 
     tick() {
@@ -196,6 +206,8 @@ export default class ClientEngine<T extends Record<string, unknown[]> & ClientWo
     }
 
     endtick() {
-        this.graphicsModule.render();
+        if(this.graphicsModule !== null) {
+            this.graphicsModule.render();
+        }
     }
 }

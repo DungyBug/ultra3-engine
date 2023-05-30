@@ -17,11 +17,11 @@ import ITexturedMaterialProps from "../contracts/materials/textured-material-pro
 export default class FreeTexturedMaterial extends BaseMaterial {
     public texture: Texture2D;
     protected engine: ClientEngine;
-    protected module: BaseGraphicsModule;
+    protected module: BaseGraphicsModule | null;
 
     constructor(engine: ClientEngine, opts: ITexturedMaterialProps) {
         super(engine, opts);
-        this.texture = opts.texture;
+        this.texture = opts.texture ?? Texture2D.blackTexture(engine);
         this.engine = engine;
         this.module = this.engine.getGraphicsModule();
         this.engine.registerShader("u3FreeTextured", this.getVertexShader(), this.getFragmentShader());
@@ -40,7 +40,7 @@ export default class FreeTexturedMaterial extends BaseMaterial {
             },
             {
                 name: "screenSize",
-                value: new Float32Array([this.module.width, this.module.height]),
+                value: new Float32Array([this.module?.width ?? 0, this.module?.height ?? 0]),
                 type: "f2"
             }
         ]

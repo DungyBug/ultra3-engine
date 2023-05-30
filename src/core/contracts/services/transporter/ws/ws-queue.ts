@@ -1,5 +1,6 @@
-interface WSQueue {
-    [k: number]: (data: string) => void;
+interface WSQueueElement {
+    id: number;
+    res: (data: string) => void;
 }
 
-export default WSQueue;
+export default WSQueueElement;

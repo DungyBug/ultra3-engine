@@ -38,8 +38,8 @@ export class Entity implements IEntity {
         this.deleted = true;
 
         // Unlink entities from this entity
-        for (let i = 0; i < this.links.length; i++) {
-            this.links[i].unlink(this); // Unlink self from other entities
+        for (const link of this.links) {
+            link.unlink(this); // Unlink self from other entities
         }
     }
 
@@ -50,8 +50,8 @@ export class Entity implements IEntity {
     unlink(entity: IEntity) {
         const entityIndex = this.links.indexOf(entity);
         
+        // Check if entity exists in our array
         if (entityIndex !== -1) {
-            // Check if entity is exists in our array
             this.links.splice(entityIndex, 1); // Unlink entity
         }
     }
@@ -73,11 +73,14 @@ export class Entity implements IEntity {
         this.requestingState = newState;
     }
 
+    /**
+     * Returns current state of the entity with all protected and private properties.
+     */
     getEntityState(): IEntityState {
         let links = [];
 
-        for (let i = 0; i < this.links.length; i++) {
-            links.push(this.links[i].id);
+        for (const link of this.links) {
+            links.push(link.id);
         }
 
         return {
@@ -93,6 +96,10 @@ export class Entity implements IEntity {
         };
     }
 
+    /**
+     * Set current state of the entity.
+     * @param state
+     */
     setEntityState(state: IEntityState): void {
         this.id = state.id;
         // Separate setting values to prevent variable linking
@@ -103,14 +110,18 @@ export class Entity implements IEntity {
         this.links = [];
         this.linkedKeys = [];
 
-        for (let i = 0; i < state.links.length; i++) {
-            this.links.push(this.world.getEntity(state.links[i]));
+        for (const link of state.links) {
+            const entity = this.world.getEntity(link);
+
+            if(entity !== null) {
+                this.links.push();
+            }
         }
 
-        for (let j = 0; j < state.linkedKeys.length; j++) {
-            this.linkedKeys[j] = state.linkedKeys[j];
-        }
-
+        state.linkedKeys.forEach((linkedKey, i) => {
+            this.linkedKeys[i] = linkedKey;
+        });
+        
         this.nextthink = state.nextthink;
         this.requestingState = state.requestingState;
         this.currentState = state.currentState;

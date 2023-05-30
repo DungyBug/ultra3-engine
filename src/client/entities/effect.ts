@@ -1,4 +1,3 @@
-import { ClassPattern } from "../../core/contracts/ent_types";
 import ClientWorld from "../client-world";
 import {
     IEffectEntity,
@@ -9,9 +8,6 @@ import ISprite from "../contracts/sprite";
 import ViewableEntity from "./base/viewable";
 
 class EffectEntity extends ViewableEntity implements IEffectEntity {
-    classname: ClassPattern<"effect">;
-    model: IMesh;
-
     constructor(params: IEffectEntityParams, world: ClientWorld) {
         super(params, world);
     }

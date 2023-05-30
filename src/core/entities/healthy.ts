@@ -12,7 +12,7 @@ export class HealthyEntity extends Entity implements IHealthyEntity {
         this.dead = false;
     }
 
-    damage(damage: number, attacker: Entity) {
+    damage(damage: number, attacker: Entity | null) {
         this.health -= damage;
 
         if(this.health <= 0) {

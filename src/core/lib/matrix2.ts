@@ -14,6 +14,7 @@ class Matrix2 {
 
         for(let i = 0; i < 2; i++) {
             for(let j = 0; j < 2; j++) {
+                // @ts-ignore
                 out[i][j] = a.m[i][j] + b.m[i][j];
             }
         }
@@ -26,6 +27,7 @@ class Matrix2 {
 
         for(let i = 0; i < 2; i++) {
             for(let j = 0; j < 2; j++) {
+                // @ts-ignore
                 out[i][j] = a.m[i][j] - b.m[i][j];
             }
         }
@@ -38,6 +40,7 @@ class Matrix2 {
 
         for(let r = 0; r < 2; r++) {
             for(let c = 0; c < 2; c++) {
+                // @ts-ignore
                 out[r][c] = a.m[r][0] * b.m[0][c] + a.m[r][1] * b.m[1][c];
             }
         }
@@ -60,6 +63,7 @@ class Matrix2 {
     add(mat: Matrix2) {
         for(let i = 0; i < 2; i++) {
             for(let j = 0; j < 2; j++) {
+                // @ts-ignore
                 this.m[i][j] += mat.m[i][j];
             }
         }
@@ -68,6 +72,7 @@ class Matrix2 {
     subtract(mat: Matrix2) {
         for(let i = 0; i < 2; i++) {
             for(let j = 0; j < 2; j++) {
+                // @ts-ignore
                 this.m[i][j] -= mat.m[i][j];
             }
         }
@@ -77,6 +82,7 @@ class Matrix2 {
         const out: Matrix2x2 = [[0, 0], [0, 0]];
         for(let r = 0; r < 2; r++) {
             for(let c = 0; c < 2; c++) {
+                // @ts-ignore
                 out[r][c] = this.m[r][0] * mat.m[0][c] + this.m[r][1] * mat.m[1][c];
             }
         }
@@ -88,6 +94,7 @@ class Matrix2 {
         const out: Matrix2x2 = [[0, 0], [0, 0]];
         for(let r = 0; r < 2; r++) {
             for(let c = 0; c < 2; c++) {
+                // @ts-ignore
                 out[r][c] = this.m[c][r];
             }
         }

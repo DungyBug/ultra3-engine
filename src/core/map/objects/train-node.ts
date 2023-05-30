@@ -11,9 +11,9 @@ import { TrainEnd } from "./train-end";
 import { TrainStart } from "./train-start";
 
 export class TrainNode extends BaseTrain implements ITrainNode {
-    readonly end: false;
-    protected _next: ITrainNode | ITrainEnd;
-    protected _prev: ITrainStart | ITrainNode;
+    readonly end: false = false;
+    protected _next: ITrainNode | ITrainEnd | null = null;
+    protected _prev: ITrainStart | ITrainNode | null = null;
 
     constructor(props: IMapObjectProps, world: World) {
         super(
@@ -50,8 +50,8 @@ export class TrainNode extends BaseTrain implements ITrainNode {
 
         return {
             ...parentState,
-            prev: this._prev.id,
-            next: this._next.id,
+            prev: this._prev?.id ?? -1,
+            next: this._next?.id ?? -1,
         };
     }
 
