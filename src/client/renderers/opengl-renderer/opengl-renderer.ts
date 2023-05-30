@@ -1298,7 +1298,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         for(const registeredMesh of meshes) {
             const mesh = registeredMesh.mesh;
 
-            if(!mesh.visible) {
+            if(!mesh.visible || !mesh.material) {
                 continue;
             }
 

@@ -16,7 +16,7 @@ export default class PhongMaterial extends BaseMaterial {
 
     constructor(engine: ClientEngine, opts: IPhongMaterialProps) {
         super(engine, opts);
-        this.texture = opts.texture;
+        this.texture = opts.texture ?? Texture2D.blackTexture(engine);
         this.shininess = opts.shininess || 256;
         this.distribution = opts.distribution || 0.2;
     }
@@ -28,7 +28,14 @@ export default class PhongMaterial extends BaseMaterial {
     getUniforms(scene: Scene): IKey[] {
         const pointLights: Array<LightEntity> = [];
         const spotLights: Array<LightEntity> = [];
-        const cameraPosition = this.engine.getGraphicsModule().getActiveCamera().getPosition();
+
+        const graphicsModule = this.engine.getGraphicsModule();
+
+        if(!graphicsModule) {
+            throw new Error("Unable to get uniforms: setup graphics module first.");
+        }
+
+        const cameraPosition = graphicsModule.getActiveCamera().getPosition();
 
         for(const entity of scene.entities) {
             if(entity instanceof LightEntity) {
@@ -54,12 +61,12 @@ export default class PhongMaterial extends BaseMaterial {
             {
                 name: "pointLightPositions",
                 type: "f3v",
-                value: new Float32Array(pointLights.reduce((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
+                value: new Float32Array(pointLights.reduce<number[]>((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
             },
             {
                 name: "pointLightColors",
                 type: "f4v",
-                value: new Float32Array(pointLights.reduce((array, light) => array.concat(light.color.concat([light.itensity])), []))
+                value: new Float32Array(pointLights.reduce<number[]>((array, light) => array.concat(light.color.concat([light.itensity])), []))
             },
             {
                 name: "pointLightsCount",
@@ -69,22 +76,22 @@ export default class PhongMaterial extends BaseMaterial {
             {
                 name: "spotLightPositions",
                 type: "f3v",
-                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
+                value: new Float32Array(spotLights.reduce<number[]>((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
             },
             {
                 name: "spotLightColors",
                 type: "f4v",
-                value: new Float32Array(spotLights.reduce((array, light) => array.concat(light.color.concat([light.itensity])), []))
+                value: new Float32Array(spotLights.reduce<number[]>((array, light) => array.concat(light.color.concat([light.itensity])), []))
             },
             {
                 name: "spotLightAngles",
                 type: "f2v",
-                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.outerAngle, light.innerAngle]), []))
+                value: new Float32Array(spotLights.reduce<number[]>((array, light) => array.concat([light.outerAngle, light.innerAngle]), []))
             },
             {
                 name: "spotLightDirections",
                 type: "f3v",
-                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.direction.x, light.direction.y, light.direction.z]), []))
+                value: new Float32Array(spotLights.reduce<number[]>((array, light) => array.concat([light.direction.x, light.direction.y, light.direction.z]), []))
             },
             {
                 name: "spotLightsCount",

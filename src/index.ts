@@ -74,7 +74,7 @@ import { IMapObject } from "./core/contracts/map-object"
 import { IMapEvent } from "./core/contracts/map-event";
 import IBasePhysicalModel from "./core/contracts/base-physical-model";
 import ITransportQueue from "./core/contracts/services/transporter/transport-queue";
-import AbstractTransporter, { ServerEvents } from "./core/contracts/services/transporter/abstract-transporter";
+import AbstractTransporter from "./core/contracts/services/transporter/abstract-transporter";
 import { IForce } from "./core/contracts/physics/force";
 import IPhysicsModule from "./core/contracts/modules/physics-module";
 import IWorldPhysics from "./core/contracts/modules/physics-parameters";
@@ -256,6 +256,7 @@ import IThirdPersonViewCamera from "./client/contracts/cameras/third-person-came
 // ********************************
 
 import ServerWSTransporter from "./client/services/transporter/ws-transporter";
+import ServerEvents from "./server/contracts/server-events";
 
 export {
     World,

@@ -27,9 +27,16 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
             framesPerSecond: 0,
             magSamplingMode: opts.magSamplingMode,
             minSamplingMode: opts.minSamplingMode,
-            frames: null
+            frames: []
         }, engine, false);
-        this.graphicsModule = engine.getGraphicsModule();
+        
+        const graphicsModule = engine.getGraphicsModule();
+
+        if(!graphicsModule) {
+            throw new Error("Unable to create RenderTexture: setup graphics module first.");
+        }
+
+        this.graphicsModule = graphicsModule;
         this.registered = false;
         this.attachment = opts.attachment;
         this.width = opts.width;
@@ -37,6 +44,7 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
         this.textureFormat = opts.textureFormat;
         this.camera = opts.camera || this.graphicsModule.getActiveCamera();
         this.scene = new Scene();
+        this.renderTextureObject = {};
 
         if(register) {
             this.register();
@@ -79,7 +87,7 @@ class RenderTexture<T extends TextureFormat = TextureFormat> extends Texture2D {
     }
 
     getRawData(time?: number): Uint8Array | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array {
-        return null;
+        return new Uint8Array(0);
     }
 }
 

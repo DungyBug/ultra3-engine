@@ -7,7 +7,7 @@ import {
 import IMesh from "../contracts/mesh";
 
 class ClientWeapon extends Weapon implements IClientWeapon {
-    model: IMesh;
+    model: IMesh | null;
 
     constructor(params: IClientWeaponParams, world: ClientWorld) {
         super(params, world);

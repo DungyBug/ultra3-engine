@@ -12,7 +12,7 @@ export default class TexturedMaterial extends BaseMaterial {
 
     constructor(engine: ClientEngine, opts: ITexturedMaterialProps) {
         super(engine, opts);
-        this.texture = opts.texture;
+        this.texture = opts.texture ?? Texture2D.blackTexture(engine);
         engine.registerShader("u3Textured", this.getVertexShader(), this.getFragmentShader());
     }
 

@@ -16,7 +16,7 @@ interface IMesh extends IBaseMesh {
     get uvs(): Array<IVector>;
     get uvsFlatArray(): Float32Array;
 
-    get material(): IMaterial;
+    get material(): IMaterial | null;
 }
 
 export default IMesh;

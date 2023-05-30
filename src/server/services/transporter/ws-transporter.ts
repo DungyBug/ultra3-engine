@@ -1,6 +1,6 @@
 import AbstractTransporter, { AbstractTransporterEvents } from "../../../core/contracts/services/transporter/abstract-transporter";
 import WSMessage from "../../../core/contracts/services/transporter/ws/ws-message";
-import WSQueueElement from "../../../core/contracts/services/transporter/ws/ws-queue";
+import WSQueueElement from "../../../core/contracts/services/transporter/ws/ws-queue-element";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import * as http from "http";
 import * as https from "https";

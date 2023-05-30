@@ -4,7 +4,7 @@ import { IClientPhysicalEntity, IClientPhysicalEntityParams } from "../../contra
 import IMesh from "../../contracts/mesh";
 
 class ClientPhysicalEntity extends PhysicalEntity implements IClientPhysicalEntity {
-    model: IMesh;
+    model: IMesh | null;
     
     constructor(params: IClientPhysicalEntityParams, world: World) {
         super(params, world);

@@ -18,7 +18,7 @@ class LightEntity extends Entity implements ILight {
         this.type = params.type;
         this.itensity = params.itensity;
         this.radius = params.radius || 0;
-        this.color = params.color;
+        this.color = params.color ?? [1, 1, 1];
 
         if(params.type === "spot") {
             this.direction = params.direction;

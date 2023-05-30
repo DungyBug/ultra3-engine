@@ -6,9 +6,9 @@ import { MapObject } from "../../map-object";
 
 export class Trigger extends MapObject implements ITrigger {
     trigger(by: IEntity) {
-        for(let i = 0; i < this.targets.length; i++) {
-            this.targets[i].activate();
-            this.targets[i].emit("trigger", {
+        for(const target of this.targets) {
+            target.activate();
+            target.emit("trigger", {
                 type: "trigger",
                 activators: [by],
                 triggerEvent: {
@@ -23,9 +23,9 @@ export class Trigger extends MapObject implements ITrigger {
         let result = super.emit(event, e);
 
         // Send events to connected objects
-        for(let i = 0; i < this.targets.length; i++) {
-            this.targets[i].activate();
-            this.targets[i].emit("trigger", {
+        for(const target of this.targets) {
+            target.activate();
+            target.emit("trigger", {
                 type: "trigger",
                 activators: e.activators,
                 triggerEvent: e

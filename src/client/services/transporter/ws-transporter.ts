@@ -1,6 +1,6 @@
 import AbstractTransporter from "../../../core/contracts/services/transporter/abstract-transporter";
 import WSMessage from "../../../core/contracts/services/transporter/ws/ws-message";
-import WSQueue from "../../../core/contracts/services/transporter/ws/ws-queue";
+import WSQueueElement from "../../../core/contracts/services/transporter/ws/ws-queue-element";
 
 type WSURL = `ws${"s" | ""}://${string}`;
 
@@ -12,7 +12,7 @@ interface IWSSendOpts {
 class WSTransporter extends AbstractTransporter {
     private address: WSURL;
     private ws: WebSocket;
-    private queue: WSQueue;
+    private queue: WSQueueElement[];
     private calls: number;
 
     constructor(address: WSURL) {
@@ -23,7 +23,7 @@ class WSTransporter extends AbstractTransporter {
         this.ws.onmessage = this.handleMessage.bind(this);
         this.ws.onopen = () => this.emit("ready");
         this.queue = [];
-        this.calls = 1; // To prevent sending messages with id 0 ( id 0 means that message is no-reply )
+        this.calls = 0;
     }
 
     get state() {
@@ -36,12 +36,16 @@ class WSTransporter extends AbstractTransporter {
 
     send<T extends boolean>(
         opts: IWSSendOpts,
-        waitForResponse: T
+        waitForResponse?: T
     ): T extends true ? Promise<string> : void {
         if (waitForResponse) {
             return <T extends true ? Promise<string> : void>(
                 new Promise<string>((res) => {
-                    this.queue[this.calls] = res;
+                    this.queue.push({
+                        id: this.calls + 1, // To prevent sending messages with id 0 ( id 0 means that message is no-reply )
+                        res
+                    });
+
                     this.ws.send(
                         JSON.stringify({
                             id: this.calls,
@@ -61,39 +65,43 @@ class WSTransporter extends AbstractTransporter {
                 data: opts.data,
             })
         );
+
+        return undefined as T extends true ? Promise<string> : void;
     }
 
     private handleError(e: Event) {
-        this.emit("error", e);
+        this.emit("error", new Error("An error has occurred."));
     }
 
     private handleMessage(e: MessageEvent<any>) {
         const res = JSON.parse(e.data) as WSMessage;
         const id = res.id;
 
-        const item = this.queue[id];
-
         if (res.type === "request") {
-            let answer;
+            const answer = 
+                res.id === 0
+                    ? (_data: unknown) => undefined
+                    : (data: unknown) => {
+                        const message: WSMessage = {
+                            id: res.id,
+                            type: "answer",
+                            data
+                        }
 
-            if (res.id === 0) {
-                // Do not answer messages with "id" 0
-                answer = function (_data: any) {};
-            } else {
-                answer = (data: any) => {
-                    const message: WSMessage = {
-                        id: res.id,
-                        type: "answer",
-                        data: data,
+                        this.ws.send(JSON.stringify(message));
                     };
-                    this.ws.send(JSON.stringify(message));
-                };
-            }
 
-            this.emit("message", res.id, answer);
-        } else if (item) {
-            item(res.data);
-            this.queue[id] = undefined;
+            this.emit("message", res.data, answer, res.id);
+        } else {
+            for(const queueElement of this.queue) {
+                if(queueElement.id !== id) {
+                    continue;
+                }
+
+                queueElement.res(res.data);
+                this.queue.splice(this.queue.indexOf(queueElement), 1);   
+                break;
+            }
         }
     }
 }

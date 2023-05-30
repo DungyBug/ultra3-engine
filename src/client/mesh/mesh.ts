@@ -1,5 +1,4 @@
 import { IVector } from "../../core/contracts/base/vector";
-import IVector2D from "../../core/contracts/base/vector2d";
 import Vector from "../../core/lib/vector";
 import BaseMaterial from "../base-material";
 import ClientEngine from "../client-engine";
@@ -9,17 +8,16 @@ import IMeshOptions from "../contracts/mesh/mesh-options";
 import BaseMesh from "./base-mesh";
 
 class Mesh extends BaseMesh implements IMesh {
-    public material: BaseMaterial;
+    public material: BaseMaterial | null;
     public verticesMode: VerticesMode;
     public id: number;
     public visible: boolean;
-    protected _vertices: Array<IVector>;
     protected _indices: Array<number>;
     protected _normals: Array<IVector>;
     protected _uvs: Array<IVector>;
-    protected _verticesFlatArray: Float32Array;
-    protected _normalsFlatArray: Float32Array;
-    protected _uvsFlatArray: Float32Array;
+    protected _verticesFlatArray: Float32Array = new Float32Array();
+    protected _normalsFlatArray: Float32Array = new Float32Array();
+    protected _uvsFlatArray: Float32Array = new Float32Array();
     protected _engine: ClientEngine | null;
     private _verticesUpdated: boolean;
     private _normalsUpdated: boolean;
@@ -30,7 +28,7 @@ class Mesh extends BaseMesh implements IMesh {
         this._normals = params.normals || this._vertices.map(() => new Vector(0, 0, 0));
         this._uvs = params.uvs || this._vertices.map(() => new Vector(0, 0, 0));
         this._indices = params.indices || this._vertices.map((v, i) => i);
-        this.material = params.material;
+        this.material = params.material ?? null;
         this.verticesMode = params.verticesMode || VerticesMode.TRIANGLES;
         this.id = -1;
         this.visible = params.visible === undefined ? true : params.visible;
@@ -89,12 +87,12 @@ class Mesh extends BaseMesh implements IMesh {
     update() {
         if(this._verticesUpdated) {
             this._verticesFlatArray = new Float32Array(this._indices.length * 3);
-        
-            for(let i = 0; i < this._indices.length; i++) {
-                this._verticesFlatArray[i * 3] = this._vertices[this._indices[i]].x;
-                this._verticesFlatArray[i * 3 + 1] = this._vertices[this._indices[i]].y;
-                this._verticesFlatArray[i * 3 + 2] = this._vertices[this._indices[i]].z;
-            }
+
+            this._indices.forEach((index, i) => {
+                this._verticesFlatArray[i * 3] = this._vertices[index]?.x ?? 0;
+                this._verticesFlatArray[i * 3 + 1] = this._vertices[index]?.y ?? 0;
+                this._verticesFlatArray[i * 3 + 2] = this._vertices[index]?.z ?? 0;
+            });
 
             this.emit("verticesUpdated");
         }
@@ -102,11 +100,11 @@ class Mesh extends BaseMesh implements IMesh {
         if(this._normalsUpdated) {
             this._normalsFlatArray = new Float32Array(this._indices.length * 3);
         
-            for(let i = 0; i < this._indices.length; i++) {
-                this._normalsFlatArray[i * 3] = this._normals[this._indices[i]].x;
-                this._normalsFlatArray[i * 3 + 1] = this._normals[this._indices[i]].y;
-                this._normalsFlatArray[i * 3 + 2] = this._normals[this._indices[i]].z;
-            }
+            this._indices.forEach((index, i) => {
+                this._normalsFlatArray[i * 3] = this._normals[index]?.x ?? 0;
+                this._normalsFlatArray[i * 3 + 1] = this._normals[index]?.y ?? 0;
+                this._normalsFlatArray[i * 3 + 2] = this._normals[index]?.z ?? 0;
+            });
 
             this.emit("normalsUpdated");
         }
@@ -114,10 +112,10 @@ class Mesh extends BaseMesh implements IMesh {
         if(this._uvsUpdated) {
             this._uvsFlatArray = new Float32Array(this._indices.length * 2);
         
-            for(let i = 0; i < this._indices.length; i++) {
-                this._uvsFlatArray[i * 2] = this._uvs[this._indices[i]].x;
-                this._uvsFlatArray[i * 2 + 1] = this._uvs[this._indices[i]].y;
-            }
+            this._indices.forEach((index, i) => {
+                this._uvsFlatArray[i * 2] = this._uvs[index]?.x ?? 0;
+                this._uvsFlatArray[i * 2 + 1] = this._uvs[index]?.y ?? 0;
+            });
 
             this.emit("uvsUpdated");
         }
@@ -189,16 +187,18 @@ class Mesh extends BaseMesh implements IMesh {
         this._normalsFlatArray = new Float32Array(this._indices.length * 3);
         this._uvsFlatArray = new Float32Array(this._indices.length * 2);
     
-        for(let i = 0; i < this._indices.length; i++) {
-            this._verticesFlatArray[i * 3] = this._vertices[this._indices[i]].x;
-            this._verticesFlatArray[i * 3 + 1] = this._vertices[this._indices[i]].y;
-            this._verticesFlatArray[i * 3 + 2] = this._vertices[this._indices[i]].z;
-            this._normalsFlatArray[i * 3] = this._normals[this._indices[i]].x;
-            this._normalsFlatArray[i * 3 + 1] = this._normals[this._indices[i]].y;
-            this._normalsFlatArray[i * 3 + 2] = this._normals[this._indices[i]].z;
-            this._uvsFlatArray[i * 2] = this._uvs[this._indices[i]].x;
-            this._uvsFlatArray[i * 2 + 1] = this._uvs[this._indices[i]].y;
-        }
+        this._indices.forEach((index, i) => {
+            this._verticesFlatArray[i * 3] = this._vertices[index]?.x ?? 0;
+            this._verticesFlatArray[i * 3 + 1] = this._vertices[index]?.y ?? 0;
+            this._verticesFlatArray[i * 3 + 2] = this._vertices[index]?.z ?? 0;
+
+            this._normalsFlatArray[i * 3] = this._normals[index]?.x ?? 0;
+            this._normalsFlatArray[i * 3 + 1] = this._normals[index]?.y ?? 0;
+            this._normalsFlatArray[i * 3 + 2] = this._normals[index]?.z ?? 0;
+            
+            this._uvsFlatArray[i * 2] = this._uvs[index]?.x ?? 0;
+            this._uvsFlatArray[i * 2 + 1] = this._uvs[index]?.y ?? 0;
+        });
 
         this._verticesUpdated = false;
         this._normalsUpdated = false;

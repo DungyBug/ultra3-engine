@@ -16,7 +16,7 @@ class HTTPTransporter extends AbstractTransporter {
         return "ready";
     }
 
-    send<T extends true | false>(opts: IHTTPSendOpts, waitForResponse: T): T extends true ? Promise<string> : void {
+    send<T extends true | false>(opts: IHTTPSendOpts, waitForResponse?: T): T extends true ? Promise<string> : void {
         const response = fetch(opts.to, {
             method: "POST",
             body: opts.data
@@ -32,6 +32,8 @@ class HTTPTransporter extends AbstractTransporter {
                 .catch((err: any) => {
                     this.emit("error", err.toString());
                 })
+
+            return undefined as T extends true ? Promise<string> : void;
         }
     }
 }

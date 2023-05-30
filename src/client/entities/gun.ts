@@ -6,7 +6,7 @@ import IClientGunEntity, {
 import IMesh from "../contracts/mesh";
 
 class ClientGunEntity extends GunEntity implements IClientGunEntity {
-    model: IMesh;
+    model: IMesh | null;
 
     constructor(params: IClientGunEntityParams, world: ClientWorld) {
         super(params, world);

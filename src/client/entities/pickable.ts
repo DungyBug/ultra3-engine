@@ -8,7 +8,7 @@ class ClientPickableEntity
     extends PickableEntity
     implements IClientPickableEntity
 {
-    model: IMesh;
+    model: IMesh | null;
 
     constructor(params: IClientPhysicalEntityParams, world: ClientWorld) {
         super(params, world);

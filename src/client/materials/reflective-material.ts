@@ -21,7 +21,13 @@ export default class ReflectiveMaterial extends BaseMaterial {
     }
 
     getUniforms(): IKey[] {
-        const cameraPosition = this.engine.getGraphicsModule().getActiveCamera().getPosition();
+        const graphicsModule = this.engine.getGraphicsModule();
+
+        if(!graphicsModule) {
+            throw new Error("Unable to get uniforms: setup graphics module first.");
+        }
+
+        const cameraPosition = graphicsModule.getActiveCamera().getPosition();
 
         return [
             {

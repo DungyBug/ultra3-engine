@@ -14,7 +14,7 @@ export default class DiffuseMaterial extends BaseMaterial {
 
     constructor(engine: ClientEngine, opts: ITexturedMaterialProps) {
         super(engine, opts);
-        this.texture = opts.texture;
+        this.texture = opts.texture ?? Texture2D.blackTexture(engine);
     }
 
     get name(): string {
@@ -49,12 +49,12 @@ export default class DiffuseMaterial extends BaseMaterial {
             {
                 name: "pointLightPositions",
                 type: "f3v",
-                value: new Float32Array(pointLights.reduce((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
+                value: new Float32Array(pointLights.reduce<number[]>((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
             },
             {
                 name: "pointLightColors",
                 type: "f4v",
-                value: new Float32Array(pointLights.reduce((array, light) => array.concat(light.color.concat([light.itensity])), []))
+                value: new Float32Array(pointLights.reduce<number[]>((array, light) => array.concat(light.color.concat([light.itensity])), []))
             },
             {
                 name: "pointLightsCount",
@@ -64,22 +64,22 @@ export default class DiffuseMaterial extends BaseMaterial {
             {
                 name: "spotLightPositions",
                 type: "f3v",
-                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
+                value: new Float32Array(spotLights.reduce<number[]>((array, light) => array.concat([light.pos.x, light.pos.y, light.pos.z]), []))
             },
             {
                 name: "spotLightColors",
                 type: "f4v",
-                value: new Float32Array(spotLights.reduce((array, light) => array.concat(light.color.concat([light.itensity])), []))
+                value: new Float32Array(spotLights.reduce<number[]>((array, light) => array.concat(light.color.concat([light.itensity])), []))
             },
             {
                 name: "spotLightAngles",
                 type: "f2v",
-                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.outerAngle, light.innerAngle]), []))
+                value: new Float32Array(spotLights.reduce<number[]>((array, light) => array.concat([light.outerAngle, light.innerAngle]), []))
             },
             {
                 name: "spotLightDirections",
                 type: "f3v",
-                value: new Float32Array(spotLights.reduce((array, light) => array.concat([light.direction.x, light.direction.y, light.direction.z]), []))
+                value: new Float32Array(spotLights.reduce<number[]>((array, light) => array.concat([light.direction.x, light.direction.y, light.direction.z]), []))
             },
             {
                 name: "spotLightsCount",

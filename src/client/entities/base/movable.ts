@@ -6,7 +6,7 @@ import IMesh from "../../contracts/mesh";
 
 
 class ClientMovableEntity extends MovableEntity implements IClientMovableEntity {
-    model: IMesh;
+    model: IMesh | null;
 
     constructor(params: IClientPhysicalEntityParams, world: World) {
         super(params, world);

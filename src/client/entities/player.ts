@@ -6,7 +6,7 @@ import IClientPlayer, {
 import IMesh from "../contracts/mesh";
 
 class ClientPlayer extends Player implements IClientPlayer {
-    model: IMesh;
+    model: IMesh | null;
 
     constructor(params: IClientPlayerParams, world: ClientWorld) {
         super(params, world);

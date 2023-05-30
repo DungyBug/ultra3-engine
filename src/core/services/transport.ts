@@ -67,7 +67,8 @@ class Transport {
     onMessage(
         callback: (
             message: string,
-            res: (message: string) => void
+            res: (message: string) => void,
+            from: number
         ) => Promise<string> | void
     ) {
         this.transporter.on("message", callback);

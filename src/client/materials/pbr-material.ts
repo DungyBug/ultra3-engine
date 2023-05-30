@@ -35,72 +35,72 @@ export default class PBRMaterial extends BaseMaterial {
         return "u3PBR";
     }
 
-    getUniforms(): IKey[] {
-        return [
-            {
-                name: "albedoSampler",
-                value: this.albedoTexture,
-                type: "texture2D"
-            },
-            {
-                name: "normalsSampler",
-                value: this.normalsTexture,
-                type: "texture2D"
-            },
-            {
-                name: "occlusionSampler",
-                value: this.occlusionTexture,
-                type: "texture2D"
-            },
-            {
-                name: "heightSampler",
-                value: this.heightTexture,
-                type: "texture2D"
-            },
-            {
-                name: "metallicSampler",
-                value: this.metallicTexture,
-                type: "texture2D"
-            },
-            {
-                name: "emissiveSampler",
-                value: this.emissiveTexture,
-                type: "texture2D"
-            }
-        ];
-    }
+    // getUniforms(): IKey[] {
+    //     return [
+    //         {
+    //             name: "albedoSampler",
+    //             value: this.albedoTexture,
+    //             type: "texture2D"
+    //         },
+    //         {
+    //             name: "normalsSampler",
+    //             value: this.normalsTexture,
+    //             type: "texture2D"
+    //         },
+    //         {
+    //             name: "occlusionSampler",
+    //             value: this.occlusionTexture,
+    //             type: "texture2D"
+    //         },
+    //         {
+    //             name: "heightSampler",
+    //             value: this.heightTexture,
+    //             type: "texture2D"
+    //         },
+    //         {
+    //             name: "metallicSampler",
+    //             value: this.metallicTexture,
+    //             type: "texture2D"
+    //         },
+    //         {
+    //             name: "emissiveSampler",
+    //             value: this.emissiveTexture,
+    //             type: "texture2D"
+    //         }
+    //     ];
+    // }
 
-    getFragmentShader(): IShader {
-        return {
-            params: [
-                {
-                    name: "albedoSampler",
-                    type: "texture2D"
-                },
-                {
-                    name: "normalsSampler",
-                    type: "texture2D"
-                },
-                {
-                    name: "occlusionSampler",
-                    type: "texture2D"
-                },
-                {
-                    name: "heightSampler",
-                    type: "texture2D"
-                },
-                {
-                    name: "metallicSampler",
-                    type: "texture2D"
-                },
-                {
-                    name: "emissiveSampler",
-                    type: "texture2D"
-                }
-            ],
-            name: "u3PBRMaterial",
-            type: "fragment",
-            source: ""
-        };
-    }
+    // getFragmentShader(): IShader {
+    //     return {
+    //         params: [
+    //             {
+    //                 name: "albedoSampler",
+    //                 type: "texture2D"
+    //             },
+    //             {
+    //                 name: "normalsSampler",
+    //                 type: "texture2D"
+    //             },
+    //             {
+    //                 name: "occlusionSampler",
+    //                 type: "texture2D"
+    //             },
+    //             {
+    //                 name: "heightSampler",
+    //                 type: "texture2D"
+    //             },
+    //             {
+    //                 name: "metallicSampler",
+    //                 type: "texture2D"
+    //             },
+    //             {
+    //                 name: "emissiveSampler",
+    //                 type: "texture2D"
+    //             }
+    //         ],
+    //         name: "u3PBRMaterial",
+    //         type: "fragment",
+    //         source: ""
+    //     };
+    // }
 }

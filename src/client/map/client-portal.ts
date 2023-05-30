@@ -10,7 +10,7 @@ import ClientMapObject from "./client-object";
 export default class ClientPortal extends ClientMapObject<Portal> {
     protected camera: BaseCamera;
 
-    constructor(physicalShape: IPhysicalMesh, props: IClientPortalProps, world: ClientWorld) {
+    constructor(physicalShape: IPhysicalMesh | null, props: IClientPortalProps, world: ClientWorld) {
         super(new Portal(physicalShape, props, world), props.mesh, world);
 
         this.camera = props.camera;
@@ -22,8 +22,15 @@ export default class ClientPortal extends ClientMapObject<Portal> {
      * @param camera - camera from which to correct portal's camera rotation and position
      */
     transformCameraAccordingTo(camera: BaseCamera) {
+        const connection = this.object.connection;
+
+        if(!connection) {
+            console.warn("Attempt to tranform camera on unconnected portal. Consider connecting portal to another first before calling \"transformCameraAccordingTo()\".");;
+            return;
+        }
+
         const objectProps = this.object.getProps();
-        const connectionProps = this.object.connection.getProps();
+        const connectionProps = connection.getProps();
 
         this.camera.position.set(connectionProps.pos);
         this.camera.position.mul(new Vector(-1)); // correct camera position ( yep, camera position stores as negative of its real position )

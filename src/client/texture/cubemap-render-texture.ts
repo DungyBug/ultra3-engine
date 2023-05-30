@@ -26,9 +26,16 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
             framesPerSecond: 0,
             minSamplingMode: opts.minSamplingMode,
             magSamplingMode: opts.magSamplingMode,
-            frames: null
+            frames: []
         }, engine, false);
-        this.graphicsModule = engine.getGraphicsModule();
+
+        const graphicsModule = engine.getGraphicsModule();
+
+        if(!graphicsModule) {
+            throw new Error("Unable to create RenderTextureCubemap: setup graphics module first.");
+        }
+
+        this.graphicsModule = graphicsModule;
         this.registered = false;
         this.attachment = opts.attachment;
         this.width = opts.size;
@@ -43,6 +50,7 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
             new PerspectiveCamera({fov: Math.PI / 2, rotation: {x: 0, y: 0, z: Math.PI}})  // -z
         ];
         this.scene = new Scene();
+        this.renderTextureObject = {};
 
         if(register) {
             this.register();
@@ -98,7 +106,7 @@ class RenderTextureCubemap<T extends TextureFormat = TextureFormat> extends Text
     }
 
     getRawData(time?: number, coordinate?: "+x" | "-x" | "+y" | "-y" | "+z" | "-z"): Uint8Array | Uint16Array | Uint32Array | Int8Array | Int16Array | Int32Array | Float32Array {
-        return null;
+        return new Uint8Array(0);
     }
 }
 

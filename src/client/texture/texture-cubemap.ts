@@ -36,6 +36,10 @@ class TextureCubemap<T extends TextureOptions = TextureOptions> extends Texture2
         image.onload = () => {
             const tempcanvas = document.createElement("canvas");
             const tmpctx = tempcanvas.getContext("2d");
+
+            if(!tmpctx) {
+                throw new Error("Unable to load image: seems that your browser doesn't support canvas 2d.");
+            }
             
             tempcanvas.width = image.width;
             tempcanvas.height = image.height;
@@ -89,27 +93,21 @@ class TextureCubemap<T extends TextureOptions = TextureOptions> extends Texture2
         switch(coordinate) {
             case "+x": {
                 return this.frames[frame * 6] as TextureOptsToArrayType<T>;
-                break;
             }
             case "-x": {
                 return this.frames[frame * 6 + 1] as TextureOptsToArrayType<T>;
-                break;
             }
             case "+y": {
                 return this.frames[frame * 6 + 2] as TextureOptsToArrayType<T>;
-                break;
             }
             case "-y": {
                 return this.frames[frame * 6 + 3] as TextureOptsToArrayType<T>;
-                break;
             }
             case "+z": {
                 return this.frames[frame * 6 + 4] as TextureOptsToArrayType<T>;
-                break;
             }
             case "-z": {
                 return this.frames[frame * 6 + 5] as TextureOptsToArrayType<T>;
-                break;
             }
         }
     }

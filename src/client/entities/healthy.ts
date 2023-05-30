@@ -9,7 +9,7 @@ class ClientHealthyEntity
     extends HealthyEntity
     implements IClientHealthyEntity
 {
-    model: IMesh;
+    model: IMesh | null;
 
     constructor(params: IClientHealthyEntityParams, world: ClientWorld) {
         super(params, world);

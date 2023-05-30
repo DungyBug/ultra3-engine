@@ -10,7 +10,7 @@ class ClientExplosiveEntity
     extends ExplosiveEntity
     implements IClientExplosiveEntity
 {
-    model: IMesh;
+    model: IMesh | null;
 
     constructor(params: IClientExplosiveEntityParams, world: ClientWorld) {
         super(params, world);

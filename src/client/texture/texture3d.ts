@@ -46,7 +46,7 @@ class Texture3D<T extends Texture3DOptions = Texture3DOptions> implements ITextu
 
     free() {
         this.engine.freeTexture(this);
-        delete this.frames;
+        this.frames.length = 0;
     }
 
     getRawData(time: number = 0): TextureOptsToArrayType<T> {
