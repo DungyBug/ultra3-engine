@@ -50,4 +50,12 @@ export class PickableEntity extends PhysicalEntity implements IPickableEntity {
             this.owner = null;
         }
     }
+
+    static fromState(state: IPickableEntityState, world: World): PickableEntity {
+        const entity = new PickableEntity(state, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 }

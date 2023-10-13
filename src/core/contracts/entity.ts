@@ -1,3 +1,4 @@
+import { World } from "../world";
 import { IVector } from "./base/vector";
 import { IWorld } from "./world";
 
@@ -69,6 +70,4 @@ export interface IEntity {
     setEntityState(state: IEntityState): void;
 }
 
-export interface IEntityConstructor {
-    new (params: IEntityParams, world: IWorld): IEntity;
-}
+export type EntityFromStateFabric<T extends IEntity> = (...args: [...Parameters<T["setEntityState"]>, World]) => T;

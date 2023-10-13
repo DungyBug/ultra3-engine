@@ -62,4 +62,12 @@ export class PhysicalEntity extends Entity implements IPhysicalEntity {
         this.activity = state.activity;
         this.weight = state.weight;
     }
+
+    static fromState(state: IPhysicalEntityState, world: World): PhysicalEntity {
+        const entity = new PhysicalEntity(state, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 };

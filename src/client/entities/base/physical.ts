@@ -1,3 +1,4 @@
+import { IPhysicalEntityState } from "../../../core/contracts/entities/base/physical";
 import { PhysicalEntity } from "../../../core/entities/base/physical";
 import { World } from "../../../core/world";
 import { IClientPhysicalEntity, IClientPhysicalEntityParams } from "../../contracts/entities/base/physical";
@@ -10,6 +11,14 @@ class ClientPhysicalEntity extends PhysicalEntity implements IClientPhysicalEnti
         super(params, world);
 
         this.model = params.model;
+    }
+
+    static fromState(state: IPhysicalEntityState, world: World): ClientPhysicalEntity {
+        const entity = new ClientPhysicalEntity({...state, model: null}, world);
+
+        entity.setEntityState(state);
+
+        return entity;
     }
 };
 

@@ -34,4 +34,12 @@ export class HealthyEntity extends Entity implements IHealthyEntity {
 
         this.health = state.health;
     }
+
+    static fromState(state: IHealthyEntityState, world: World): HealthyEntity {
+        const entity = new HealthyEntity(state, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 }

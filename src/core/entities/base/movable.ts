@@ -67,4 +67,12 @@ export class MovableEntity extends PhysicalEntity implements IMovableEntity {
             });
         }
     }
+
+    static fromState(state: IMovableEntityState, world: World): MovableEntity {
+        const entity = new MovableEntity(state, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 }

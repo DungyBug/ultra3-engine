@@ -1,3 +1,4 @@
+import { IMovableEntityState } from "../../../core/contracts/entities/base/movable";
 import { MovableEntity } from "../../../core/entities/base/movable";
 import { World } from "../../../core/world";
 import { IClientMovableEntity } from "../../contracts/entities/base/movable";
@@ -12,6 +13,14 @@ class ClientMovableEntity extends MovableEntity implements IClientMovableEntity 
         super(params, world);
         
         this.model = params.model;
+    }
+
+    static fromState(state: IMovableEntityState, world: World): ClientMovableEntity {
+        const entity = new ClientMovableEntity({...state, model: null}, world);
+
+        entity.setEntityState(state);
+
+        return entity;
     }
 }
 

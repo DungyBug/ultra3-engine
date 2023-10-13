@@ -91,4 +91,12 @@ export class GunEntity extends Weapon implements IGunEntity {
             this.ammoInMagazine = state.ammoInMagazine;
         }
     }
+
+    static fromState(state: GunEntityState, world: World): GunEntity {
+        const entity = new GunEntity(state, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 }

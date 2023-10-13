@@ -67,4 +67,12 @@ export class Player extends HealthyEntity implements IPlayer {
             this.inventory.push(entity);
         }
     }
+
+    static fromState(state: IPlayerState, world: World): Player {
+        const entity = new Player(state, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 }

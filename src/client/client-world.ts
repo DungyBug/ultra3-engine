@@ -10,7 +10,7 @@ class ClientWorld<T extends Record<string, unknown[]> & ClientWorldEvents = Clie
     readonly clientMapObjects: Array<ClientMapObject>;
     protected viewableEntities: Array<IViewableEntity>;
     
-    constructor(props: IWorldProps, registry: Registry) {
+    constructor(props: IWorldProps, registry: Registry<ClientWorld>) {
         super(props, registry);
 
         this.viewableEntities = [];

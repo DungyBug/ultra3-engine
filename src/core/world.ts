@@ -1,10 +1,6 @@
-import { IEntityConstructor } from "./contracts/entity";
+import { EntityFromStateFabric } from "./contracts/entity";
 import { IMapObject } from "./contracts/map-object";
-import BaseModule from "./contracts/module";
-import BaseModuleContext from "./contracts/module-context";
-import BasePhysicsModule from "./contracts/modules/physics-module";
 import { IWorld, IWorldState } from "./contracts/world";
-import WorldModuleEvents from "./contracts/world-module-events";
 import { IWorldProps } from "./contracts/world-porps";
 import { Entity } from "./entity";
 import { Registry } from "./registry";
@@ -17,6 +13,7 @@ export class World<T extends {[key: string]: unknown[]} & WorldEvents = WorldEve
     protected _objects: Array<IMapObject> = [];
     protected _time: number = 0; // Global world time
     protected readonly _startTime: number = Date.now(); // World initialization time
+    protected _repeatThink: boolean;
     protected addedEntitiesCount: number = 0; // Increments every time a new entity has been added
     protected addedObjectsCount: number = 0;
     private thinkPeriod: number = 0;
@@ -30,6 +27,7 @@ export class World<T extends {[key: string]: unknown[]} & WorldEvents = WorldEve
         super();
         this.thinkPeriod = worldProps.thinkPeriod || 0;
         this.runTick = this.runTick.bind(this);
+        this._repeatThink = worldProps.repeatThink ?? true;
     }
 
     get entities() {
@@ -40,8 +38,8 @@ export class World<T extends {[key: string]: unknown[]} & WorldEvents = WorldEve
         return this._objects;
     }
 
-    registerClass(classname: string, classConstructor: IEntityConstructor) {
-        this.registry.registerClass(classname, classConstructor);
+    registerClass<T extends typeof Entity>(classname: string, classObject: T) {
+        this.registry.registerClass<T>(classname, classObject);
     }
 
     addEntity(entity: Entity) {
@@ -56,13 +54,7 @@ export class World<T extends {[key: string]: unknown[]} & WorldEvents = WorldEve
     }
 
     getEntity(id: number): Entity | null {
-        for (const entity of this._entities) {
-            if (entity.id === id) {
-                return entity;
-            }
-        }
-
-        return null;
+        return this._entities.find(entity => entity.id === id) ?? null;
     }
 
     addObject(object: MapObject) {
@@ -107,15 +99,9 @@ export class World<T extends {[key: string]: unknown[]} & WorldEvents = WorldEve
             if (entity !== null) {
                 entity.setEntityState(entityState);
             } else {
-                const EntityConstructor = this.registry.getClass(
-                    entityState.classname
-                );
+                const newEntity = this.registry.getClass(entityState.classname, entityState, this);
 
-                // Check if EntityConstructor is already exists
-                if (EntityConstructor !== undefined) {
-                    const newEntity = new EntityConstructor(entityState, this);
-                    newEntity.setEntityState(entityState);
-                }
+                // entity is automatically added to the world
             }
         }
 
@@ -166,6 +152,10 @@ export class World<T extends {[key: string]: unknown[]} & WorldEvents = WorldEve
         }
 
         this.emit("frameend");
+
+        if(!this._repeatThink) {
+            return;
+        }
 
         if(this.thinkPeriod) {
             setTimeout(this.runTick, this.thinkPeriod);

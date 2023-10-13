@@ -48,6 +48,7 @@ describe("WSTransporter", () => {
         client2.close();
         client3.close();
         client4.close();
+        client5.close();
     }, 3000);
 
     it("should handle connections from three users", cb => {
@@ -313,7 +314,9 @@ describe("WSTransporter", () => {
 
                 client5 = new WebSocket("ws://192.168.0.21:3100");
     
-                res(null);
+                // Wait till client5 opens connection to avoid crashing in afterAll callback, where
+                // client5 closes connection before establishing it
+                client5.on("open", () => res(null));
             });
         });
 

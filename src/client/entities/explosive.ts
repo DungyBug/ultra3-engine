@@ -1,3 +1,4 @@
+import { IExplosiveEntityState } from "../../core/contracts/entities/explosive";
 import { ExplosiveEntity } from "../../core/entities/explosive";
 import ClientWorld from "../client-world";
 import {
@@ -15,6 +16,14 @@ class ClientExplosiveEntity
     constructor(params: IClientExplosiveEntityParams, world: ClientWorld) {
         super(params, world);
         this.model = params.model;
+    }
+
+    static fromState(state: IExplosiveEntityState, world: ClientWorld): ClientExplosiveEntity {
+        const entity = new ClientExplosiveEntity({...state, model: null}, world);
+
+        entity.setEntityState(state);
+
+        return entity;
     }
 }
 

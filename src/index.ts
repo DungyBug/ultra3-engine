@@ -97,7 +97,7 @@ import { IPlayerSpawnEvent } from "./core/contracts/map-events/playerspawn";
 import { IPlayerTeleportEvent } from "./core/contracts/map-events/playerteleport";
 import { IShootEvent } from "./core/contracts/map-events/shoot";
 import { ITriggerEvent } from "./core/contracts/map-events/trigger";
-import { IEntity, IEntityConstructor, IEntityParams, IEntityState } from "./core/contracts/entity";
+import { IEntity, EntityFromStateFabric, IEntityParams, IEntityState } from "./core/contracts/entity";
 import { IMovableEntity, IMovableEntityState } from "./core/contracts/entities/base/movable";
 import { IPhysicalEntity, IPhysicalEntityParams, IPhysicalEntityState } from "./core/contracts/entities/base/physical";
 import { IExplosiveEntity, IExplosiveEntityParams, IExplosiveEntityState } from "./core/contracts/entities/explosive";
@@ -331,7 +331,7 @@ export {
     IPlayerTeleportEvent,
     IShootEvent,
     ITriggerEvent,
-    IEntity, IEntityConstructor, IEntityParams, IEntityState,
+    IEntity, EntityFromStateFabric, IEntityParams, IEntityState,
     IMovableEntity, IMovableEntityState,
     IPhysicalEntity, IPhysicalEntityParams, IPhysicalEntityState,
     IExplosiveEntity, IExplosiveEntityParams, IExplosiveEntityState,

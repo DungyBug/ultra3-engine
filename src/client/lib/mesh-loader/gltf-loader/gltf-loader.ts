@@ -129,7 +129,7 @@ class GLTFLoader implements IMeshLoader {
 
         const decoder = new TextDecoder();
 
-        if(!chunks[0]) {
+        if (!chunks[0]) {
             throw new Error("Ultra3.GLTFLoader: missing 0 chunk.");
         }
 
@@ -166,7 +166,7 @@ class GLTFLoader implements IMeshLoader {
                 buffer.startsWith("data:application/octet-stream;base64,")
                     ? buffer.slice(37)
                     : buffer.slice(36)
-                );
+            );
 
             const array = new Uint8Array(binaryString.length);
 
@@ -180,7 +180,7 @@ class GLTFLoader implements IMeshLoader {
 
             const arrayBuffer = this.binaries.find(binary => binary.name === buffer);
 
-            if(!arrayBuffer) {
+            if (!arrayBuffer) {
                 console.warn(`Ultra3.GLTFLoader: unable to find binary file \"${buffer}\".`);
 
                 return new ArrayBuffer(0);
@@ -193,7 +193,7 @@ class GLTFLoader implements IMeshLoader {
     accessImage(src: string) {
         const image = this.images[src];
 
-        if(!image) {
+        if (!image) {
             throw new Error(`Ultra3.GLTFLoader: unable to access image at ${src.length > 30 ? src.slice(0, 27) + "..." : src}`);
         }
 
@@ -226,19 +226,19 @@ class GLTFLoader implements IMeshLoader {
 
                     const storageMeshes = storage.meshes;
 
-                    if(!storageMeshes) {
+                    if (!storageMeshes) {
                         throw new Error("Ultra3.GLTFLoader: unable to access storageMeshes.");
                     }
 
                     const storageMesh = storageMeshes[storageNodeMesh];
 
-                    if(!storageMesh) {
+                    if (!storageMesh) {
                         throw new Error("Ultra3.GLTFLoader: unable to access storageMesh.");
                     }
 
                     // Parse primitives
                     for (const storageMeshPrimitive of storageMesh.primitives) {
-                        if(!storage.accessors || !storage.bufferViews || !storage.buffers) {
+                        if (!storage.accessors || !storage.bufferViews || !storage.buffers) {
                             throw new Error("Ultra3.GLTFLoader: unable to access accessors or buffers.");
                         }
 
@@ -253,7 +253,7 @@ class GLTFLoader implements IMeshLoader {
                          */
                         const verticesAccessor: GLTFAccessor =
                             storage.accessors[
-                                storageMeshPrimitive.attributes.POSITION
+                            storageMeshPrimitive.attributes.POSITION
                             ] as GLTFAccessor; // storage.accessors[storageMeshPrimitive.attributes.POSITION] is always non-undefined
 
                         // Check for data type
@@ -303,14 +303,14 @@ class GLTFLoader implements IMeshLoader {
                         const verticesBufferView: IGLTFBufferView | undefined =
                             storage.bufferViews[verticesAccessor.bufferView];
 
-                        if(!verticesBufferView) {
+                        if (!verticesBufferView) {
                             throw new Error("Ultra3.GLTFLoader: unable to access verticesBufferView.");
                         }
 
                         const verticesBuffer: IGLTFBuffer | undefined =
                             storage.buffers[verticesBufferView.buffer];
 
-                        if(!verticesBuffer) {
+                        if (!verticesBuffer) {
                             throw new Error("Ultra3.GLTFLoader: unable to access verticesBuffer.");
                         }
 
@@ -333,14 +333,14 @@ class GLTFLoader implements IMeshLoader {
                             const oldBuffer = new Uint8Array(
                                 buffer.slice(
                                     (verticesBufferView.byteOffset ?? 0) +
-                                        (verticesAccessor.byteOffset ?? 0)
+                                    (verticesAccessor.byteOffset ?? 0)
                                 )
                             );
 
                             for (let i = 0; i < verticesAccessor.count * 3 * 4; i++) {
                                 newBuffer[i] =
                                     oldBuffer[
-                                        i * (verticesBufferView.byteStride + 1)
+                                    i * (verticesBufferView.byteStride + 1)
                                     ] ?? 0;
                             }
 
@@ -361,7 +361,7 @@ class GLTFLoader implements IMeshLoader {
                             pointsBinary = new Float32Array(
                                 buffer.slice(
                                     (verticesBufferView.byteOffset || 0) +
-                                        (verticesAccessor.byteOffset || 0)
+                                    (verticesAccessor.byteOffset || 0)
                                 ),
                                 0,
                                 verticesAccessor.count * 3
@@ -378,24 +378,24 @@ class GLTFLoader implements IMeshLoader {
                              */
                             const indicesAccessor: GLTFAccessor | undefined =
                                 storage.accessors[
-                                    storageMeshPrimitive.indices
+                                storageMeshPrimitive.indices
                                 ];
 
-                            if(!indicesAccessor) {
+                            if (!indicesAccessor) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access indicesAccessor.");
                             }
 
                             const indicesBufferView: IGLTFBufferView | undefined =
                                 storage.bufferViews[indicesAccessor.bufferView];
 
-                            if(!indicesBufferView) {
+                            if (!indicesBufferView) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access indicesBufferView.");
                             }
 
                             const indicesBuffer: IGLTFBuffer | undefined =
                                 storage.buffers[indicesBufferView.buffer];
 
-                            if(!indicesBuffer) {
+                            if (!indicesBuffer) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access indicesBuffer.");
                             }
 
@@ -487,7 +487,7 @@ class GLTFLoader implements IMeshLoader {
                                 let oldBuffer = new Uint8Array(
                                     buffer.slice(
                                         (indicesBufferView.byteOffset || 0) +
-                                            (indicesAccessor.byteOffset || 0)
+                                        (indicesAccessor.byteOffset || 0)
                                     )
                                 );
 
@@ -511,7 +511,7 @@ class GLTFLoader implements IMeshLoader {
                                 indicesBinary = new arrayType(
                                     buffer.slice(
                                         (indicesBufferView.byteOffset || 0) +
-                                            (indicesAccessor.byteOffset || 0)
+                                        (indicesAccessor.byteOffset || 0)
                                     ),
                                     0,
                                     indicesAccessor.count
@@ -601,19 +601,19 @@ class GLTFLoader implements IMeshLoader {
                              */
                             const normalsAccessor = storage.accessors[storageMeshPrimitive.attributes.NORMAL];
 
-                            if(!normalsAccessor) {
+                            if (!normalsAccessor) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access normalsAccessor.");
                             }
 
                             const normalsBufferView = storage.bufferViews[normalsAccessor.bufferView];
 
-                            if(!normalsBufferView) {
+                            if (!normalsBufferView) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access normalsBufferView.");
                             }
 
                             const normalsBuffer = storage.buffers[normalsBufferView.buffer];
 
-                            if(!normalsBuffer) {
+                            if (!normalsBuffer) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access normalsBuffer.");
                             }
 
@@ -637,16 +637,16 @@ class GLTFLoader implements IMeshLoader {
                                 let oldBuffer = new Uint8Array(
                                     buffer.slice(
                                         (normalsBufferView.byteOffset || 0) +
-                                            (normalsAccessor.byteOffset || 0)
+                                        (normalsAccessor.byteOffset || 0)
                                     )
                                 );
 
                                 for (let i = 0; i < normalsAccessor.count * 3 * 4; i++) {
                                     newBuffer[i] =
                                         oldBuffer[
-                                            i *
-                                                (normalsBufferView.byteStride +
-                                                    1)
+                                        i *
+                                        (normalsBufferView.byteStride +
+                                            1)
                                         ] ?? 0;
                                 }
 
@@ -669,7 +669,7 @@ class GLTFLoader implements IMeshLoader {
                                 normalsBinary = new Float32Array(
                                     buffer.slice(
                                         (normalsBufferView.byteOffset || 0) +
-                                            (normalsAccessor.byteOffset || 0)
+                                        (normalsAccessor.byteOffset || 0)
                                     ),
                                     0,
                                     normalsAccessor.count * 3
@@ -698,24 +698,24 @@ class GLTFLoader implements IMeshLoader {
 
                             const uvsAccessor =
                                 storage.accessors[
-                                    storageMeshPrimitive.attributes.TEXCOORD_0
+                                storageMeshPrimitive.attributes.TEXCOORD_0
                                 ];
 
-                            if(!uvsAccessor) {
+                            if (!uvsAccessor) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access uvsAccessor.");
                             }
 
                             const uvsBufferView =
                                 storage.bufferViews[uvsAccessor.bufferView];
 
-                            if(!uvsBufferView) {
+                            if (!uvsBufferView) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access uvsBufferView.");
                             }
 
                             const uvsBuffer =
                                 storage.buffers[uvsBufferView.buffer];
 
-                            if(!uvsBuffer) {
+                            if (!uvsBuffer) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access uvsBuffer.");
                             }
 
@@ -792,14 +792,14 @@ class GLTFLoader implements IMeshLoader {
                                 let oldBuffer = new Uint8Array(
                                     buffer.slice(
                                         (uvsBufferView.byteOffset || 0) +
-                                            (uvsAccessor.byteOffset || 0)
+                                        (uvsAccessor.byteOffset || 0)
                                     )
                                 );
 
                                 for (let i = 0; i < uvsAccessor.count * 2 * componentSize; i++) {
                                     newBuffer[i] =
                                         oldBuffer[
-                                            i * (uvsBufferView.byteStride + 1)
+                                        i * (uvsBufferView.byteStride + 1)
                                         ] ?? 0;
                                 }
 
@@ -825,8 +825,8 @@ class GLTFLoader implements IMeshLoader {
                                             buffer.slice(
                                                 (uvsBufferView.byteOffset ||
                                                     0) +
-                                                    (uvsAccessor.byteOffset ||
-                                                        0)
+                                                (uvsAccessor.byteOffset ||
+                                                    0)
                                             ),
                                             0,
                                             uvsAccessor.count * 2
@@ -839,8 +839,8 @@ class GLTFLoader implements IMeshLoader {
                                                 buffer.slice(
                                                     (uvsBufferView.byteOffset ||
                                                         0) +
-                                                        (uvsAccessor.byteOffset ||
-                                                            0)
+                                                    (uvsAccessor.byteOffset ||
+                                                        0)
                                                 ),
                                                 0,
                                                 uvsAccessor.count * 2
@@ -854,8 +854,8 @@ class GLTFLoader implements IMeshLoader {
                                                 buffer.slice(
                                                     (uvsBufferView.byteOffset ||
                                                         0) +
-                                                        (uvsAccessor.byteOffset ||
-                                                            0)
+                                                    (uvsAccessor.byteOffset ||
+                                                        0)
                                                 ),
                                                 0,
                                                 uvsAccessor.count * 2
@@ -872,8 +872,8 @@ class GLTFLoader implements IMeshLoader {
                                                 buffer.slice(
                                                     (uvsBufferView.byteOffset ||
                                                         0) +
-                                                        (uvsAccessor.byteOffset ||
-                                                            0)
+                                                    (uvsAccessor.byteOffset ||
+                                                        0)
                                                 ),
                                                 0,
                                                 uvsAccessor.count * 2
@@ -890,8 +890,8 @@ class GLTFLoader implements IMeshLoader {
                                                 buffer.slice(
                                                     (uvsBufferView.byteOffset ||
                                                         0) +
-                                                        (uvsAccessor.byteOffset ||
-                                                            0)
+                                                    (uvsAccessor.byteOffset ||
+                                                        0)
                                                 ),
                                                 0,
                                                 uvsAccessor.count * 2
@@ -908,8 +908,8 @@ class GLTFLoader implements IMeshLoader {
                                                 buffer.slice(
                                                     (uvsBufferView.byteOffset ||
                                                         0) +
-                                                        (uvsAccessor.byteOffset ||
-                                                            0)
+                                                    (uvsAccessor.byteOffset ||
+                                                        0)
                                                 ),
                                                 0,
                                                 uvsAccessor.count * 2
@@ -942,7 +942,7 @@ class GLTFLoader implements IMeshLoader {
 
                         const GLTFMaterial =
                             (storage.materials ?? [])[
-                                storageMeshPrimitive.material ?? 0
+                            storageMeshPrimitive.material ?? 0
                             ];
                         let albedo: ITexture2D<Uint8Array> | null = null;
                         let metallic: ITexture2D<Uint8Array> | null = null;
@@ -961,23 +961,23 @@ class GLTFLoader implements IMeshLoader {
                                 GLTFMaterial.pbrMetallicRoughness
                                     .baseColorTexture && this.engine !== null
                             ) {
-                                if(!storage.textures || !storage.images) {
+                                if (!storage.textures || !storage.images) {
                                     continue;
                                 }
 
                                 const texture =
                                     storage.textures[
-                                        GLTFMaterial.pbrMetallicRoughness
-                                            .baseColorTexture.index
+                                    GLTFMaterial.pbrMetallicRoughness
+                                        .baseColorTexture.index
                                     ];
-                                
-                                if(!texture || !texture.source) {
+
+                                if (!texture || !texture.source) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access texture.");
                                 }
 
                                 const image = storage.images[texture.source];
 
-                                if(!image || !image.uri) {
+                                if (!image || !image.uri) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access image.");
                                 }
 
@@ -1016,13 +1016,13 @@ class GLTFLoader implements IMeshLoader {
                                 if (texture.sampler) {
                                     const storageSamplers = storage.samplers;
 
-                                    if(!storageSamplers) {
+                                    if (!storageSamplers) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access samplers.");
                                     }
 
                                     const sampler = storageSamplers[texture.sampler];
 
-                                    if(!sampler) {
+                                    if (!sampler) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access sampler.");
                                     }
 
@@ -1074,21 +1074,21 @@ class GLTFLoader implements IMeshLoader {
                                     offset: GLTFMaterial.pbrMetallicRoughness
                                         .baseColorTexture.extensions
                                         ?.KHR_texture_transform?.offset || [
-                                        0, 0,
-                                    ],
+                                            0, 0,
+                                        ],
                                     rotation: [
                                         GLTFMaterial.pbrMetallicRoughness
                                             .baseColorTexture.extensions
                                             ?.KHR_texture_transform?.rotation ||
-                                            0,
+                                        0,
                                     ],
                                     scale: GLTFMaterial.pbrMetallicRoughness
                                         .baseColorTexture.extensions
                                         ?.KHR_texture_transform?.scale || [
-                                        1, 1,
-                                    ],
+                                            1, 1,
+                                        ],
                                 }, this.engine);
-                            } else if(this.engine !== null) {
+                            } else if (this.engine !== null) {
                                 let color: [number, number, number, number] = [
                                     1.0, 1.0, 1.0, 1.0,
                                 ];
@@ -1123,23 +1123,23 @@ class GLTFLoader implements IMeshLoader {
                                 GLTFMaterial.pbrMetallicRoughness
                                     .metallicRoughnessTexture && this.engine !== null
                             ) {
-                                if(!storage.textures || !storage.images) {
+                                if (!storage.textures || !storage.images) {
                                     continue;
                                 }
 
                                 const texture =
                                     storage.textures[
-                                        GLTFMaterial.pbrMetallicRoughness
-                                            .metallicRoughnessTexture.index
+                                    GLTFMaterial.pbrMetallicRoughness
+                                        .metallicRoughnessTexture.index
                                     ];
 
-                                if(!texture || !texture.source) {
+                                if (!texture || !texture.source) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access texture.");
                                 }
 
                                 const image = storage.images[texture.source];
 
-                                if(!image || !image.uri) {
+                                if (!image || !image.uri) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access image.");
                                 }
 
@@ -1185,14 +1185,14 @@ class GLTFLoader implements IMeshLoader {
                                     SamplingMode.TRILINEAR;
 
                                 if (texture.sampler) {
-                                    if(!storage.samplers) {
+                                    if (!storage.samplers) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access samplers.");
                                     }
 
                                     const sampler =
                                         storage.samplers[texture.sampler];
 
-                                    if(!sampler) {
+                                    if (!sampler) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access sampler.");
                                     }
 
@@ -1244,19 +1244,19 @@ class GLTFLoader implements IMeshLoader {
                                     offset: GLTFMaterial.pbrMetallicRoughness
                                         .metallicRoughnessTexture.extensions
                                         ?.KHR_texture_transform?.offset || [
-                                        0, 0,
-                                    ],
+                                            0, 0,
+                                        ],
                                     rotation: [
                                         GLTFMaterial.pbrMetallicRoughness
                                             .metallicRoughnessTexture.extensions
                                             ?.KHR_texture_transform?.rotation ||
-                                            0,
+                                        0,
                                     ],
                                     scale: GLTFMaterial.pbrMetallicRoughness
                                         .metallicRoughnessTexture.extensions
                                         ?.KHR_texture_transform?.scale || [
-                                        1, 1,
-                                    ],
+                                            1, 1,
+                                        ],
                                 }, this.engine);
 
                                 roughness = new Texture2D<IUint8TextureOptions>(
@@ -1274,8 +1274,8 @@ class GLTFLoader implements IMeshLoader {
                                             .pbrMetallicRoughness
                                             .metallicRoughnessTexture.extensions
                                             ?.KHR_texture_transform?.offset || [
-                                            0, 0,
-                                        ],
+                                                0, 0,
+                                            ],
                                         rotation: [
                                             GLTFMaterial.pbrMetallicRoughness
                                                 .metallicRoughnessTexture
@@ -1286,11 +1286,11 @@ class GLTFLoader implements IMeshLoader {
                                         scale: GLTFMaterial.pbrMetallicRoughness
                                             .metallicRoughnessTexture.extensions
                                             ?.KHR_texture_transform?.scale || [
-                                            1, 1,
-                                        ],
+                                                1, 1,
+                                            ],
                                     }, this.engine
                                 );
-                            } else if(this.engine !== null) {
+                            } else if (this.engine !== null) {
                                 let metallicFactor =
                                     1.0 ||
                                     GLTFMaterial.pbrMetallicRoughness
@@ -1329,22 +1329,22 @@ class GLTFLoader implements IMeshLoader {
                          *****************************************
                          */
                         if (GLTFMaterial && GLTFMaterial.normalTexture && this.engine !== null) {
-                            if(!storage.textures || !storage.images) {
+                            if (!storage.textures || !storage.images) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access textures or images.");
                             }
 
                             const texture =
                                 storage.textures[
-                                    GLTFMaterial.normalTexture.index
+                                GLTFMaterial.normalTexture.index
                                 ];
 
-                            if(!texture || !texture.source) {
+                            if (!texture || !texture.source) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access texture.");
                             }
 
                             const image = storage.images[texture.source];
 
-                            if(!image || !image.uri) {
+                            if (!image || !image.uri) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access image.");
                             }
 
@@ -1357,14 +1357,14 @@ class GLTFLoader implements IMeshLoader {
                                 SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
-                                if(!storage.samplers) {
+                                if (!storage.samplers) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access samplers.");
                                 }
 
                                 const sampler =
                                     storage.samplers[texture.sampler];
-                                
-                                if(!sampler) {
+
+                                if (!sampler) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access sampler.");
                                 }
 
@@ -1417,14 +1417,14 @@ class GLTFLoader implements IMeshLoader {
                                     rotation: [
                                         GLTFMaterial.normalTexture.extensions
                                             ?.KHR_texture_transform?.rotation ||
-                                            0,
+                                        0,
                                     ],
                                     scale: GLTFMaterial.normalTexture.extensions
                                         ?.KHR_texture_transform?.scale || [
-                                        1, 1,
-                                    ],
+                                            1, 1,
+                                        ],
                                 }, this.engine);
-                        } else if(this.engine !== null) {
+                        } else if (this.engine !== null) {
                             normalsTexture = new Texture2D({
                                 width: 1,
                                 height: 1,
@@ -1443,22 +1443,22 @@ class GLTFLoader implements IMeshLoader {
                          *****************************************
                          */
                         if (GLTFMaterial && GLTFMaterial.occlusionTexture && this.engine !== null) {
-                            if(!storage.textures || !storage.images) {
+                            if (!storage.textures || !storage.images) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access textures or images.");
                             }
 
                             const texture =
                                 storage.textures[
-                                    GLTFMaterial.occlusionTexture.index
+                                GLTFMaterial.occlusionTexture.index
                                 ];
 
-                            if(!texture || !texture.source) {
+                            if (!texture || !texture.source) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access texture.");
                             }
 
                             const image = storage.images[texture.source];
 
-                            if(!image || !image.uri) {
+                            if (!image || !image.uri) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access image.");
                             }
 
@@ -1471,14 +1471,14 @@ class GLTFLoader implements IMeshLoader {
                                 SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
-                                if(!storage.samplers) {
+                                if (!storage.samplers) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access samplers.")
                                 }
 
                                 const sampler =
                                     storage.samplers[texture.sampler];
-                                
-                                if(!sampler) {
+
+                                if (!sampler) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access sampler.")
                                 }
 
@@ -1533,7 +1533,7 @@ class GLTFLoader implements IMeshLoader {
                                 scale: GLTFMaterial.occlusionTexture.extensions
                                     ?.KHR_texture_transform?.scale || [1, 1],
                             }, this.engine);
-                        } else if(this.engine !== null) {
+                        } else if (this.engine !== null) {
                             occlusion = new Texture2D({
                                 width: 1,
                                 height: 1,
@@ -1552,22 +1552,22 @@ class GLTFLoader implements IMeshLoader {
                          *****************************************
                          */
                         if (GLTFMaterial && GLTFMaterial.emissiveTexture && this.engine !== null) {
-                            if(!storage.textures || !storage.images) {
+                            if (!storage.textures || !storage.images) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access textures or images.");
                             }
 
                             const texture =
                                 storage.textures[
-                                    GLTFMaterial.emissiveTexture.index
+                                GLTFMaterial.emissiveTexture.index
                                 ];
 
-                            if(!texture || !texture.source) {
+                            if (!texture || !texture.source) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access texture.");
                             }
 
                             const image = storage.images[texture.source];
 
-                            if(!image || !image.uri) {
+                            if (!image || !image.uri) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access image.");
                             }
 
@@ -1580,14 +1580,14 @@ class GLTFLoader implements IMeshLoader {
                                 SamplingMode.TRILINEAR;
 
                             if (texture.sampler) {
-                                if(!storage.samplers) {
+                                if (!storage.samplers) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access samplers.");
                                 }
 
                                 const sampler =
                                     storage.samplers[texture.sampler];
 
-                                if(!sampler) {
+                                if (!sampler) {
                                     throw new Error("Ultra3.GLTFLoader: unable to access sampler.");
                                 }
 
@@ -1642,7 +1642,7 @@ class GLTFLoader implements IMeshLoader {
                                 scale: GLTFMaterial.emissiveTexture.extensions
                                     ?.KHR_texture_transform?.scale || [1, 1],
                             }, this.engine);
-                        } else if(this.engine !== null) {
+                        } else if (this.engine !== null) {
                             emissive = new Texture2D({
                                 width: 1,
                                 height: 1,
@@ -1682,25 +1682,25 @@ class GLTFLoader implements IMeshLoader {
                                             .KHR_materials_specular
                                             .specularFactor || 1.0;
 
-                                    if(!storage.textures || !storage.images) {
+                                    if (!storage.textures || !storage.images) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access textures or images.");
                                     }
-                                    
+
                                     const texture =
                                         storage.textures[
-                                            GLTFMaterial.extensions
-                                                .KHR_materials_specular
-                                                .specularTexture.index
+                                        GLTFMaterial.extensions
+                                            .KHR_materials_specular
+                                            .specularTexture.index
                                         ];
 
-                                    if(!texture || !texture.source) {
+                                    if (!texture || !texture.source) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access texture.");
                                     }
 
                                     const image =
                                         storage.images[texture.source];
-                                    
-                                    if(!image || !image.uri) {
+
+                                    if (!image || !image.uri) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access image.");
                                     }
 
@@ -1726,14 +1726,14 @@ class GLTFLoader implements IMeshLoader {
                                         SamplingMode.TRILINEAR;
 
                                     if (texture.sampler) {
-                                        if(!storage.samplers) {
+                                        if (!storage.samplers) {
                                             throw new Error("Ultra3.GLTFLoader: unable to access samplers.");
                                         }
 
                                         const sampler =
                                             storage.samplers[texture.sampler];
 
-                                        if(!sampler) {
+                                        if (!sampler) {
                                             throw new Error("Ultra3.GLTFLoader: unable to access sampler.");
                                         }
 
@@ -1786,8 +1786,8 @@ class GLTFLoader implements IMeshLoader {
                                             .KHR_materials_specular
                                             .specularTexture.extensions
                                             ?.KHR_texture_transform?.offset || [
-                                            0, 0,
-                                        ],
+                                                0, 0,
+                                            ],
                                         rotation: [
                                             GLTFMaterial.extensions
                                                 .KHR_materials_specular
@@ -1799,10 +1799,10 @@ class GLTFLoader implements IMeshLoader {
                                             .KHR_materials_specular
                                             .specularTexture.extensions
                                             ?.KHR_texture_transform?.scale || [
-                                            1, 1,
-                                        ],
+                                                1, 1,
+                                            ],
                                     }, this.engine);
-                                } else if(this.engine !== null) {
+                                } else if (this.engine !== null) {
                                     let factor =
                                         GLTFMaterial.extensions
                                             .KHR_materials_specular
@@ -1828,25 +1828,25 @@ class GLTFLoader implements IMeshLoader {
                                         .KHR_materials_specular
                                         .specularColorFactor || [1.0, 1.0, 1.0];
 
-                                    if(!storage.textures || !storage.images) {
+                                    if (!storage.textures || !storage.images) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access textures or images.");
                                     }
 
                                     const texture =
                                         storage.textures[
-                                            GLTFMaterial.extensions
-                                                .KHR_materials_specular
-                                                .specularColorTexture.index
+                                        GLTFMaterial.extensions
+                                            .KHR_materials_specular
+                                            .specularColorTexture.index
                                         ];
 
-                                    if(!texture || !texture.source) {
+                                    if (!texture || !texture.source) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access texture.");
                                     }
 
                                     const image =
                                         storage.images[texture.source];
-                                    
-                                    if(!image || !image.uri) {
+
+                                    if (!image || !image.uri) {
                                         throw new Error("Ultra3.GLTFLoader: unable to access image.");
                                     }
 
@@ -1871,14 +1871,14 @@ class GLTFLoader implements IMeshLoader {
                                         SamplingMode.TRILINEAR;
 
                                     if (texture.sampler) {
-                                        if(!storage.samplers) {
+                                        if (!storage.samplers) {
                                             throw new Error("Ultra3.GLTFLoader: unable to access samplers.");
                                         }
 
                                         const sampler =
                                             storage.samplers[texture.sampler];
 
-                                        if(!sampler) {
+                                        if (!sampler) {
                                             throw new Error("Ultra3.GLTFLoader: unable to access sampler.");
                                         }
 
@@ -1931,8 +1931,8 @@ class GLTFLoader implements IMeshLoader {
                                             .KHR_materials_specular
                                             .specularColorTexture.extensions
                                             ?.KHR_texture_transform?.offset || [
-                                            0, 0,
-                                        ],
+                                                0, 0,
+                                            ],
                                         rotation: [
                                             GLTFMaterial.extensions
                                                 .KHR_materials_specular
@@ -1944,10 +1944,10 @@ class GLTFLoader implements IMeshLoader {
                                             .KHR_materials_specular
                                             .specularColorTexture.extensions
                                             ?.KHR_texture_transform?.scale || [
-                                            1, 1,
-                                        ],
+                                                1, 1,
+                                            ],
                                     }, this.engine);
-                                } else if(this.engine !== null) {
+                                } else if (this.engine !== null) {
                                     specularColor = new Texture2D({
                                         width: 1,
                                         height: 1,
@@ -1962,7 +1962,7 @@ class GLTFLoader implements IMeshLoader {
                             }
                         }
 
-                        if(this.engine !== null) {
+                        if (this.engine !== null) {
                             material = new PBRMaterial(this.engine, {
                                 albedoTexture: albedo ?? Texture2D.blackTexture(this.engine),
                                 metallicTexture: metallic ?? Texture2D.blackTexture(this.engine),
@@ -1977,8 +1977,8 @@ class GLTFLoader implements IMeshLoader {
                             });
                         }
 
-                        if(uvs.length === 0) {
-                            uvs = points.map<IVector2D>(v => ({x: v.x, y: v.y}));
+                        if (uvs.length === 0) {
+                            uvs = points.map<IVector2D>(v => ({ x: v.x, y: v.y }));
                         }
 
                         mesh = new Mesh({
@@ -1987,11 +1987,11 @@ class GLTFLoader implements IMeshLoader {
                             indices: indices,
                             normals: normals,
                             drawMode: DrawMode.DYNAMIC,
-                            uvs: uvs.map<IVector>(v => ({x: v.x, y: v.y, z: 0})),
+                            uvs: uvs.map<IVector>(v => ({ x: v.x, y: v.y, z: 0 })),
                             pos: { x: 0, y: 0, z: 0 },
                             scale: { x: 1, y: 1, z: 1 },
                             rotation: { x: 0, y: 0, z: 0 },
-                            ...(material ? {material} : {}),
+                            ...(material ? { material } : {}),
                         });
 
                         meshes.push(mesh);
@@ -2014,10 +2014,10 @@ class GLTFLoader implements IMeshLoader {
                              */
                             const light =
                                 storage_KHR_lights_punctual.lights[
-                                    storageNode_KHR_lights_punctual.light
+                                storageNode_KHR_lights_punctual.light
                                 ];
-                            
-                            if(!light) {
+
+                            if (!light) {
                                 throw new Error("Ultra3.GLTFLoader: unable to access light.");
                             }
 
@@ -2094,7 +2094,7 @@ class GLTFLoader implements IMeshLoader {
             const storageBuffer = storage.buffers?.[i];
             let url: string;
 
-            if(!storageBuffer || !storageBuffer.uri) {
+            if (!storageBuffer || !storageBuffer.uri) {
                 throw new Error("Ultra3.GLTFLoader: unable to access storage buffer.");
             }
 
@@ -2129,7 +2129,7 @@ class GLTFLoader implements IMeshLoader {
             let url: string;
             let mimetype: string;
 
-            if(!externalImage || !externalImage.uri) {
+            if (!externalImage || !externalImage.uri) {
                 throw new Error("Ultra3.GLTFLoader: unable to access external image.");
             }
 
@@ -2166,7 +2166,7 @@ class GLTFLoader implements IMeshLoader {
 
                         const ctx = canvas.getContext("2d");
 
-                        if(!ctx) {
+                        if (!ctx) {
                             throw new Error("Ultra3.GLTFLoader: seems that your browser does not support canvas 2d.");
                         }
 
@@ -2179,7 +2179,7 @@ class GLTFLoader implements IMeshLoader {
                             canvas.height
                         ).data;
 
-                        if(!externalImage.uri) {
+                        if (!externalImage.uri) {
                             throw new Error("Ultra3.GLTFLoader: unable to access external image URI.");
                         }
 
@@ -2227,20 +2227,20 @@ class GLTFLoader implements IMeshLoader {
             // Get all internal images. Needed to find out how much there is internal images.
             storage.images?.forEach((storageImage, i) => {
                 if (storageImage.bufferView) {
-                    if(!storage.bufferViews || !storage.buffers) {
+                    if (!storage.bufferViews || !storage.buffers) {
                         throw new Error("Ultra3.GLTFLoader: unable to access buffers.")
                     }
 
                     const bufferView =
                         storage.bufferViews[storageImage.bufferView];
 
-                    if(!bufferView) {
+                    if (!bufferView) {
                         throw new Error("Ultra3.GLTFLoader: unable to access bufferView.")
                     }
 
                     const buffer = storage.buffers[bufferView.buffer];
 
-                    if(!buffer) {
+                    if (!buffer) {
                         throw new Error("Ultra3.GLTFLoader: unable to access buffer.")
                     }
 
@@ -2254,7 +2254,7 @@ class GLTFLoader implements IMeshLoader {
 
                         const newStorageImage = newStorageImages[i];
 
-                        if(!newStorageImage) {
+                        if (!newStorageImage) {
                             throw new Error("Ultra3.GLTFLoader: unable to access storage image.");
                         }
 
@@ -2266,14 +2266,14 @@ class GLTFLoader implements IMeshLoader {
             });
 
             internalImages.forEach((internalImage, i) => {
-                if(!internalImage.bufferView || !storage.bufferViews) {
+                if (!internalImage.bufferView || !storage.bufferViews) {
                     throw new Error("Ultra3.GLTFLoader: unable to load internalImage.bufferView or storage.bufferViews.");
                 }
 
                 const bufferView =
                     storage.bufferViews[internalImage.bufferView];
 
-                if(!bufferView) {
+                if (!bufferView) {
                     throw new Error("Ultra3.GLTFLoader: unable to load buffer view.");
                 }
 
@@ -2292,7 +2292,7 @@ class GLTFLoader implements IMeshLoader {
 
                     const ctx = canvas.getContext("2d");
 
-                    if(!ctx) {
+                    if (!ctx) {
                         throw new Error("Ultra3.GLTFLoader: seems that your browser doesn't support canvas 2d.");
                     }
 
@@ -2308,7 +2308,7 @@ class GLTFLoader implements IMeshLoader {
 
                     this.loadImage(
                         `${internalImage.name}.${extension}` ||
-                            `image${i}.${extension}`,
+                        `image${i}.${extension}`,
                         imageData as unknown as Uint8Array,
                         canvas.width,
                         canvas.height
@@ -2346,7 +2346,7 @@ class GLTFLoader implements IMeshLoader {
                     () => {
                         const binary = this.binaries[this.binaries.length - 1];
 
-                        if(!binary) {
+                        if (!binary) {
                             return;
                         }
 

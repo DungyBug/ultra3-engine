@@ -32,4 +32,12 @@ export class Weapon extends PickableEntity implements IWeapon {
         this.damage = state.damage;
         this.lastShoot = state.lastShoot;
     }
+
+    static fromState(state: IWeaponState, world: World): Weapon {
+        const entity = new Weapon(state, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 }

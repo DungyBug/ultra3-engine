@@ -1,3 +1,4 @@
+import { IHealthyEntityState } from "../../core/contracts/entities/healthy";
 import { HealthyEntity } from "../../core/entities/healthy";
 import ClientWorld from "../client-world";
 import IClientHealthyEntity, {
@@ -14,6 +15,14 @@ class ClientHealthyEntity
     constructor(params: IClientHealthyEntityParams, world: ClientWorld) {
         super(params, world);
         this.model = params.model;
+    }
+
+    static fromState(state: IHealthyEntityState, world: ClientWorld): ClientHealthyEntity {
+        const entity = new ClientHealthyEntity({...state, model: null}, world);
+
+        entity.setEntityState(state);
+
+        return entity;
     }
 }
 

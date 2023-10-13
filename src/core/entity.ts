@@ -1,6 +1,7 @@
 import { IVector } from "./contracts/base/vector";
 import { IEntity, IEntityParams, IEntityState } from "./contracts/entity";
 import { IWorld } from "./contracts/world";
+import { World } from "./world";
 
 export class Entity implements IEntity {
     readonly classname: string;
@@ -43,6 +44,10 @@ export class Entity implements IEntity {
         }
     }
 
+    /**
+     * Does the stuff entity should do. Example: EnemyEntity watches for player and shoots him.
+     * Calls every frame.
+     */
     think() {
         // Do nothing
     }
@@ -125,5 +130,18 @@ export class Entity implements IEntity {
         this.nextthink = state.nextthink;
         this.requestingState = state.requestingState;
         this.currentState = state.currentState;
+    }
+
+    /**
+     * Create entity from it's state and world
+     * @param state - entity state
+     * @param world - world where to place entity
+     */
+    static fromState(state: IEntityState, world: World): Entity {
+        const entity = new Entity({classname: state.classname}, world);
+
+        entity.setEntityState(state);
+
+        return entity;
     }
 }

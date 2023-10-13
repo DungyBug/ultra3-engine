@@ -1,6 +1,6 @@
 interface WSMessage {
     id: number;
-    type: "answer" | "request";
+    type: "answer" | "request" | "broadcast";
     data: any;
 }
 

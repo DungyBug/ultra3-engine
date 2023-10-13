@@ -13,35 +13,15 @@ export default {
     // The directory where Jest should store its cached dependency information
     // cacheDirectory: "/tmp/jest_rs",
 
-    // Automatically clear mock calls, instances, contexts and results before every test
-    clearMocks: true,
-
     preset: "ts-jest/presets/js-with-ts",
 
-    testEnvironment: "node",
+    testEnvironment: "jsdom",
 
     globals: {
         "ts-jest": {
             tsconfig: "./tsconfig.json"
         }
     },
-
-    // Indicates whether the coverage information should be collected while executing the test
-    collectCoverage: true,
-
-    // An array of glob patterns indicating a set of files for which coverage information should be collected
-    // collectCoverageFrom: undefined,
-
-    // The directory where Jest should output its coverage files
-    coverageDirectory: "coverage",
-
-    // An array of regexp pattern strings used to skip coverage collection
-    // coveragePathIgnorePatterns: [
-    //   "/node_modules/"
-    // ],
-
-    // Indicates which provider should be used to instrument code for coverage
-    coverageProvider: "v8",
 
     // A list of reporter names that Jest uses when writing coverage reports
     // coverageReporters: [
@@ -113,7 +93,7 @@ export default {
     // preset: undefined,
 
     // Run tests from one or more projects
-    projects: ["<rootDir>/src/core/", "<rootDir>/src/client", "<rootDir>/src/server"],
+    // projects: undefined,
 
     // Use this configuration option to add custom reporters to Jest
     // reporters: undefined,
@@ -125,7 +105,7 @@ export default {
     // resetModules: false,
 
     // A path to a custom resolver
-    // resolver: undefined,
+    // resolver: undefined
 
     // Automatically restore mock state and implementation before every test
     // restoreMocks: false,

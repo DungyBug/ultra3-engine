@@ -37,7 +37,7 @@ class WSTransporter extends AbstractTransporter<WSTrnasporterEvents> {
         return "ready";
     }
 
-    send<T extends boolean, U extends IWSSendOpts>(
+    send<T extends boolean, U extends IWSSendOpts | IWSSendToAllOpts>(
         opts: U,
         waitForResponse?: U extends IWSSendToAllOpts ? never : T
     ): T extends true ? Promise<string> : void {
@@ -46,8 +46,14 @@ class WSTransporter extends AbstractTransporter<WSTrnasporterEvents> {
         if (to === undefined) {
             // Send to all
 
+            const dataToSend = JSON.stringify({
+                id: 0,
+                type: "broadcast",
+                data: opts.data,
+            })
+
             for (const connection of this.connections) {
-                connection.ws.send(opts.data);
+                connection.ws.send(dataToSend);
             }
 
             return undefined as T extends true ? Promise<string> : void;

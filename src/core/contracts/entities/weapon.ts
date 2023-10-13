@@ -11,7 +11,6 @@ import { IPhysicalEntityParams } from "./base/physical";
 import { IPickableEntity, IPickableEntityState } from "./pickable";
 
 export interface IWeaponParams extends IPhysicalEntityParams {
-    classname: ClassPattern<"wp">;
     damage: number;
 }
 

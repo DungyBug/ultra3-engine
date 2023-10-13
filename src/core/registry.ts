@@ -1,7 +1,9 @@
-import { IEntityConstructor } from "./contracts/entity";
+import { EntityFromStateFabric, IEntityState } from "./contracts/entity";
+import { Entity } from "./entity";
+import { World } from "./world";
 
-export class Registry {
-    private _classnames: Record<string, IEntityConstructor>;
+export class Registry<WORLD extends World = World> {
+    private _classnames: Record<string, EntityFromStateFabric<Entity>>;
 
     constructor() {
         this._classnames = {};
@@ -12,11 +14,17 @@ export class Registry {
      * @param classname - entity classname start ( everything before underscore ) or full entity classname
      * @param classConstructor - entity class constructor
      */
-    registerClass(classname: string, classConstructor: IEntityConstructor) {
-        this._classnames[classname] = classConstructor;
+    registerClass<T extends typeof Entity>(classname: string, classObject: T) {
+        this._classnames[classname] = classObject.fromState;
     }
 
-    getClass(classname: string): IEntityConstructor | undefined {
-        return this._classnames[classname];
+    getClass(classname: string, state: IEntityState, world: WORLD): Entity | null {
+        const registryItem = this._classnames[classname];
+
+        if(registryItem) {
+            return registryItem(state, world);
+        }
+
+        return null;
     }
 }

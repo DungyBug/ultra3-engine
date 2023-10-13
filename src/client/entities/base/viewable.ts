@@ -22,6 +22,14 @@ class ViewableEntity extends Entity implements IViewableEntity {
             this.model.pos = state.pos;
         }
     }
+
+    static fromState(state: IEntityState, world: ClientWorld): ViewableEntity {
+        const entity = new ViewableEntity({...state, model: null}, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 }
 
 export default ViewableEntity;

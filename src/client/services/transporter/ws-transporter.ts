@@ -6,7 +6,7 @@ type WSURL = `ws${"s" | ""}://${string}`;
 
 interface IWSSendOpts {
     data: string;
-    to: "";
+    to?: "";
 }
 
 class WSTransporter extends AbstractTransporter {
@@ -48,7 +48,7 @@ class WSTransporter extends AbstractTransporter {
 
                     this.ws.send(
                         JSON.stringify({
-                            id: this.calls,
+                            id: this.calls + 1,
                             type: "request",
                             data: opts.data,
                         })
@@ -77,29 +77,41 @@ class WSTransporter extends AbstractTransporter {
         const res = JSON.parse(e.data) as WSMessage;
         const id = res.id;
 
-        if (res.type === "request") {
-            const answer = 
-                res.id === 0
-                    ? (_data: unknown) => undefined
-                    : (data: unknown) => {
-                        const message: WSMessage = {
-                            id: res.id,
-                            type: "answer",
-                            data
-                        }
 
-                        this.ws.send(JSON.stringify(message));
-                    };
+        switch(res.type) {
+            case "broadcast": {
+                this.emit("message", res.data, (_data: unknown) => undefined, res.id);
+                break;
+            }
 
-            this.emit("message", res.data, answer, res.id);
-        } else {
-            for(const queueElement of this.queue) {
-                if(queueElement.id !== id) {
-                    continue;
+            case "request": {
+                const answer = 
+                    res.id === 0
+                        ? (_data: unknown) => undefined
+                        : (data: unknown) => {
+                            const message: WSMessage = {
+                                id: res.id,
+                                type: "answer",
+                                data
+                            }
+    
+                            this.ws.send(JSON.stringify(message));
+                        };
+    
+                this.emit("message", res.data, answer, res.id);
+                break;
+            }
+
+            case "answer": {
+                for(const queueElement of this.queue) {
+                    if(queueElement.id !== id) {
+                        continue;
+                    }
+    
+                    queueElement.res(res.data);
+                    this.queue.splice(this.queue.indexOf(queueElement), 1);   
+                    break;
                 }
-
-                queueElement.res(res.data);
-                this.queue.splice(this.queue.indexOf(queueElement), 1);   
                 break;
             }
         }

@@ -36,4 +36,12 @@ export class ExplosiveEntity extends PhysicalEntity implements IExplosiveEntity 
         this.explodeRadius = state.explodeRadius;
         this.explodeDamage = state.explodeDamage;
     }
+
+    static fromState(state: IExplosiveEntityState, world: World): ExplosiveEntity {
+        const entity = new ExplosiveEntity(state, world);
+
+        entity.setEntityState(state);
+
+        return entity;
+    }
 }
