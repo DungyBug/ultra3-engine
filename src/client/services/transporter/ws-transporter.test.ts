@@ -34,10 +34,10 @@ describe("WSTransporter", () => {
         createClient().then(client => {
                 const random = Math.random().toString();
         
-                const text = JSON.stringify("Hello, I'm a new client!" + random);
+                const text = "Hello, I'm a new client!" + random;
 
                 serverTransporter.on("message", (message, send, id) => {
-                    if(JSON.parse(message) === "Hello, I'm a new client!" + random) {
+                    if(message === "Hello, I'm a new client!" + random) {
                         cb();
                     }
                 });
@@ -54,8 +54,8 @@ describe("WSTransporter", () => {
         This test also checks that client is capable sorting answers and giving corresponding to your request answer.
         */
         
-        const weatherRequestText = JSON.stringify("What's the weather today?");
-        const timeRequestText = JSON.stringify("What time is it now?");
+        const weatherRequestText = "What's the weather today?";
+        const timeRequestText = "What time is it now?";
         const todaysWeather = "It's sunny today";
         const timeNow = "It's 9:48 AM at Facing Worlds";
 
@@ -115,12 +115,10 @@ describe("WSTransporter", () => {
 
         let count = 0;
 
-        client.on("message", (data: string, send) => {
-            if(count === 2 || !data.startsWith("\"")) {
+        client.on("message", (request: string, send) => {
+            if(count === 2) {
                 return;
             }
-
-            const request = JSON.parse(data);
 
             if(!Object.keys(responses).includes(request)) {
                 return;
@@ -141,7 +139,7 @@ describe("WSTransporter", () => {
             })
         }
 
-        const requests = Object.keys(responses).map((request) => sendAndExpect(JSON.stringify(request), responses[request] || "??"));
+        const requests = Object.keys(responses).map((request) => sendAndExpect(request, responses[request] || "??"));
 
         await Promise.all(requests);
     }, 8000);
