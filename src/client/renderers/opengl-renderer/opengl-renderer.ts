@@ -83,7 +83,7 @@ export default class OpenGLRenderer extends BaseGraphicsModule<ClientGraphicsMod
         return this.camera;
     }
 
-    resoreActiveScene(): void {
+    restoreActiveScene(): void {
         this.activeScene = this.scene;
     }
 

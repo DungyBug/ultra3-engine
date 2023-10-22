@@ -174,6 +174,10 @@ export default class ClientEngine<
         this.textures.forEach((textureItem, i) => {
             if(textureItem.texture === texture) {
                 this.textures.splice(i, 1);
+                
+                if(this.graphicsModule) {
+                    this.graphicsModule.freeTexture(textureItem.id);
+                }
             }
         });
     }

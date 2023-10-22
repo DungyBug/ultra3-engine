@@ -160,7 +160,11 @@ export class World<T extends {[key: string]: unknown[]} & WorldEvents = WorldEve
         if(this.thinkPeriod) {
             setTimeout(this.runTick, this.thinkPeriod);
         } else {
-            requestAnimationFrame(this.runTick);
+            if(requestAnimationFrame) {
+                requestAnimationFrame(this.runTick);
+            } else {
+                setTimeout(this.runTick, this.thinkPeriod, 1000/60);
+            }
         }
     }
 

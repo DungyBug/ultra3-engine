@@ -48,7 +48,7 @@ export default abstract class BaseGraphicsModule<T extends Record<string, any[]>
      * Sets main scene as active scene
      * Note: main scene is a scene that creates in the module itself and keeps in it all entities and mapobjects
      */
-    abstract resoreActiveScene(): void;
+    abstract restoreActiveScene(): void;
 
     /**
      * Sets active scene ( i.e. scene to render )
